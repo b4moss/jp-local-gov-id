@@ -4,7 +4,7 @@
 
 A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
-**Docs / Playground:** [https://jplocalgovid.netlify.app/](https://jplocalgovid.netlify.app/)
+**Docs / Playground:** [https://jplocalgov.oss.b4m.jp/](https://jplocalgov.oss.b4m.jp/)
 
 | Package | Description | Version |
 |---------|-------------|---------|
