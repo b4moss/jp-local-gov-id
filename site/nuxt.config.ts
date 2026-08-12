@@ -35,9 +35,12 @@ export default defineNuxtConfig({
   },
   // GTM: set NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=GTM-XXXXXXX (build-time for SSG).
   // Empty / unset → tagging stays disabled (see plugins/google-tag-manager.client.ts).
+  // bundle: false → always load live gtm.js from Google (Tag Assistant / publish 即反映).
   scripts: {
     registry: {
-      googleTagManager: {},
+      googleTagManager: {
+        bundle: false,
+      },
     },
   },
   colorMode: {

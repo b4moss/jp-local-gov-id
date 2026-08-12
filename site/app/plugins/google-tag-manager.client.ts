@@ -13,6 +13,8 @@ export default defineNuxtPlugin(() => {
     id,
     scriptOptions: {
       trigger: "onNuxtReady",
+      // Serve live gtm.js from Google (not a build-time bundle snapshot).
+      bundle: false,
     },
   });
 });
