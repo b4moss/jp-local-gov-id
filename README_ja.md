@@ -9,7 +9,7 @@
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
 | [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 0.6.0 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 0.1.0 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 1.0.0-rc.1 |
 
 ## インストール（利用側）
 
