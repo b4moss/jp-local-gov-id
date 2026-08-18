@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 
-const EXPECTED_REPO_URL = "https://github.com/b4m-oss/jp-local-gov-id";
+const EXPECTED_REPO_URL = "https://github.com/b4moss/jp-local-gov-id";
 
 const packages = [
   {
