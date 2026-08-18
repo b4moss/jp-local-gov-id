@@ -1,6 +1,6 @@
 <template>
   <footer class="site-footer">
-    <p class="site-footer-text">MIT License . 2026 Bicycle for Mind LLC.</p>
+    <p class="site-footer-text">MIT License . 2026 <a href="https://b4m.co.jp/" target="_blank">Bicycle for Mind LLC.</a></p>
   </footer>
 </template>
 
