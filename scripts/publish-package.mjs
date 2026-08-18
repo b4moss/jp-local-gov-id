@@ -19,7 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
-const EXPECTED_REPO_URL = "https://github.com/b4m-oss/jp-local-gov-id";
+const EXPECTED_REPO_URL = "https://github.com/b4moss/jp-local-gov-id";
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
