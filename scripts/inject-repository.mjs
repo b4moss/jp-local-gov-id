@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const EXPECTED_REPO_URL = "https://github.com/b4m-oss/jp-local-gov-id";
+const EXPECTED_REPO_URL = "https://github.com/b4moss/jp-local-gov-id";
 
 const targetDir = process.argv[2];
 if (!targetDir) {
