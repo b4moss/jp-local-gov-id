@@ -2,7 +2,9 @@
 
 [日本語](./README_ja.md)
 
-Split JSON datasets of Japan’s nationwide local government codes. Use with [`@b4moss/jp-local-gov-id`](../jp-local-gov-id), or host the files yourself behind a versioned index URL.
+Split JSON datasets of Japan’s nationwide local government codes (全国地方公共団体コード).
+
+This package ships **data only**. For search and lookup APIs, use [`@b4moss/jp-local-gov-id`](https://www.npmjs.com/package/@b4moss/jp-local-gov-id) with this package, or serve the same files yourself behind a versioned index URL.
 
 ## Install
 
@@ -10,7 +12,20 @@ Split JSON datasets of Japan’s nationwide local government codes. Use with [`@
 npm install @b4moss/jp-local-gov-id-data
 ```
 
-## Usage with the API package
+## What’s included
+
+| Path | Contents |
+|------|----------|
+| `index.json` | Index metadata (`schemaVersion`, `asOf`, paths, counts, …) |
+| `prefectures.json` | All prefectures |
+| `prefectures/{code}.json` | Municipalities for that prefecture (e.g. `13.json`) |
+| `dataset.js` | Default export bundling the above for the API package |
+
+A single JSON file of all municipalities is **not** distributed.
+
+## Import
+
+Default dataset (for the API package):
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -19,22 +34,13 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 ```
 
-You can also import individual files:
+Individual JSON files:
 
 ```ts
 import index from "@b4moss/jp-local-gov-id-data/index.json";
 import prefectures from "@b4moss/jp-local-gov-id-data/prefectures.json";
+import tokyo from "@b4moss/jp-local-gov-id-data/prefectures/13.json";
 ```
-
-## Data layout
-
-A single JSON file of all municipalities is **not** distributed.
-
-| File | Contents |
-|------|----------|
-| `index.json` | Index of paths, `schemaVersion`, `asOf`, etc. |
-| `prefectures.json` | Prefectures only |
-| `prefectures/{code}.json` | Municipalities for that prefecture (e.g. `13.json`) |
 
 ### Dataset exports
 
@@ -42,21 +48,21 @@ A single JSON file of all municipalities is **not** distributed.
 |--------|-------------|
 | `index` | Index metadata |
 | `prefectures` | All prefectures |
-| `municipalitiesByCode` | Prefetched municipality files keyed by prefecture code |
+| `municipalitiesByCode` | Municipality files keyed by prefecture code |
 | `loadMunicipalities(code)` | Load municipalities for a prefecture code |
 
-## Hosting your own data
+## Self-hosted data
 
-If you host the JSON yourself, serve it with a **versioned URL** and the same split-file layout. The package maintainers take no responsibility for availability, CORS, correctness, or URL management. Enable CORS on the hosting side.
+If you host the JSON yourself, serve it with a **versioned URL** and the same split-file layout. Availability, CORS, correctness, and URL operations are your responsibility. Enable CORS on the hosting side.
 
 ## About the data
 
 - As of: 1 January 2024 (R6.1.1)
-- Source file: `resources/000925835.xlsx`
+- Source: Ministry of Internal Affairs and Communications (総務省) nationwide local government code Excel (`000925835.xlsx` in the monorepo `resources/`)
 - Abolished / merged entities are not included (current only)
 
 ## License
 
 MIT
 
-See the [monorepo README](../../README.md) for API usage, versioning, and development notes.
+Repository: [b4moss/jp-local-gov-id](https://github.com/b4moss/jp-local-gov-id)
