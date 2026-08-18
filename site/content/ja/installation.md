@@ -32,10 +32,10 @@ npm / Vite / webpack を使わず、ブラウザから直接読み込むこと�
 <html lang="ja">
   <body>
     <script type="module">
-      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@0.2.0/dist/jp-local-gov-id.js";
+      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@0.6.0/dist/jp-local-gov-id.js";
 
       const client = await createLocalGovClient({
-        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.1/index.json",
       });
 
       console.log(await client.getByCode("131016"));
