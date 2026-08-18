@@ -96,7 +96,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
-          expected='https://github.com/b4m-oss/jp-local-gov-id'
+          expected='https://github.com/b4moss/jp-local-gov-id'
           pkg_dir='packages/jp-local-gov-id-data'
 
           node <<'EOF'
@@ -105,7 +105,7 @@ jobs:
           const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
           pkg.repository = {
             type: 'git',
-            url: 'https://github.com/b4m-oss/jp-local-gov-id',
+            url: 'https://github.com/b4moss/jp-local-gov-id',
             directory: 'packages/jp-local-gov-id-data',
           };
           fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
@@ -130,7 +130,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
-          expected='https://github.com/b4m-oss/jp-local-gov-id'
+          expected='https://github.com/b4moss/jp-local-gov-id'
           pkg_dir='packages/jp-local-gov-id'
 
           node <<'EOF'
@@ -139,7 +139,7 @@ jobs:
           const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
           pkg.repository = {
             type: 'git',
-            url: 'https://github.com/b4m-oss/jp-local-gov-id',
+            url: 'https://github.com/b4moss/jp-local-gov-id',
             directory: 'packages/jp-local-gov-id',
           };
           fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
