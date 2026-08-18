@@ -9,7 +9,7 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 | Package | Description | Version |
 |---------|-------------|---------|
 | [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 0.6.0 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 0.1.0 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 1.0.0-rc.1 |
 
 ## Install (consumers)
 
