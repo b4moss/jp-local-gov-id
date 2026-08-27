@@ -1,4 +1,8 @@
-import { getCachedData, setCachedData } from "./cache";
+import {
+  DEFAULT_CACHE_TTL_SECONDS,
+  getCachedData,
+  setCachedData,
+} from "./cache";
 import { buildLocalGovClient } from "./api";
 import {
   LocalGovSchemaError,
@@ -9,20 +13,44 @@ import {
 } from "./schema";
 import { createStore } from "./store";
 import type {
+  CreateLocalGovCacheOptions,
   CreateLocalGovOptions,
   LocalGovClient,
   LocalGovIndexFile,
 } from "./types";
 
+type ResolvedCacheConfig = {
+  enabled: boolean;
+  ttlSeconds: number;
+};
+
+function resolveCacheConfig(
+  options: CreateLocalGovCacheOptions,
+): ResolvedCacheConfig {
+  const enabled = options.cache !== false;
+  const ttlSeconds =
+    options.cacheTtlSeconds === undefined
+      ? DEFAULT_CACHE_TTL_SECONDS
+      : options.cacheTtlSeconds;
+
+  if (!Number.isFinite(ttlSeconds) || ttlSeconds < 0) {
+    throw new TypeError(
+      "cacheTtlSeconds must be a finite number greater than or equal to 0",
+    );
+  }
+
+  return { enabled, ttlSeconds };
+}
+
 function hasData(
   options: CreateLocalGovOptions,
-): options is { data: unknown; url?: never } {
+): options is { data: unknown; url?: never } & CreateLocalGovCacheOptions {
   return "data" in options && options.data !== undefined;
 }
 
 function hasUrl(
   options: CreateLocalGovOptions,
-): options is { url: string; data?: never } {
+): options is { url: string; data?: never } & CreateLocalGovCacheOptions {
   return "url" in options && typeof options.url === "string";
 }
 
@@ -60,9 +88,10 @@ async function fetchJson(url: string): Promise<unknown> {
 async function fetchAndCache<T>(
   url: string,
   validate: (data: unknown) => T,
+  cache: ResolvedCacheConfig,
   options?: { persist?: boolean },
 ): Promise<T> {
-  const cached = getCachedData(url);
+  const cached = getCachedData(url, { enabled: cache.enabled });
   if (cached !== null) {
     // Re-validate cached payloads so schema changes surface clearly
     return validate(cached);
@@ -71,13 +100,19 @@ async function fetchAndCache<T>(
   const parsed = await fetchJson(url);
   const validated = validate(parsed);
   if (options?.persist !== false) {
-    setCachedData(url, parsed);
+    setCachedData(url, parsed, {
+      enabled: cache.enabled,
+      ttlSeconds: cache.ttlSeconds,
+    });
   }
   return validated;
 }
 
-async function createFromUrl(indexUrl: string): Promise<LocalGovClient> {
-  const index = await fetchAndCache(indexUrl, validateIndexFile);
+async function createFromUrl(
+  indexUrl: string,
+  cache: ResolvedCacheConfig,
+): Promise<LocalGovClient> {
+  const index = await fetchAndCache(indexUrl, validateIndexFile, cache);
 
   const prefecturesUrl = resolveSiblingUrl(
     indexUrl,
@@ -86,6 +121,7 @@ async function createFromUrl(indexUrl: string): Promise<LocalGovClient> {
   const prefecturesFile = await fetchAndCache(
     prefecturesUrl,
     validatePrefecturesFile,
+    cache,
   );
 
   const store = createStore(
@@ -96,9 +132,14 @@ async function createFromUrl(indexUrl: string): Promise<LocalGovClient> {
         indexUrl,
         municipalitiesPath(index, code),
       );
-      const file = await fetchAndCache(url, validateMunicipalitiesFile, {
-        persist: loadOptions?.persist,
-      });
+      const file = await fetchAndCache(
+        url,
+        validateMunicipalitiesFile,
+        cache,
+        {
+          persist: loadOptions?.persist,
+        },
+      );
       return file.municipalities;
     },
   );
@@ -141,6 +182,10 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
  * Load index + prefectures, validate schemas, then return a client.
  * Municipality JSON is loaded lazily (concurrency 6 for nationwide search).
  * Pass either `{ data }` (dataset) or `{ url }` (versioned index.json URL).
+ *
+ * For `url` mode, localStorage caching is on by default (`cache: true`,
+ * `cacheTtlSeconds` defaults to 1 year). Nationwide string search still skips
+ * writing municipality JSON to localStorage.
  */
 export async function createLocalGovClient(
   options: CreateLocalGovOptions,
@@ -167,8 +212,11 @@ export async function createLocalGovClient(
   }
 
   if (urlProvided) {
-    return createFromUrl(options.url);
+    const cache = resolveCacheConfig(options);
+    return createFromUrl(options.url, cache);
   }
 
+  // Validate cache options even for data mode so bad values fail fast
+  resolveCacheConfig(options);
   return createFromData(options.data);
 }

@@ -1,6 +1,8 @@
 export type DocsNavItem = {
   key: string;
   path: string;
+  /** When set, item is a child of this nav key (shown indented in sidebar). */
+  parent?: string;
 };
 
 export const docsNavItems: DocsNavItem[] = [
@@ -10,6 +12,21 @@ export const docsNavItems: DocsNavItem[] = [
   { key: "usage", path: "/usage" },
   { key: "api", path: "/api" },
   { key: "examples", path: "/examples" },
+  {
+    key: "examplesAddressInput",
+    path: "/examples/address-input",
+    parent: "examples",
+  },
+  {
+    key: "examplesMunicipalityValidation",
+    path: "/examples/municipality-validation",
+    parent: "examples",
+  },
+  {
+    key: "examplesNationwideMunicipalities",
+    path: "/examples/nationwide-municipalities",
+    parent: "examples",
+  },
   { key: "playground", path: "/playground" },
   { key: "contribute", path: "/contribute" },
 ];

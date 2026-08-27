@@ -2,6 +2,7 @@
 const { items } = useDocsNav();
 const { open, close } = useSidebar();
 const route = useRoute();
+const localePath = useLocalePath();
 
 watch(
   () => route.fullPath,
@@ -9,6 +10,18 @@ watch(
     close();
   },
 );
+
+function isActive(item: { path: string; to: string }) {
+  const current = route.path.replace(/\/+$/, "") || "/";
+  const target = String(item.to).replace(/\/+$/, "") || "/";
+  if (current === target) return true;
+  // Keep the examples pillar highlighted on child pages
+  if (item.path === "/examples") {
+    const examplesRoot = localePath("/examples").replace(/\/+$/, "");
+    return current.startsWith(`${examplesRoot}/`);
+  }
+  return false;
+}
 </script>
 
 <template>
@@ -19,6 +32,10 @@ watch(
         :key="item.key"
         :to="item.to"
         class="sidebar-link"
+        :class="{
+          'sidebar-link--child': Boolean(item.parent),
+          'router-link-exact-active': isActive(item),
+        }"
         @click="close"
       >
         {{ item.label }}
@@ -73,6 +90,12 @@ watch(
 .sidebar-link:hover {
   color: var(--color-ink);
   background: var(--color-accent-soft);
+}
+
+.sidebar-link--child {
+  padding-left: 1.35rem;
+  font-size: 0.875rem;
+  font-weight: 400;
 }
 
 .sidebar-link.router-link-exact-active {

@@ -19,11 +19,39 @@ client.listPrefectures();
 client.getPrefectureByCode("27"); // Osaka
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // Tokyo municipalities, etc.
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // designated-city body only
 await client.getMunicipalityByCode("131016"); // Chiyoda
 await client.getByCode("131016");
 await client.searchByText("中央", { prefecture: "01", target: "cities" });
 await client.searchByText("ちよだ", { prefecture: "13", target: "cities" }); // kana / hiragana OK
 await client.getLocalGovCodeByName("千代田区"); // "131016"
+```
+
+### Designated-city body / ward filter
+
+For address forms that need “city only” or “wards only”, use `designatedCity` (default `"both"`).
+
+| Value | Meaning | Example (Hokkaido) |
+|-------|---------|--------------------|
+| `"both"` | City body and wards | `札幌市` and `札幌市中央区` |
+| `"city"` | City body only | `札幌市` only |
+| `"ward"` | Wards only | `札幌市中央区`, etc. |
+
+Applies to: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`. Tokyo special wards are not affected.
+
+```ts
+// Address select: city only
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" });
+
+// Address select: wards only
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "ward" });
+
+// Same option works with search
+await client.searchByText("札幌", {
+  prefecture: "01",
+  target: "cities",
+  designatedCity: "ward",
+});
 ```
 
 Install the app and data packages from npm, then import and use them as shown above.
@@ -153,7 +181,22 @@ This example uses a jsDelivr URL, but you can also serve a self-hosted dataset a
 
 Prefer a versioned URL. The client caches responses, so if the dataset updates under a non-unique URL, stale cache may be served.
 
-- With `url`, fetched files are cached in localStorage (key = each file URL, TTL 1 year)
+```ts
+// Disable cache
+const client = await createLocalGovClient({
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  cache: false,
+});
+
+// TTL = 1 hour
+const clientShortTtl = await createLocalGovClient({
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  cacheTtlSeconds: 3600,
+});
+```
+
+- With `url`, fetched files are cached in localStorage by default (key = each file URL)
+- Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
 - Exception: municipality JSON loaded by **nationwide** string search stays in memory only (to avoid cache bloat)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)

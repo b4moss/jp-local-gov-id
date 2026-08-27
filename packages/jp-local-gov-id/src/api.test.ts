@@ -113,6 +113,84 @@ describe("getPrefectureByCode", () => {
   });
 });
 
+describe("getMunicipalityCountByPrefecture", () => {
+  it("TC-A01: resolves code and name to the same both count", async () => {
+    const c = await client();
+    const byPadded = c.getMunicipalityCountByPrefecture("01");
+    const byUnpadded = c.getMunicipalityCountByPrefecture("1");
+    const byName = c.getMunicipalityCountByPrefecture("北海道");
+
+    expect(byPadded).toBe(195);
+    expect(byUnpadded).toBe(195);
+    expect(byName).toBe(195);
+  });
+
+  it("TC-A02: Hokkaido designatedCity modes", async () => {
+    const c = await client();
+    expect(c.getMunicipalityCountByPrefecture("01")).toBe(195);
+    expect(
+      c.getMunicipalityCountByPrefecture("01", { designatedCity: "both" }),
+    ).toBe(195);
+    expect(
+      c.getMunicipalityCountByPrefecture("01", { designatedCity: "city" }),
+    ).toBe(185);
+    expect(
+      c.getMunicipalityCountByPrefecture("01", { designatedCity: "ward" }),
+    ).toBe(194);
+  });
+
+  it("TC-A03/A05: Tokyo modes are equal (special wards included)", async () => {
+    const c = await client();
+    const both = c.getMunicipalityCountByPrefecture("13");
+    const city = c.getMunicipalityCountByPrefecture("東京都", {
+      designatedCity: "city",
+    });
+    const ward = c.getMunicipalityCountByPrefecture("13", {
+      designatedCity: "ward",
+    });
+
+    expect(both).toBe(62);
+    expect(city).toBe(62);
+    expect(ward).toBe(62);
+  });
+
+  it("TC-A04: Okinawa modes are equal", async () => {
+    const c = await client();
+    expect(c.getMunicipalityCountByPrefecture("47")).toBe(41);
+    expect(
+      c.getMunicipalityCountByPrefecture("沖縄県", { designatedCity: "city" }),
+    ).toBe(41);
+    expect(
+      c.getMunicipalityCountByPrefecture("47", { designatedCity: "ward" }),
+    ).toBe(41);
+  });
+
+  it("TC-A06: unknown prefecture returns null", async () => {
+    const c = await client();
+    expect(c.getMunicipalityCountByPrefecture("99")).toBeNull();
+    expect(c.getMunicipalityCountByPrefecture("存在しない県")).toBeNull();
+    expect(c.getMunicipalityCountByPrefecture("")).toBeNull();
+  });
+
+  it("TC-A07: municipalityCounts is on prefecture records", async () => {
+    const c = await client();
+    const expected = { both: 195, city: 185, ward: 194 };
+
+    expect(c.getPrefectureByCode("01")?.municipalityCounts).toEqual(expected);
+    expect(
+      c.listPrefectures().find((p) => p.code === "01")?.municipalityCounts,
+    ).toEqual(expected);
+  });
+
+  it("TC-A08: returns sync number without loading municipalities", async () => {
+    const c = await client();
+    const result = c.getMunicipalityCountByPrefecture("01");
+
+    expect(result).toBe(195);
+    expect(result).not.toBeInstanceOf(Promise);
+  });
+});
+
 describe("listMunicipalitiesByPrefecture", () => {
   it("accepts name, padded code, and unpadded code", async () => {
     const c = await client();
@@ -125,10 +203,39 @@ describe("listMunicipalitiesByPrefecture", () => {
     expect(byUnpadded).toEqual(byName);
   });
 
-  it("includes designated city body and ward", async () => {
+  it("includes designated city body and ward by default (both)", async () => {
     const munis = await (await client()).listMunicipalitiesByPrefecture("01");
     expect(munis.find((m) => m.code === "011002")?.name).toBe("札幌市");
     expect(munis.find((m) => m.code === "011011")?.name).toBe("札幌市中央区");
+  });
+
+  it("designatedCity city keeps body and excludes wards", async () => {
+    const munis = await (
+      await client()
+    ).listMunicipalitiesByPrefecture("01", { designatedCity: "city" });
+    expect(munis.some((m) => m.name === "札幌市")).toBe(true);
+    expect(munis.some((m) => m.name === "札幌市中央区")).toBe(false);
+    expect(munis.every((m) => !/^.+市.+区$/.test(m.name))).toBe(true);
+  });
+
+  it("designatedCity ward keeps wards and excludes body", async () => {
+    const munis = await (
+      await client()
+    ).listMunicipalitiesByPrefecture("01", { designatedCity: "ward" });
+    expect(munis.some((m) => m.name === "札幌市")).toBe(false);
+    expect(munis.some((m) => m.name === "札幌市中央区")).toBe(true);
+  });
+
+  it("designatedCity modes keep Tokyo special wards", async () => {
+    const c = await client();
+    const city = await c.listMunicipalitiesByPrefecture("13", {
+      designatedCity: "city",
+    });
+    const ward = await c.listMunicipalitiesByPrefecture("13", {
+      designatedCity: "ward",
+    });
+    expect(city.some((m) => m.name === "千代田区")).toBe(true);
+    expect(ward.some((m) => m.name === "千代田区")).toBe(true);
   });
 
   it("returns empty array when prefecture is unknown", async () => {
@@ -544,5 +651,38 @@ describe("createLocalGovClient url + cache + lazy load", () => {
 
     await createLocalGovClient({ url: indexUrl });
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("skips localStorage when cache is false", async () => {
+    stubLocalStorage();
+    const fetchMock = stubFetch(fileMap());
+
+    await createLocalGovClient({ url: indexUrl, cache: false });
+    expect(store.size).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await createLocalGovClient({ url: indexUrl, cache: false });
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it("uses cacheTtlSeconds when writing cache entries", async () => {
+    stubLocalStorage();
+    stubFetch(fileMap());
+    const before = Date.now();
+
+    await createLocalGovClient({ url: indexUrl, cacheTtlSeconds: 60 });
+
+    const cached = JSON.parse(store.get(indexUrl)!);
+    expect(cached.expiresAt).toBeGreaterThanOrEqual(before + 60_000);
+    expect(cached.expiresAt).toBeLessThanOrEqual(Date.now() + 60_000 + 1000);
+  });
+
+  it("rejects invalid cacheTtlSeconds", async () => {
+    stubLocalStorage();
+    stubFetch(fileMap());
+
+    await expect(
+      createLocalGovClient({ url: indexUrl, cacheTtlSeconds: -1 }),
+    ).rejects.toThrow(/cacheTtlSeconds/);
   });
 });

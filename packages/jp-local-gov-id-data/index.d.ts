@@ -1,3 +1,9 @@
+export type MunicipalityCounts = {
+  both: number;
+  city: number;
+  ward: number;
+};
+
 export type LocalGov = {
   code: string;
   name: string;
@@ -5,6 +11,8 @@ export type LocalGov = {
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
+  /** Present on prefecture records in `prefectures.json` only. */
+  municipalityCounts?: MunicipalityCounts;
 };
 
 export type LocalGovIndex = {

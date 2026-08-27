@@ -27,13 +27,18 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27");
 client.getPrefectureCodeByName("大阪府"); // "27"
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13");
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // city body only
 await client.getMunicipalityByCode("131016");
 await client.getByCode("131016");
 await client.searchByText("中央", { prefecture: "01", target: "cities" });
 await client.searchByText("ちよだ", { prefecture: "13", target: "cities" });
 await client.getLocalGovCodeByName("千代田区"); // "131016"
 ```
+
+`designatedCity` (`"both"` | `"city"` | `"ward"`, default `"both"`) filters designated-city bodies vs wards on `listMunicipalitiesByPrefecture`, `searchByText`, `getLocalGovCodeByName`, and `getMunicipalityCountByPrefecture`. Tokyo special wards are not affected.
 
 Fetch from a versioned index URL:
 
@@ -43,7 +48,8 @@ const client = await createLocalGovClient({
 });
 ```
 
-- When `url` is set, fetched files are cached in localStorage (key = file URL, TTL 1 year)
+- When `url` is set, fetched files are cached in localStorage by default (key = file URL)
+- Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
 - Exception: municipality JSON loaded by **nationwide** string search is kept in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)

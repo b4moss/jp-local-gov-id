@@ -4,12 +4,12 @@
 
 日本の全国地方公共団体コードを扱うモノレポです（npm workspaces）。
 
-**ドキュメント / Playground:** [https://jplocalgovid.netlify.app/](https://jplocalgovid.netlify.app/)
+**ドキュメント / Playground:** [https://jplocalgov.oss.b4m.jp/](https://jplocalgov.oss.b4m.jp/)
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 0.6.0 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 0.1.0 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.1 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 1.0.0-rc.2 |
 
 ## インストール（利用側）
 
@@ -35,6 +35,8 @@ const client = await createLocalGovClient({ data: dataset });
 
 client.listPrefectures();
 client.getPrefectureByCode("27"); // 大阪府
+client.getMunicipalityCountByPrefecture("01"); // 同期・県別 JSON 不要
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // 東京都の市区町村等
 await client.getMunicipalityByCode("131016"); // 千代田区
@@ -52,7 +54,8 @@ const client = await createLocalGovClient({
 });
 ```
 
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（キーは各ファイルの URL、有効期限 1 年）
+- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）
+- `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
 - 例外: **全国対象**の文字列検索で取得した県別 JSON は localStorage に書かず、メモリのみ保持します
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）

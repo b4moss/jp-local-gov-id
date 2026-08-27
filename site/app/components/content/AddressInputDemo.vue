@@ -9,6 +9,8 @@ const prefectures = ref<LocalGov[]>([]);
 const municipalities = ref<LocalGov[]>([]);
 const prefectureCode = ref("");
 const municipalityCode = ref("");
+const townAddress = ref("");
+const buildingName = ref("");
 const muniPending = ref(false);
 const muniError = ref<string | null>(null);
 
@@ -93,6 +95,26 @@ async function onPrefectureChange() {
             {{ muni.name }}
           </option>
         </select>
+      </div>
+      <div class="field">
+        <label for="address-town">{{ t("addressInputDemo.townAddress") }}</label>
+        <input
+          id="address-town"
+          v-model="townAddress"
+          type="text"
+          :placeholder="t('addressInputDemo.townAddressPlaceholder')"
+        >
+      </div>
+      <div class="field">
+        <label for="address-building">
+          {{ t("addressInputDemo.buildingName") }}
+        </label>
+        <input
+          id="address-building"
+          v-model="buildingName"
+          type="text"
+          :placeholder="t('addressInputDemo.buildingNamePlaceholder')"
+        >
       </div>
       <p v-if="muniError" class="error-text">{{ muniError }}</p>
       <pre v-else-if="selectedMunicipality">{{

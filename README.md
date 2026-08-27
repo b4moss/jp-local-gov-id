@@ -4,12 +4,12 @@
 
 A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
-**Docs / Playground:** [https://jplocalgovid.netlify.app/](https://jplocalgovid.netlify.app/)
+**Docs / Playground:** [https://jplocalgov.oss.b4m.jp/](https://jplocalgov.oss.b4m.jp/)
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 0.6.0 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 0.1.0 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.1 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 1.0.0-rc.2 |
 
 ## Install (consumers)
 
@@ -35,6 +35,8 @@ const client = await createLocalGovClient({ data: dataset });
 
 client.listPrefectures();
 client.getPrefectureByCode("27"); // Osaka
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // municipalities in Tokyo, etc.
 await client.getMunicipalityByCode("131016"); // Chiyoda City
@@ -52,7 +54,8 @@ const client = await createLocalGovClient({
 });
 ```
 
-- When `url` is set, fetched files are cached in localStorage (key = file URL, TTL 1 year)
+- When `url` is set, fetched files are cached in localStorage by default (key = file URL)
+- Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
 - Exception: municipality JSON loaded by **nationwide** string search is kept in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)

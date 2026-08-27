@@ -1,0 +1,75 @@
+name: Deploy Docs
+
+# Docs site → GitHub Pages
+# Tag: site-vX.Y.Z-doc.N (example: site-v0.6.0-doc.1)
+# Tag push alone deploys; independent of data-v* / app-v* npm releases.
+
+on:
+  push:
+    tags:
+      - "site-v*-doc.*"
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build docs site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Validate tag
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if [[ ! "$tag" =~ ^site-v[0-9]+\.[0-9]+\.[0-9]+-doc\.[0-9]+$ ]]; then
+            echo "::error::Unsupported tag '${tag}'. Use site-vX.Y.Z-doc.N (e.g. site-v0.6.0-doc.1)."
+            exit 1
+          fi
+          echo "Validated docs tag: ${tag}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        env:
+          NITRO_PRESET: static
+          NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID: ${{ vars.NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID }}
+        run: npm run build:site
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/.output/public
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

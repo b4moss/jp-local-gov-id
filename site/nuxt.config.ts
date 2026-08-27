@@ -33,11 +33,14 @@ export default defineNuxtConfig({
       dataVersion,
     },
   },
-  // GA4: set NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID=G-XXXXXXXX (build-time for SSG).
-  // Empty / unset → analytics stays disabled (see plugins/google-analytics.client.ts).
+  // GTM: set NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=GTM-XXXXXXX (build-time for SSG).
+  // Empty / unset → tagging stays disabled (see plugins/google-tag-manager.client.ts).
+  // bundle: false → always load live gtm.js from Google (Tag Assistant / publish 即反映).
   scripts: {
     registry: {
-      googleAnalytics: {},
+      googleTagManager: {
+        bundle: false,
+      },
     },
   },
   colorMode: {
@@ -113,6 +116,12 @@ export default defineNuxtConfig({
         "/en/usage",
         "/ja/examples",
         "/en/examples",
+        "/ja/examples/address-input",
+        "/en/examples/address-input",
+        "/ja/examples/municipality-validation",
+        "/en/examples/municipality-validation",
+        "/ja/examples/nationwide-municipalities",
+        "/en/examples/nationwide-municipalities",
         "/ja/contribute",
         "/en/contribute",
       ],

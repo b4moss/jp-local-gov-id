@@ -1,5 +1,15 @@
-/** Cache TTL for URL-fetched data: 1 year. */
-export const CACHE_TTL_MS = 365 * 24 * 60 * 60 * 1000;
+/** Default cache TTL for URL-fetched data: 1 year (in seconds). */
+export const DEFAULT_CACHE_TTL_SECONDS = 365 * 24 * 60 * 60;
+
+/** @deprecated Prefer DEFAULT_CACHE_TTL_SECONDS. Kept for existing imports. */
+export const CACHE_TTL_MS = DEFAULT_CACHE_TTL_SECONDS * 1000;
+
+export type CacheWriteOptions = {
+  /** Default: true */
+  enabled?: boolean;
+  /** TTL in seconds. Default: DEFAULT_CACHE_TTL_SECONDS (1 year). */
+  ttlSeconds?: number;
+};
 
 type CacheEntry = {
   expiresAt: number;
@@ -21,8 +31,24 @@ function isCacheEntry(value: unknown): value is CacheEntry {
   return typeof o.expiresAt === "number" && "data" in o;
 }
 
+function resolveTtlMs(ttlSeconds?: number): number {
+  const seconds =
+    ttlSeconds === undefined ? DEFAULT_CACHE_TTL_SECONDS : ttlSeconds;
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new TypeError(
+      "cacheTtlSeconds must be a finite number greater than or equal to 0",
+    );
+  }
+  return seconds * 1000;
+}
+
 /** Read cached JSON for a versioned URL. Returns null on miss / expiry / unavailable. */
-export function getCachedData(url: string): unknown | null {
+export function getCachedData(
+  url: string,
+  options?: { enabled?: boolean },
+): unknown | null {
+  if (options?.enabled === false) return null;
+
   const storage = getLocalStorage();
   if (!storage) return null;
 
@@ -53,12 +79,18 @@ export function getCachedData(url: string): unknown | null {
 }
 
 /** Store fetch result under the versioned URL key. No-op without localStorage. */
-export function setCachedData(url: string, data: unknown): void {
+export function setCachedData(
+  url: string,
+  data: unknown,
+  options?: CacheWriteOptions,
+): void {
+  if (options?.enabled === false) return;
+
   const storage = getLocalStorage();
   if (!storage) return;
 
   const entry: CacheEntry = {
-    expiresAt: Date.now() + CACHE_TTL_MS,
+    expiresAt: Date.now() + resolveTtlMs(options?.ttlSeconds),
     data,
   };
 

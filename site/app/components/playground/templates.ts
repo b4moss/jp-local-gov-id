@@ -46,8 +46,10 @@ const client = await createLocalGovClient({ data: dataset });
 const prefectures = client.listPrefectures();
 console.log("prefectures", prefectures.length, prefectures.slice(0, 3));
 
-const municipalities = await client.listMunicipalitiesByPrefecture("13");
-console.log("municipalities in 13", municipalities.length, municipalities.slice(0, 3));
+const municipalities = await client.listMunicipalitiesByPrefecture("01", {
+  designatedCity: "city",
+});
+console.log("municipalities in 01 (city)", municipalities.length, municipalities.slice(0, 3));
 `,
   },
 ];

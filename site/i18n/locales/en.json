@@ -6,6 +6,9 @@
     "usage": "Usage",
     "api": "API",
     "examples": "Examples",
+    "examplesAddressInput": "Address input",
+    "examplesMunicipalityValidation": "Municipality validation",
+    "examplesNationwideMunicipalities": "Nationwide municipalities",
     "playground": "Playground",
     "contribute": "Contribute",
     "language": "Language",
@@ -65,7 +68,11 @@
     "prefecturePlaceholder": "Select a prefecture",
     "municipality": "Municipality",
     "municipalityPlaceholder": "Select a municipality",
-    "loadingMunicipalities": "Loading…"
+    "loadingMunicipalities": "Loading…",
+    "townAddress": "Town / street address",
+    "townAddressPlaceholder": "e.g. Marunouchi 1-1-1",
+    "buildingName": "Building name",
+    "buildingNamePlaceholder": "e.g. Foo Building 3F"
   },
   "municipalityValidationDemo": {
     "loading": "Initializing…",
@@ -73,10 +80,39 @@
     "prefecturePlaceholder": "Select a prefecture",
     "municipality": "Municipality name",
     "placeholder": "千代田区",
-    "run": "Validate",
     "needPrefecture": "Please select a prefecture",
-    "needName": "Please enter a municipality name",
     "invalid": "This municipality name does not exist",
-    "valid": "Valid (code: {code})"
+    "valid": "Valid (code: {code})",
+    "townAddress": "Town / street address",
+    "townAddressPlaceholder": "e.g. Marunouchi 1-1-1",
+    "buildingName": "Building name",
+    "buildingNamePlaceholder": "e.g. Foo Building 3F"
+  },
+  "collapseBox": {
+    "expand": "Show more",
+    "collapse": "Show less"
+  },
+  "nationwideMunicipalityFilterDemo": {
+    "loading": "Loading municipalities nationwide…",
+    "title": "Search by area",
+    "selectedCount": "{count} selected",
+    "clear": "Clear",
+    "prefMeta": "{selected}/{total}",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "previewLabel": "Selected",
+    "previewEmpty": "None",
+    "previewAll": "all",
+    "removePref": "Remove {name}",
+    "removeMuni": "Remove {name}",
+    "comboLabel": "Search municipalities or prefectures",
+    "comboPlaceholder": "Search by name or code…",
+    "comboEmpty": "No matches",
+    "comboPrefDetail": "Select all ({total})"
+  },
+  "codeTabs": {
+    "label": "Source language",
+    "html": "HTML",
+    "ts": "TypeScript"
   }
 }

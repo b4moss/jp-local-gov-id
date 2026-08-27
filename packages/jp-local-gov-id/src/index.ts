@@ -1,5 +1,8 @@
 export type {
+  CreateLocalGovCacheOptions,
   CreateLocalGovOptions,
+  DesignatedCityMode,
+  ListMunicipalitiesOptions,
   LocalGov,
   LocalGovClient,
   LocalGovDataFile,
@@ -8,10 +11,15 @@ export type {
   LocalGovMunicipalitiesFile,
   LocalGovPrefecturesFile,
   MatchField,
+  MunicipalityCounts,
   SearchOptions,
   SearchTarget,
 } from "./types";
 export { createLocalGovClient } from "./create";
+export {
+  CACHE_TTL_MS,
+  DEFAULT_CACHE_TTL_SECONDS,
+} from "./cache";
 export {
   LOCAL_GOV_SCHEMA_VERSION,
   LocalGovSchemaError,

@@ -23,7 +23,9 @@ const { prev, next } = useDocsPager();
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
+  width: min(100%, var(--max-width));
   margin-top: 3rem;
+  margin-inline: auto;
   padding-top: 1.5rem;
   border-top: 1px solid var(--color-border);
 }

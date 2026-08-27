@@ -8,6 +8,8 @@ const initError = ref<string | null>(null);
 const prefectures = ref<LocalGov[]>([]);
 const prefectureCode = ref("");
 const municipalityName = ref("");
+const townAddress = ref("");
+const buildingName = ref("");
 const pending = ref(false);
 const error = ref<string | null>(null);
 const resolvedCode = ref<string | null | undefined>(undefined);
@@ -22,18 +24,15 @@ onMounted(async () => {
   }
 });
 
-async function validate() {
+async function validateOnBlur() {
   error.value = null;
   resolvedCode.value = undefined;
 
+  const name = municipalityName.value.trim();
+  if (!name) return;
+
   if (!prefectureCode.value) {
     error.value = t("municipalityValidationDemo.needPrefecture");
-    return;
-  }
-
-  const name = municipalityName.value.trim();
-  if (!name) {
-    error.value = t("municipalityValidationDemo.needName");
     return;
   }
 
@@ -85,23 +84,36 @@ async function validate() {
         <label for="valid-muni">
           {{ t("municipalityValidationDemo.municipality") }}
         </label>
-        <div class="row">
-          <input
-            id="valid-muni"
-            v-model="municipalityName"
-            type="text"
-            :placeholder="t('municipalityValidationDemo.placeholder')"
-            @keyup.enter="validate"
-          >
-          <button
-            class="btn"
-            type="button"
-            :disabled="pending"
-            @click="validate"
-          >
-            {{ t("municipalityValidationDemo.run") }}
-          </button>
-        </div>
+        <input
+          id="valid-muni"
+          v-model="municipalityName"
+          type="text"
+          :placeholder="t('municipalityValidationDemo.placeholder')"
+          :disabled="pending"
+          @blur="validateOnBlur"
+        >
+      </div>
+      <div class="field">
+        <label for="valid-town">
+          {{ t("municipalityValidationDemo.townAddress") }}
+        </label>
+        <input
+          id="valid-town"
+          v-model="townAddress"
+          type="text"
+          :placeholder="t('municipalityValidationDemo.townAddressPlaceholder')"
+        >
+      </div>
+      <div class="field">
+        <label for="valid-building">
+          {{ t("municipalityValidationDemo.buildingName") }}
+        </label>
+        <input
+          id="valid-building"
+          v-model="buildingName"
+          type="text"
+          :placeholder="t('municipalityValidationDemo.buildingNamePlaceholder')"
+        >
       </div>
       <p v-if="error" class="error-text">{{ error }}</p>
       <p v-else-if="resolvedCode" class="ok-text">
@@ -114,15 +126,6 @@ async function validate() {
 <style scoped>
 .demo {
   margin: 1.25rem 0;
-}
-
-.row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.row input {
-  flex: 1;
 }
 
 .ok-text {

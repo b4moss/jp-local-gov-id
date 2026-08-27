@@ -6,6 +6,9 @@
     "usage": "使い方",
     "api": "API",
     "examples": "サンプル",
+    "examplesAddressInput": "住所入力",
+    "examplesMunicipalityValidation": "市区町村バリデーション",
+    "examplesNationwideMunicipalities": "全国市区町村一覧",
     "playground": "Playground",
     "contribute": "開発に参加する",
     "language": "言語",
@@ -65,7 +68,11 @@
     "prefecturePlaceholder": "選択してください",
     "municipality": "市区町村",
     "municipalityPlaceholder": "選択してください",
-    "loadingMunicipalities": "読み込み中…"
+    "loadingMunicipalities": "読み込み中…",
+    "townAddress": "町名・番地",
+    "townAddressPlaceholder": "例: 丸の内1-1-1",
+    "buildingName": "建物名",
+    "buildingNamePlaceholder": "例: ○○ビル 3F"
   },
   "municipalityValidationDemo": {
     "loading": "初期化中…",
@@ -73,10 +80,39 @@
     "prefecturePlaceholder": "選択してください",
     "municipality": "市区町村名",
     "placeholder": "千代田区",
-    "run": "検証",
     "needPrefecture": "都道府県を選択してください",
-    "needName": "市区町村名を入力してください",
     "invalid": "存在しない市区町村名です",
-    "valid": "有効です（コード: {code}）"
+    "valid": "有効です（コード: {code}）",
+    "townAddress": "町名・番地",
+    "townAddressPlaceholder": "例: 丸の内1-1-1",
+    "buildingName": "建物名",
+    "buildingNamePlaceholder": "例: ○○ビル 3F"
+  },
+  "collapseBox": {
+    "expand": "続きを表示",
+    "collapse": "折りたたむ"
+  },
+  "nationwideMunicipalityFilterDemo": {
+    "loading": "全国の市区町村を読み込み中…",
+    "title": "エリアから探す",
+    "selectedCount": "{count} 件選択中",
+    "clear": "クリア",
+    "prefMeta": "{selected}/{total}",
+    "expand": "開く",
+    "collapse": "閉じる",
+    "previewLabel": "選択中",
+    "previewEmpty": "未選択",
+    "previewAll": "すべて",
+    "removePref": "{name}の選択を解除",
+    "removeMuni": "{name}の選択を解除",
+    "comboLabel": "市区町村・都道府県を検索",
+    "comboPlaceholder": "市区町村名・コードで検索…",
+    "comboEmpty": "該当なし",
+    "comboPrefDetail": "全市区町村（{total}）を選択"
+  },
+  "codeTabs": {
+    "label": "ソースコード言語",
+    "html": "HTML",
+    "ts": "TypeScript"
   }
 }

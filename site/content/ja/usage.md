@@ -19,11 +19,39 @@ client.listPrefectures();
 client.getPrefectureByCode("27"); // 大阪府
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // 東京都の市区町村等
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // 政令市本体のみ
 await client.getMunicipalityByCode("131016"); // 千代田区
 await client.getByCode("131016");
 await client.searchByText("中央", { prefecture: "01", target: "cities" });
 await client.searchByText("ちよだ", { prefecture: "13", target: "cities" }); // カナ／ひらがな可
 await client.getLocalGovCodeByName("千代田区"); // "131016"
+```
+
+### 政令指定都市の市/区フィルタ
+
+住所フォームで「市だけ選びたい」「区だけ選びたい」場合は `designatedCity` を使います（既定 `"both"`）。
+
+| 値 | 意味 | 例（北海道） |
+|----|------|--------------|
+| `"both"` | 市本体と区の両方 | `札幌市` と `札幌市中央区` |
+| `"city"` | 市本体のみ | `札幌市` のみ |
+| `"ward"` | 区のみ | `札幌市中央区` など |
+
+適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`。東京特別区は対象外です。
+
+```ts
+// 住所セレクト: 市のみ
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" });
+
+// 住所セレクト: 区のみ
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "ward" });
+
+// 検索でも同じオプションが使える
+await client.searchByText("札幌", {
+  prefecture: "01",
+  target: "cities",
+  designatedCity: "ward",
+});
 ```
 
 このように、アプリケーションとデータをそれぞれ npm パッケージから呼び出し、読み込めば使用できます。
@@ -153,7 +181,22 @@ const client = await createLocalGovClient({
 
 その場合、URLにはversionを指定することをお勧めします。アプリにはキャッシュ機能があるため、データソースが更新された場合、URLが一意でないと、古いキャッシュが配信される可能性があります。
 
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（キーは各ファイルの URL、有効期限 1 年）
+```ts
+// キャッシュ無効
+const client = await createLocalGovClient({
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  cache: false,
+});
+
+// TTL を 1 時間に
+const clientShortTtl = await createLocalGovClient({
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  cacheTtlSeconds: 3600,
+});
+```
+
+- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）
+- `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
 - 例外: **全国対象**の文字列検索で取得した県別 JSON は localStorage に書かず、メモリのみ保持します（キャッシュの巨大化を避けるため）
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）

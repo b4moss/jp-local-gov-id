@@ -35,7 +35,7 @@ JavaScript で、現在の都道府県・市区町村の地方自治体コード
 | 全市区町村一覧 API | なし。県別取得・検索結果として返す |
 | 全市区町村を1ファイルにまとめた配布 | **しない**（県別に分割する） |
 | 名前検索 | 部分一致（`search`）。必要なら未ロードの県別データを取得してから検索 |
-| 政令指定都市 | 市本体も返し、区も 1 地方公共団体として返す |
+| 政令指定都市 | 市本体も返し、区も 1 地方公共団体として返す。`designatedCity` オプションで市のみ / 区のみ / 両方を選べる（既定: `"both"`）。東京特別区は対象外 |
 | 政令市区の `name` | 元データどおり（例: `札幌市中央区`）。区名のみへの正規化はしない |
 | カナ | `LocalGov` に半角カナを含める |
 | 廃止・合併済みコード | 返さない（現行のみ） |
@@ -97,6 +97,16 @@ const client = await createLocalGovClient({ data: dataset });
 const client = await createLocalGovClient({
   url: "https://example.com/jp-local-gov-id-data/0.3.2/index.json",
 });
+
+// キャッシュを無効化 / TTL を秒で指定（url モードのみ有効）
+const clientNoCache = await createLocalGovClient({
+  url: "https://example.com/jp-local-gov-id-data/0.3.2/index.json",
+  cache: false,
+});
+const clientShortTtl = await createLocalGovClient({
+  url: "https://example.com/jp-local-gov-id-data/0.3.2/index.json",
+  cacheTtlSeconds: 3600, // 1 時間
+});
 ```
 
 ### 遅延ロードと文字列検索
@@ -115,15 +125,17 @@ const client = await createLocalGovClient({
 
 ### URL 取得時のキャッシュ（localStorage）
 
-- **`url` 起点で fetch した各ファイル**について、結果を localStorage に保存して再利用する
-- 例外: **全国対象の文字列検索**で取得した県別 JSON（`prefectures/{code}.json`）は localStorage に書かず、**メモリのみ**保持する
-- `getByCode` / `listMunicipalitiesByPrefecture` / `getMunicipalityByCode` / 都道府県指定の検索で取得した県別 JSON は従来どおりキャッシュする
-- `data` を直接渡した場合はキャッシュしない
+- **`url` 起点で fetch した各ファイル**について、結果を localStorage に保存して再利用する（**既定: ON**）
+- `createLocalGovClient` のオプションで制御する:
+  - `cache?: boolean` — 既定 `true`。`false` で localStorage の読み書きを行わない
+  - `cacheTtlSeconds?: number` — 有効期限（**秒**）。既定 `31536000`（1 年）。`cache: false` のときは無視
+- 例外: **全国対象の文字列検索**で取得した県別 JSON（`prefectures/{code}.json`）は localStorage に書かず、**メモリのみ**保持する（`cache` の設定にかかわらず書き込みしない）
+- `getByCode` / `listMunicipalitiesByPrefecture` / `getMunicipalityByCode` / 都道府県指定の検索で取得した県別 JSON は従来どおりキャッシュする（`cache: true` のとき）
+- `data` を直接渡した場合はキャッシュしない（`cache` / `cacheTtlSeconds` を渡しても URL キャッシュには使わない）
 - **キャッシュキーは版付き URL そのもの**とする（公式の利用方法）
-- 有効期限は **1 年**
 - localStorage が使えない環境（Node 等）ではキャッシュをスキップしてよい
 - 同一 URL の中身を後から書き換えた場合の整合は保証しない
-- 既に localStorage にある県別 JSON は、全国検索時も読み取り再利用してよい（書き込みだけ抑止）
+- 既に localStorage にある県別 JSON は、全国検索時も読み取り再利用してよい（書き込みだけ抑止。`cache: false` のときは読み取りもしない）
 
 ### 公式 URL と自前データ
 
@@ -162,6 +174,12 @@ type LocalGov = {
   prefectureCode: string       // 例: "13"
   prefectureName: string       // 例: "東京都"
   prefectureNameKana: string   // 半角カナ（例: "ﾄｳｷｮｳﾄ"）
+  /** 都道府県レコードのみ。市区町村には付かない */
+  municipalityCounts?: {
+    both: number
+    city: number
+    ward: number
+  }
 }
 
 // 都道府県の場合、prefectureCode / prefectureName / prefectureNameKana は自身の値とする
@@ -169,15 +187,34 @@ type LocalGov = {
 
 type SearchTarget = "all" | "prefectures" | "cities"
 
+/** 政令指定都市の市本体 / 行政区の出し分け（東京特別区は対象外） */
+type DesignatedCityMode = "both" | "city" | "ward"
+// both = 市本体+区（既定） / city = 市本体のみ / ward = 区のみ
+
+type ListMunicipalitiesOptions = {
+  designatedCity?: DesignatedCityMode  // 既定: "both"
+}
+
 type SearchOptions = {
   prefecture?: string
   target?: SearchTarget       // 既定: "all"
   matchField?: "name" | "nameKana" | "both"  // 既定: "both"
+  designatedCity?: DesignatedCityMode        // 既定: "both"
 }
 
 type CreateLocalGovOptions =
-  | { data: unknown; url?: never }
-  | { url: string; data?: never }
+  | {
+      data: unknown
+      url?: never
+      cache?: boolean              // url モード用。data では無視（既定 true）
+      cacheTtlSeconds?: number     // 秒。既定 31536000（1 年）
+    }
+  | {
+      url: string
+      data?: never
+      cache?: boolean              // 既定: true
+      cacheTtlSeconds?: number     // 秒。既定: 31536000（1 年）
+    }
 
 /** インデックス解決・都道府県ロード・スキーマ検証のうえクライアントを返す */
 createLocalGovClient(options: CreateLocalGovOptions): Promise<LocalGovClient>
@@ -187,9 +224,20 @@ type LocalGovClient = {
   listPrefectures(): LocalGov[]
   getPrefectureByCode(code: string): LocalGov | null
   getPrefectureCodeByName(name: string): string | null
+  /**
+   * 都道府県の municipalityCounts から件数を返す（同期・県別 JSON 不要）
+   * pref はコードまたは名称。未知は null。designatedCity 既定 "both"
+   */
+  getMunicipalityCountByPrefecture(
+    pref: string,
+    options?: ListMunicipalitiesOptions,
+  ): number | null
 
   /** 未ロードなら県別 JSON を取得してから返す */
-  listMunicipalitiesByPrefecture(pref: string): Promise<LocalGov[]>
+  listMunicipalitiesByPrefecture(
+    pref: string,
+    options?: ListMunicipalitiesOptions,
+  ): Promise<LocalGov[]>
   getMunicipalityByCode(code: string): Promise<LocalGov | null>
   getByCode(code: string): Promise<LocalGov | null>
   searchByText(text: string, options?: SearchOptions): Promise<LocalGov[]>
@@ -209,15 +257,20 @@ const client = await createLocalGovClient({
 client.listPrefectures()
 client.getPrefectureCodeByName("大阪府")
 client.getPrefectureByCode("27")
+client.getMunicipalityCountByPrefecture("01")
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" })
 
 await client.listMunicipalitiesByPrefecture("大阪府")
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }) // 政令市本体のみ
 await client.getMunicipalityByCode("271004")
 await client.getByCode("271004")
 await client.searchByText("堺") // 全国対象なら未ロード県を 6 並列で取得してから検索
 await client.searchByText("中央", { prefecture: "01", target: "cities" })
+await client.searchByText("札幌", { prefecture: "01", target: "cities", designatedCity: "ward" })
 await client.searchByText("東京", { target: "prefectures" }) // 都道府県のみなら追加 fetch 不要
 await client.searchByText("ちよだ", { target: "cities" }) // カナ／ひらがな可
 await client.getLocalGovCodeByName("千代田区")
+await client.getLocalGovCodeByName("札幌市", { designatedCity: "city" })
 ```
 
 ## 情報のソース

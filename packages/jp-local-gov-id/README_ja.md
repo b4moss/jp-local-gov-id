@@ -27,13 +27,18 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27");
 client.getPrefectureCodeByName("大阪府"); // "27"
+client.getMunicipalityCountByPrefecture("01"); // 同期・県別 JSON 不要
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13");
+await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // 政令市本体のみ
 await client.getMunicipalityByCode("131016");
 await client.getByCode("131016");
 await client.searchByText("中央", { prefecture: "01", target: "cities" });
 await client.searchByText("ちよだ", { prefecture: "13", target: "cities" });
 await client.getLocalGovCodeByName("千代田区"); // "131016"
 ```
+
+`designatedCity`（`"both"` | `"city"` | `"ward"`、既定 `"both"`）で、政令指定都市の市本体 / 行政区の出し分けができます。適用 API は `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`。東京特別区は対象外です。
 
 版付きインデックス URL から取得する場合:
 
@@ -43,7 +48,8 @@ const client = await createLocalGovClient({
 });
 ```
 
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（キーは各ファイルの URL、有効期限 1 年）
+- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）
+- `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
 - 例外: **全国対象**の文字列検索で取得した県別 JSON は localStorage に書かず、メモリのみ保持します
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）
