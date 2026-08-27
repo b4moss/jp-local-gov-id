@@ -29,6 +29,9 @@
     "prefecture"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/b4moss/jp-local-gov-id",
