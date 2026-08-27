@@ -1,6 +1,6 @@
 {
   "name": "@b4moss/jp-local-gov-id-data",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "日本の全国地方公共団体コードのデータ（分割 JSON）",
   "type": "module",
   "main": "./dataset.js",
