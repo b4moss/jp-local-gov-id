@@ -22,4 +22,4 @@ dist/
 *.swo
 
 
-resources/**/*.xlsx
+resources/**/*.xlsxcoverage/

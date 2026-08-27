@@ -1,14 +1,11 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "asOf": "R6.1.1",
   "prefectures": [
     {
-      "code": "01",
+      "code": "010006",
       "name": "北海道",
       "nameKana": "ﾎｯｶｲﾄﾞｳ",
-      "prefectureCode": "01",
-      "prefectureName": "北海道",
-      "prefectureNameKana": "ﾎｯｶｲﾄﾞｳ",
       "municipalityCounts": {
         "both": 195,
         "city": 185,
@@ -16,12 +13,9 @@
       }
     },
     {
-      "code": "02",
+      "code": "020001",
       "name": "青森県",
       "nameKana": "ｱｵﾓﾘｹﾝ",
-      "prefectureCode": "02",
-      "prefectureName": "青森県",
-      "prefectureNameKana": "ｱｵﾓﾘｹﾝ",
       "municipalityCounts": {
         "both": 40,
         "city": 40,
@@ -29,12 +23,9 @@
       }
     },
     {
-      "code": "03",
+      "code": "030007",
       "name": "岩手県",
       "nameKana": "ｲﾜﾃｹﾝ",
-      "prefectureCode": "03",
-      "prefectureName": "岩手県",
-      "prefectureNameKana": "ｲﾜﾃｹﾝ",
       "municipalityCounts": {
         "both": 33,
         "city": 33,
@@ -42,12 +33,9 @@
       }
     },
     {
-      "code": "04",
+      "code": "040002",
       "name": "宮城県",
       "nameKana": "ﾐﾔｷﾞｹﾝ",
-      "prefectureCode": "04",
-      "prefectureName": "宮城県",
-      "prefectureNameKana": "ﾐﾔｷﾞｹﾝ",
       "municipalityCounts": {
         "both": 40,
         "city": 35,
@@ -55,12 +43,9 @@
       }
     },
     {
-      "code": "05",
+      "code": "050008",
       "name": "秋田県",
       "nameKana": "ｱｷﾀｹﾝ",
-      "prefectureCode": "05",
-      "prefectureName": "秋田県",
-      "prefectureNameKana": "ｱｷﾀｹﾝ",
       "municipalityCounts": {
         "both": 25,
         "city": 25,
@@ -68,12 +53,9 @@
       }
     },
     {
-      "code": "06",
+      "code": "060003",
       "name": "山形県",
       "nameKana": "ﾔﾏｶﾞﾀｹﾝ",
-      "prefectureCode": "06",
-      "prefectureName": "山形県",
-      "prefectureNameKana": "ﾔﾏｶﾞﾀｹﾝ",
       "municipalityCounts": {
         "both": 35,
         "city": 35,
@@ -81,12 +63,9 @@
       }
     },
     {
-      "code": "07",
+      "code": "070009",
       "name": "福島県",
       "nameKana": "ﾌｸｼﾏｹﾝ",
-      "prefectureCode": "07",
-      "prefectureName": "福島県",
-      "prefectureNameKana": "ﾌｸｼﾏｹﾝ",
       "municipalityCounts": {
         "both": 59,
         "city": 59,
@@ -94,12 +73,9 @@
       }
     },
     {
-      "code": "08",
+      "code": "080004",
       "name": "茨城県",
       "nameKana": "ｲﾊﾞﾗｷｹﾝ",
-      "prefectureCode": "08",
-      "prefectureName": "茨城県",
-      "prefectureNameKana": "ｲﾊﾞﾗｷｹﾝ",
       "municipalityCounts": {
         "both": 44,
         "city": 44,
@@ -107,12 +83,9 @@
       }
     },
     {
-      "code": "09",
+      "code": "090000",
       "name": "栃木県",
       "nameKana": "ﾄﾁｷﾞｹﾝ",
-      "prefectureCode": "09",
-      "prefectureName": "栃木県",
-      "prefectureNameKana": "ﾄﾁｷﾞｹﾝ",
       "municipalityCounts": {
         "both": 25,
         "city": 25,
@@ -120,12 +93,9 @@
       }
     },
     {
-      "code": "10",
+      "code": "100005",
       "name": "群馬県",
       "nameKana": "ｸﾞﾝﾏｹﾝ",
-      "prefectureCode": "10",
-      "prefectureName": "群馬県",
-      "prefectureNameKana": "ｸﾞﾝﾏｹﾝ",
       "municipalityCounts": {
         "both": 35,
         "city": 35,
@@ -133,12 +103,9 @@
       }
     },
     {
-      "code": "11",
+      "code": "110001",
       "name": "埼玉県",
       "nameKana": "ｻｲﾀﾏｹﾝ",
-      "prefectureCode": "11",
-      "prefectureName": "埼玉県",
-      "prefectureNameKana": "ｻｲﾀﾏｹﾝ",
       "municipalityCounts": {
         "both": 73,
         "city": 63,
@@ -146,12 +113,9 @@
       }
     },
     {
-      "code": "12",
+      "code": "120006",
       "name": "千葉県",
       "nameKana": "ﾁﾊﾞｹﾝ",
-      "prefectureCode": "12",
-      "prefectureName": "千葉県",
-      "prefectureNameKana": "ﾁﾊﾞｹﾝ",
       "municipalityCounts": {
         "both": 60,
         "city": 54,
@@ -159,12 +123,9 @@
       }
     },
     {
-      "code": "13",
+      "code": "130001",
       "name": "東京都",
       "nameKana": "ﾄｳｷｮｳﾄ",
-      "prefectureCode": "13",
-      "prefectureName": "東京都",
-      "prefectureNameKana": "ﾄｳｷｮｳﾄ",
       "municipalityCounts": {
         "both": 62,
         "city": 62,
@@ -172,12 +133,9 @@
       }
     },
     {
-      "code": "14",
+      "code": "140007",
       "name": "神奈川県",
       "nameKana": "ｶﾅｶﾞﾜｹﾝ",
-      "prefectureCode": "14",
-      "prefectureName": "神奈川県",
-      "prefectureNameKana": "ｶﾅｶﾞﾜｹﾝ",
       "municipalityCounts": {
         "both": 61,
         "city": 33,
@@ -185,12 +143,9 @@
       }
     },
     {
-      "code": "15",
+      "code": "150002",
       "name": "新潟県",
       "nameKana": "ﾆｲｶﾞﾀｹﾝ",
-      "prefectureCode": "15",
-      "prefectureName": "新潟県",
-      "prefectureNameKana": "ﾆｲｶﾞﾀｹﾝ",
       "municipalityCounts": {
         "both": 38,
         "city": 30,
@@ -198,12 +153,9 @@
       }
     },
     {
-      "code": "16",
+      "code": "160008",
       "name": "富山県",
       "nameKana": "ﾄﾔﾏｹﾝ",
-      "prefectureCode": "16",
-      "prefectureName": "富山県",
-      "prefectureNameKana": "ﾄﾔﾏｹﾝ",
       "municipalityCounts": {
         "both": 15,
         "city": 15,
@@ -211,12 +163,9 @@
       }
     },
     {
-      "code": "17",
+      "code": "170003",
       "name": "石川県",
       "nameKana": "ｲｼｶﾜｹﾝ",
-      "prefectureCode": "17",
-      "prefectureName": "石川県",
-      "prefectureNameKana": "ｲｼｶﾜｹﾝ",
       "municipalityCounts": {
         "both": 19,
         "city": 19,
@@ -224,12 +173,9 @@
       }
     },
     {
-      "code": "18",
+      "code": "180009",
       "name": "福井県",
       "nameKana": "ﾌｸｲｹﾝ",
-      "prefectureCode": "18",
-      "prefectureName": "福井県",
-      "prefectureNameKana": "ﾌｸｲｹﾝ",
       "municipalityCounts": {
         "both": 17,
         "city": 17,
@@ -237,12 +183,9 @@
       }
     },
     {
-      "code": "19",
+      "code": "190004",
       "name": "山梨県",
       "nameKana": "ﾔﾏﾅｼｹﾝ",
-      "prefectureCode": "19",
-      "prefectureName": "山梨県",
-      "prefectureNameKana": "ﾔﾏﾅｼｹﾝ",
       "municipalityCounts": {
         "both": 27,
         "city": 27,
@@ -250,12 +193,9 @@
       }
     },
     {
-      "code": "20",
+      "code": "200000",
       "name": "長野県",
       "nameKana": "ﾅｶﾞﾉｹﾝ",
-      "prefectureCode": "20",
-      "prefectureName": "長野県",
-      "prefectureNameKana": "ﾅｶﾞﾉｹﾝ",
       "municipalityCounts": {
         "both": 77,
         "city": 77,
@@ -263,12 +203,9 @@
       }
     },
     {
-      "code": "21",
+      "code": "210005",
       "name": "岐阜県",
       "nameKana": "ｷﾞﾌｹﾝ",
-      "prefectureCode": "21",
-      "prefectureName": "岐阜県",
-      "prefectureNameKana": "ｷﾞﾌｹﾝ",
       "municipalityCounts": {
         "both": 42,
         "city": 42,
@@ -276,12 +213,9 @@
       }
     },
     {
-      "code": "22",
+      "code": "220001",
       "name": "静岡県",
       "nameKana": "ｼｽﾞｵｶｹﾝ",
-      "prefectureCode": "22",
-      "prefectureName": "静岡県",
-      "prefectureNameKana": "ｼｽﾞｵｶｹﾝ",
       "municipalityCounts": {
         "both": 41,
         "city": 35,
@@ -289,12 +223,9 @@
       }
     },
     {
-      "code": "23",
+      "code": "230006",
       "name": "愛知県",
       "nameKana": "ｱｲﾁｹﾝ",
-      "prefectureCode": "23",
-      "prefectureName": "愛知県",
-      "prefectureNameKana": "ｱｲﾁｹﾝ",
       "municipalityCounts": {
         "both": 70,
         "city": 54,
@@ -302,12 +233,9 @@
       }
     },
     {
-      "code": "24",
+      "code": "240001",
       "name": "三重県",
       "nameKana": "ﾐｴｹﾝ",
-      "prefectureCode": "24",
-      "prefectureName": "三重県",
-      "prefectureNameKana": "ﾐｴｹﾝ",
       "municipalityCounts": {
         "both": 29,
         "city": 29,
@@ -315,12 +243,9 @@
       }
     },
     {
-      "code": "25",
+      "code": "250007",
       "name": "滋賀県",
       "nameKana": "ｼｶﾞｹﾝ",
-      "prefectureCode": "25",
-      "prefectureName": "滋賀県",
-      "prefectureNameKana": "ｼｶﾞｹﾝ",
       "municipalityCounts": {
         "both": 19,
         "city": 19,
@@ -328,12 +253,9 @@
       }
     },
     {
-      "code": "26",
+      "code": "260002",
       "name": "京都府",
       "nameKana": "ｷｮｳﾄﾌ",
-      "prefectureCode": "26",
-      "prefectureName": "京都府",
-      "prefectureNameKana": "ｷｮｳﾄﾌ",
       "municipalityCounts": {
         "both": 37,
         "city": 26,
@@ -341,12 +263,9 @@
       }
     },
     {
-      "code": "27",
+      "code": "270008",
       "name": "大阪府",
       "nameKana": "ｵｵｻｶﾌ",
-      "prefectureCode": "27",
-      "prefectureName": "大阪府",
-      "prefectureNameKana": "ｵｵｻｶﾌ",
       "municipalityCounts": {
         "both": 74,
         "city": 43,
@@ -354,12 +273,9 @@
       }
     },
     {
-      "code": "28",
+      "code": "280003",
       "name": "兵庫県",
       "nameKana": "ﾋｮｳｺﾞｹﾝ",
-      "prefectureCode": "28",
-      "prefectureName": "兵庫県",
-      "prefectureNameKana": "ﾋｮｳｺﾞｹﾝ",
       "municipalityCounts": {
         "both": 50,
         "city": 41,
@@ -367,12 +283,9 @@
       }
     },
     {
-      "code": "29",
+      "code": "290009",
       "name": "奈良県",
       "nameKana": "ﾅﾗｹﾝ",
-      "prefectureCode": "29",
-      "prefectureName": "奈良県",
-      "prefectureNameKana": "ﾅﾗｹﾝ",
       "municipalityCounts": {
         "both": 39,
         "city": 39,
@@ -380,12 +293,9 @@
       }
     },
     {
-      "code": "30",
+      "code": "300004",
       "name": "和歌山県",
       "nameKana": "ﾜｶﾔﾏｹﾝ",
-      "prefectureCode": "30",
-      "prefectureName": "和歌山県",
-      "prefectureNameKana": "ﾜｶﾔﾏｹﾝ",
       "municipalityCounts": {
         "both": 30,
         "city": 30,
@@ -393,12 +303,9 @@
       }
     },
     {
-      "code": "31",
+      "code": "310000",
       "name": "鳥取県",
       "nameKana": "ﾄｯﾄﾘｹﾝ",
-      "prefectureCode": "31",
-      "prefectureName": "鳥取県",
-      "prefectureNameKana": "ﾄｯﾄﾘｹﾝ",
       "municipalityCounts": {
         "both": 19,
         "city": 19,
@@ -406,12 +313,9 @@
       }
     },
     {
-      "code": "32",
+      "code": "320005",
       "name": "島根県",
       "nameKana": "ｼﾏﾈｹﾝ",
-      "prefectureCode": "32",
-      "prefectureName": "島根県",
-      "prefectureNameKana": "ｼﾏﾈｹﾝ",
       "municipalityCounts": {
         "both": 19,
         "city": 19,
@@ -419,12 +323,9 @@
       }
     },
     {
-      "code": "33",
+      "code": "330001",
       "name": "岡山県",
       "nameKana": "ｵｶﾔﾏｹﾝ",
-      "prefectureCode": "33",
-      "prefectureName": "岡山県",
-      "prefectureNameKana": "ｵｶﾔﾏｹﾝ",
       "municipalityCounts": {
         "both": 31,
         "city": 27,
@@ -432,12 +333,9 @@
       }
     },
     {
-      "code": "34",
+      "code": "340006",
       "name": "広島県",
       "nameKana": "ﾋﾛｼﾏｹﾝ",
-      "prefectureCode": "34",
-      "prefectureName": "広島県",
-      "prefectureNameKana": "ﾋﾛｼﾏｹﾝ",
       "municipalityCounts": {
         "both": 31,
         "city": 23,
@@ -445,12 +343,9 @@
       }
     },
     {
-      "code": "35",
+      "code": "350001",
       "name": "山口県",
       "nameKana": "ﾔﾏｸﾞﾁｹﾝ",
-      "prefectureCode": "35",
-      "prefectureName": "山口県",
-      "prefectureNameKana": "ﾔﾏｸﾞﾁｹﾝ",
       "municipalityCounts": {
         "both": 19,
         "city": 19,
@@ -458,12 +353,9 @@
       }
     },
     {
-      "code": "36",
+      "code": "360007",
       "name": "徳島県",
       "nameKana": "ﾄｸｼﾏｹﾝ",
-      "prefectureCode": "36",
-      "prefectureName": "徳島県",
-      "prefectureNameKana": "ﾄｸｼﾏｹﾝ",
       "municipalityCounts": {
         "both": 24,
         "city": 24,
@@ -471,12 +363,9 @@
       }
     },
     {
-      "code": "37",
+      "code": "370002",
       "name": "香川県",
       "nameKana": "ｶｶﾞﾜｹﾝ",
-      "prefectureCode": "37",
-      "prefectureName": "香川県",
-      "prefectureNameKana": "ｶｶﾞﾜｹﾝ",
       "municipalityCounts": {
         "both": 17,
         "city": 17,
@@ -484,12 +373,9 @@
       }
     },
     {
-      "code": "38",
+      "code": "380008",
       "name": "愛媛県",
       "nameKana": "ｴﾋﾒｹﾝ",
-      "prefectureCode": "38",
-      "prefectureName": "愛媛県",
-      "prefectureNameKana": "ｴﾋﾒｹﾝ",
       "municipalityCounts": {
         "both": 20,
         "city": 20,
@@ -497,12 +383,9 @@
       }
     },
     {
-      "code": "39",
+      "code": "390003",
       "name": "高知県",
       "nameKana": "ｺｳﾁｹﾝ",
-      "prefectureCode": "39",
-      "prefectureName": "高知県",
-      "prefectureNameKana": "ｺｳﾁｹﾝ",
       "municipalityCounts": {
         "both": 34,
         "city": 34,
@@ -510,12 +393,9 @@
       }
     },
     {
-      "code": "40",
+      "code": "400009",
       "name": "福岡県",
       "nameKana": "ﾌｸｵｶｹﾝ",
-      "prefectureCode": "40",
-      "prefectureName": "福岡県",
-      "prefectureNameKana": "ﾌｸｵｶｹﾝ",
       "municipalityCounts": {
         "both": 74,
         "city": 60,
@@ -523,12 +403,9 @@
       }
     },
     {
-      "code": "41",
+      "code": "410004",
       "name": "佐賀県",
       "nameKana": "ｻｶﾞｹﾝ",
-      "prefectureCode": "41",
-      "prefectureName": "佐賀県",
-      "prefectureNameKana": "ｻｶﾞｹﾝ",
       "municipalityCounts": {
         "both": 20,
         "city": 20,
@@ -536,12 +413,9 @@
       }
     },
     {
-      "code": "42",
+      "code": "420000",
       "name": "長崎県",
       "nameKana": "ﾅｶﾞｻｷｹﾝ",
-      "prefectureCode": "42",
-      "prefectureName": "長崎県",
-      "prefectureNameKana": "ﾅｶﾞｻｷｹﾝ",
       "municipalityCounts": {
         "both": 21,
         "city": 21,
@@ -549,12 +423,9 @@
       }
     },
     {
-      "code": "43",
+      "code": "430005",
       "name": "熊本県",
       "nameKana": "ｸﾏﾓﾄｹﾝ",
-      "prefectureCode": "43",
-      "prefectureName": "熊本県",
-      "prefectureNameKana": "ｸﾏﾓﾄｹﾝ",
       "municipalityCounts": {
         "both": 50,
         "city": 45,
@@ -562,12 +433,9 @@
       }
     },
     {
-      "code": "44",
+      "code": "440001",
       "name": "大分県",
       "nameKana": "ｵｵｲﾀｹﾝ",
-      "prefectureCode": "44",
-      "prefectureName": "大分県",
-      "prefectureNameKana": "ｵｵｲﾀｹﾝ",
       "municipalityCounts": {
         "both": 18,
         "city": 18,
@@ -575,12 +443,9 @@
       }
     },
     {
-      "code": "45",
+      "code": "450006",
       "name": "宮崎県",
       "nameKana": "ﾐﾔｻﾞｷｹﾝ",
-      "prefectureCode": "45",
-      "prefectureName": "宮崎県",
-      "prefectureNameKana": "ﾐﾔｻﾞｷｹﾝ",
       "municipalityCounts": {
         "both": 26,
         "city": 26,
@@ -588,12 +453,9 @@
       }
     },
     {
-      "code": "46",
+      "code": "460001",
       "name": "鹿児島県",
       "nameKana": "ｶｺﾞｼﾏｹﾝ",
-      "prefectureCode": "46",
-      "prefectureName": "鹿児島県",
-      "prefectureNameKana": "ｶｺﾞｼﾏｹﾝ",
       "municipalityCounts": {
         "both": 43,
         "city": 43,
@@ -601,12 +463,9 @@
       }
     },
     {
-      "code": "47",
+      "code": "470007",
       "name": "沖縄県",
       "nameKana": "ｵｷﾅﾜｹﾝ",
-      "prefectureCode": "47",
-      "prefectureName": "沖縄県",
-      "prefectureNameKana": "ｵｷﾅﾜｹﾝ",
       "municipalityCounts": {
         "both": 41,
         "city": 41,

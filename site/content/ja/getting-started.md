@@ -1,11 +1,11 @@
 ---
 title: はじめに
-description: jp-local-gov-id の概要と次のステップ
+description: 全国地方公共団体コードヘルパの概要と次のステップ
 ---
 
 # はじめに
 
-`jp-local-gov-id`は、日本の全国地方公共団体コードをJavaScriptから扱うためのnpmパッケージです。
+全国地方公共団体コードヘルパは、日本の全国地方公共団体コードをJavaScriptから扱うためのnpmパッケージです。
 
 パッケージは2種類に分かれており
 

@@ -18,6 +18,8 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27"); // Osaka
 client.getPrefectureCodeByName("大阪府"); // "27"
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13"); // Tokyo municipalities, etc.
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // designated-city body only
 await client.getMunicipalityByCode("131016"); // Chiyoda
@@ -37,7 +39,7 @@ For address forms that need “city only” or “wards only”, use `designated
 | `"city"` | City body only | `札幌市` only |
 | `"ward"` | Wards only | `札幌市中央区`, etc. |
 
-Applies to: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`. Tokyo special wards are not affected.
+Applies to: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`. Tokyo special wards are not affected.
 
 ```ts
 // Address select: city only

@@ -2,7 +2,7 @@
 
 [English](./README.md)
 
-日本の全国地方公共団体コードの分割 JSON データです。
+全国地方公共団体コードヘルパ向けの、日本の全国地方公共団体コードの分割 JSON データです。
 
 このパッケージは**データのみ**を提供します。検索・取得 API が必要な場合は [`@b4moss/jp-local-gov-id`](https://www.npmjs.com/package/@b4moss/jp-local-gov-id) と組み合わせて使うか、同等のファイルを版付きインデックス URL で自前配信してください。
 

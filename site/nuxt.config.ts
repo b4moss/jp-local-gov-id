@@ -1,6 +1,7 @@
 import { copyFileSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gt, valid } from "semver";
 
 const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -11,9 +12,49 @@ function readPackageVersion(relativePath: string) {
   return pkg.version;
 }
 
-const appVersion = readPackageVersion("packages/jp-local-gov-id/package.json");
-const dataVersion = readPackageVersion(
+/** Prefer the newer of npm `latest` and `rc` (RC-inclusive latest). */
+function pickLatestIncludingRc(versions: Array<string | undefined>): string | null {
+  let best: string | null = null;
+  for (const raw of versions) {
+    if (!raw || !valid(raw)) continue;
+    if (!best || gt(raw, best)) best = raw;
+  }
+  return best;
+}
+
+async function resolveNpmLatestIncludingRc(
+  packageName: string,
+  fallback: string,
+): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://registry.npmjs.org/${encodeURIComponent(packageName)}`,
+    );
+    if (!res.ok) return fallback;
+    const data = (await res.json()) as {
+      "dist-tags"?: Record<string, string>;
+    };
+    const tags = data["dist-tags"] ?? {};
+    return pickLatestIncludingRc([tags.latest, tags.rc]) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const packageAppVersion = readPackageVersion(
+  "packages/jp-local-gov-id/package.json",
+);
+const packageDataVersion = readPackageVersion(
   "packages/jp-local-gov-id-data/package.json",
+);
+
+const appVersion = await resolveNpmLatestIncludingRc(
+  "@b4moss/jp-local-gov-id",
+  packageAppVersion,
+);
+const dataVersion = await resolveNpmLatestIncludingRc(
+  "@b4moss/jp-local-gov-id-data",
+  packageDataVersion,
 );
 
 // https://nuxt.com/docs/api/configuration/nuxt-config

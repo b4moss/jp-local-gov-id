@@ -1,4 +1,4 @@
-# jp-local-gov-id
+# 全国地方公共団体コードヘルパ
 
 [![CI](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml/badge.svg)](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/b4moss/jp-local-gov-id)](https://codecov.io/gh/b4moss/jp-local-gov-id)
@@ -9,7 +9,7 @@
 
 [English](./README.md)
 
-日本の全国地方公共団体コードを扱うモノレポです（npm workspaces）。
+日本の全国地方公共団体コードを扱うモノレポです（npm workspaces）。npm パッケージ名は `jp-local-gov-id` です。
 
 **ドキュメント / Playground:** [https://jplocalgov.oss.b4m.jp/](https://jplocalgov.oss.b4m.jp/)
 
