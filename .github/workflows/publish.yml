@@ -80,7 +80,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          registry-url: https://registry.npmjs.org
+          # Do not set registry-url here: it injects NODE_AUTH_TOKEN into .npmrc.
+          # Trusted Publishing (OIDC + id-token: write) must authenticate npm publish.
 
       - name: Upgrade npm for Trusted Publishing
         run: npm install -g npm@latest
