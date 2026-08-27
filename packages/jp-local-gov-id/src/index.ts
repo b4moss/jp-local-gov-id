@@ -11,9 +11,16 @@ export type {
   LocalGovMunicipalitiesFile,
   LocalGovPrefecturesFile,
   MatchField,
+  Municipality,
   MunicipalityCounts,
+  Prefecture,
   SearchOptions,
   SearchTarget,
+} from "./types";
+export {
+  isMunicipality,
+  isPrefecture,
+  prefectureOrgCode,
 } from "./types";
 export { createLocalGovClient } from "./create";
 export {

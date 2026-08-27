@@ -1,6 +1,6 @@
 {
   "name": "@b4moss/jp-local-gov-id",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "全国地方公共団体コードヘルパ — 日本の全国地方公共団体コードを扱う npm パッケージ",
   "type": "module",
   "main": "./dist/jp-local-gov-id.js",
@@ -41,7 +41,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@b4moss/jp-local-gov-id-data": "1.0.0-rc.3",
+    "@b4moss/jp-local-gov-id-data": "1.0.0-rc.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-dts": "^4.5.4",

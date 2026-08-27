@@ -2,7 +2,12 @@ import {
   MUNICIPALITY_FETCH_CONCURRENCY,
   mapWithConcurrency,
 } from "./pool";
-import type { LocalGov, LocalGovIndexFile } from "./types";
+import type {
+  LocalGovIndexFile,
+  Municipality,
+  Prefecture,
+} from "./types";
+import { prefectureOrgCode } from "./types";
 
 export type LoadMunicipalitiesOptions = {
   /** When false, URL fetches skip localStorage writes. Default true. */
@@ -12,42 +17,51 @@ export type LoadMunicipalitiesOptions = {
 export type LoadMunicipalitiesFn = (
   code: string,
   options?: LoadMunicipalitiesOptions,
-) => Promise<readonly LocalGov[]>;
+) => Promise<readonly Municipality[]>;
 
 export type LocalGovStore = {
   index: LocalGovIndexFile;
-  prefectures: readonly LocalGov[];
-  prefectureByCode: ReadonlyMap<string, LocalGov>;
-  prefectureByName: ReadonlyMap<string, LocalGov>;
+  prefectures: readonly Prefecture[];
+  /** Keyed by 2-digit prefecture (organizational) code. */
+  prefectureByOrgCode: ReadonlyMap<string, Prefecture>;
+  /** Keyed by 6-digit 地方公共団体コード. */
+  prefectureByEntityCode: ReadonlyMap<string, Prefecture>;
+  prefectureByName: ReadonlyMap<string, Prefecture>;
   ensureMunicipalities: (
     codes: readonly string[],
     options?: LoadMunicipalitiesOptions,
   ) => Promise<void>;
-  getMunicipalities: (code: string) => readonly LocalGov[] | undefined;
-  getMunicipalityByCode: (code: string) => LocalGov | undefined;
+  getMunicipalities: (code: string) => readonly Municipality[] | undefined;
+  getMunicipalityByCode: (code: string) => Municipality | undefined;
   allPrefectureCodes: readonly string[];
 };
 
 export function createStore(
   index: LocalGovIndexFile,
-  prefectures: readonly LocalGov[],
+  prefectures: readonly Prefecture[],
   loadMunicipalities: LoadMunicipalitiesFn,
 ): LocalGovStore {
-  const prefectureByCode = new Map(
+  const prefectureByOrgCode = new Map(
+    prefectures.map((p) => [prefectureOrgCode(p), p] as const),
+  );
+  const prefectureByEntityCode = new Map(
     prefectures.map((p) => [p.code, p] as const),
   );
   const prefectureByName = new Map(
     prefectures.map((p) => [p.name, p] as const),
   );
 
-  const municipalitiesByPrefectureCode = new Map<string, readonly LocalGov[]>();
-  const municipalityByCode = new Map<string, LocalGov>();
+  const municipalitiesByPrefectureCode = new Map<
+    string,
+    readonly Municipality[]
+  >();
+  const municipalityByCode = new Map<string, Municipality>();
   const inFlight = new Map<string, Promise<void>>();
 
   const allPrefectureCodes =
     index.prefectureCodes.length > 0
       ? index.prefectureCodes
-      : prefectures.map((p) => p.code);
+      : prefectures.map((p) => prefectureOrgCode(p));
 
   async function loadOne(
     code: string,
@@ -94,7 +108,8 @@ export function createStore(
   return {
     index,
     prefectures,
-    prefectureByCode,
+    prefectureByOrgCode,
+    prefectureByEntityCode,
     prefectureByName,
     ensureMunicipalities,
     getMunicipalities: (code) => municipalitiesByPrefectureCode.get(code),

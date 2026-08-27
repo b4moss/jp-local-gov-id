@@ -15,7 +15,13 @@ const sourcePath = resolve(root, "resources/000925835.xlsx");
 const dataDir = resolve(root, "packages/jp-local-gov-id-data");
 const prefecturesDir = resolve(dataDir, "prefectures");
 
-type LocalGov = {
+type Prefecture = {
+  code: string;
+  name: string;
+  nameKana: string;
+};
+
+type Municipality = {
   code: string;
   name: string;
   nameKana: string;
@@ -75,19 +81,15 @@ function sheetToRows(sheet: ExcelJS.Worksheet): RawRow[] {
   return result;
 }
 
-function toPrefecture(row: RawRow): LocalGov {
-  const prefectureCode = toPrefectureCode(row.code6);
+function toPrefecture(row: RawRow): Prefecture {
   return {
-    code: prefectureCode,
+    code: row.code6,
     name: row.prefectureName,
     nameKana: row.prefectureNameKana,
-    prefectureCode,
-    prefectureName: row.prefectureName,
-    prefectureNameKana: row.prefectureNameKana,
   };
 }
 
-function toMunicipality(row: RawRow): LocalGov {
+function toMunicipality(row: RawRow): Municipality {
   if (!row.municipalityName) {
     throw new Error(`Municipality name missing for code ${row.code6}`);
   }
@@ -117,8 +119,8 @@ async function main(): Promise<void> {
   const currentRows = sheetToRows(currentSheet);
   const designatedRows = sheetToRows(designatedSheet);
 
-  const prefectures: LocalGov[] = [];
-  const municipalitiesByCode = new Map<string, LocalGov>();
+  const prefectures: Prefecture[] = [];
+  const municipalitiesByCode = new Map<string, Municipality>();
 
   for (const row of currentRows) {
     if (!row.municipalityName) {
@@ -142,7 +144,7 @@ async function main(): Promise<void> {
   );
   prefectures.sort((a, b) => a.code.localeCompare(b.code));
 
-  const byPrefecture = new Map<string, LocalGov[]>();
+  const byPrefecture = new Map<string, Municipality[]>();
   for (const m of municipalities) {
     const list = byPrefecture.get(m.prefectureCode);
     if (list) {
@@ -153,9 +155,9 @@ async function main(): Promise<void> {
   }
 
   const asOf = "R6.1.1";
-  const schemaVersion = 1;
+  const schemaVersion = 2;
   const generatedAt = new Date().toISOString();
-  const prefectureCodes = prefectures.map((p) => p.code);
+  const prefectureCodes = prefectures.map((p) => toPrefectureCode(p.code));
 
   mkdirSync(dataDir, { recursive: true });
   mkdirSync(prefecturesDir, { recursive: true });
@@ -189,7 +191,8 @@ async function main(): Promise<void> {
   });
 
   const prefecturesWithCounts = prefectures.map((p) => {
-    const list = byPrefecture.get(p.code) ?? [];
+    const orgCode = toPrefectureCode(p.code);
+    const list = byPrefecture.get(orgCode) ?? [];
     return {
       ...p,
       municipalityCounts: {

@@ -22,10 +22,11 @@ JavaScript で、現在の都道府県・市区町村の地方自治体コード
 
 | 対象 | 形式 | 入力時の許容 |
 |------|------|--------------|
-| 都道府県 | 半角数字 2 桁 | 0 埋めの有無どちらも許容（例: `"1"` / `"01"`） |
-| 市区町村 | チェックデジット込みの 6 桁 | 6 桁を正式とする |
+| 地方公共団体コード（エンティティの `code`） | 半角数字 6 桁 | 都道府県・市区町村とも 6 桁が正 |
+| 都道府県コード（組織キー） | 半角数字 2 桁 | 0 埋めの有無どちらも許容（例: `"1"` / `"01"`）。ファイルパス・`index.prefectureCodes`・`getPrefectureCodeByName`・県指定フィルタで使用 |
+| 市区町村コード | チェックデジット込みの 6 桁 | 地方公共団体コードと同形 |
 
-都道府県向け API と市区町村向け API で、扱う桁を分ける。
+`getByCode` / `getPrefectureByCode` は **2 桁（都道府県コード）と 6 桁（地方公共団体コード）の両方**で都道府県を解決できる。
 
 ## スコープ
 
@@ -167,14 +168,11 @@ const clientShortTtl = await createLocalGovClient({
 市区町村データを必要としうる操作は **async** とする（遅延ロードのため）。
 
 ```ts
-type LocalGov = {
-  code: string                 // 都道府県: 2 桁 / 市区町村: 6 桁
-  name: string                 // 例: "千代田区" / "東京都" / "札幌市中央区"
+type Prefecture = {
+  code: string                 // 地方公共団体コード（6 桁）。例: "130001"
+  name: string                 // 例: "東京都"
   nameKana: string             // 半角カナ
-  prefectureCode: string       // 例: "13"
-  prefectureName: string       // 例: "東京都"
-  prefectureNameKana: string   // 半角カナ（例: "ﾄｳｷｮｳﾄ"）
-  /** 都道府県レコードのみ。市区町村には付かない */
+  /** 都道府県レコードのみ */
   municipalityCounts?: {
     both: number
     city: number
@@ -182,8 +180,17 @@ type LocalGov = {
   }
 }
 
-// 都道府県の場合、prefectureCode / prefectureName / prefectureNameKana は自身の値とする
-// 都道府県の nameKana は prefectureNameKana と同じ値とする
+type Municipality = {
+  code: string                 // 地方公共団体コード（6 桁）。例: "131016"
+  name: string                 // 例: "千代田区" / "札幌市中央区"
+  nameKana: string             // 半角カナ
+  prefectureCode: string       // 所属都道府県コード（2 桁）。例: "13"
+  prefectureName: string       // 例: "東京都"
+  prefectureNameKana: string   // 半角カナ（例: "ﾄｳｷｮｳﾄ"）
+}
+
+type LocalGov = Prefecture | Municipality
+// 都道府県は所属フィールドを持たない。市区町村のみ prefecture* を持つ。
 
 type SearchTarget = "all" | "prefectures" | "cities"
 
@@ -221,8 +228,9 @@ createLocalGovClient(options: CreateLocalGovOptions): Promise<LocalGovClient>
 
 type LocalGovClient = {
   /** 同期可（初期化時にロード済み） */
-  listPrefectures(): LocalGov[]
-  getPrefectureByCode(code: string): LocalGov | null
+  listPrefectures(): Prefecture[]
+  getPrefectureByCode(code: string): Prefecture | null
+  /** 都道府県名 → 都道府県コード（2 桁）。地方公共団体コードではない */
   getPrefectureCodeByName(name: string): string | null
   /**
    * 都道府県の municipalityCounts から件数を返す（同期・県別 JSON 不要）
@@ -237,10 +245,11 @@ type LocalGovClient = {
   listMunicipalitiesByPrefecture(
     pref: string,
     options?: ListMunicipalitiesOptions,
-  ): Promise<LocalGov[]>
-  getMunicipalityByCode(code: string): Promise<LocalGov | null>
+  ): Promise<Municipality[]>
+  getMunicipalityByCode(code: string): Promise<Municipality | null>
   getByCode(code: string): Promise<LocalGov | null>
   searchByText(text: string, options?: SearchOptions): Promise<LocalGov[]>
+  /** 正式名称 → 地方公共団体コード（6 桁）。都道府県ヒット時も 6 桁 */
   getLocalGovCodeByName(name: string, options?: SearchOptions): Promise<string | null>
 }
 ```

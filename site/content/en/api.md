@@ -18,31 +18,45 @@ Overview of the client returned by `createLocalGovClient`.
 
 Exactly one of `data` or `url` is required. `cache` / `cacheTtlSeconds` apply to `url` mode (unused for URL caching when using `data`).
 
-## `LocalGov`
+## `Prefecture` / `Municipality` / `LocalGov`
+
+`LocalGov = Prefecture | Municipality`.
+
+### `Prefecture`
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `code` | `string` | Entity code |
+| `code` | `string` | Local-government code (6 digits) |
 | `name` | `string` | Name |
 | `nameKana` | `string` | Halfwidth kana |
-| `prefectureCode` | `string` | Prefecture code (2 digits) |
+| `municipalityCounts?` | `{ both, city, ward }` | Counts by `designatedCity` mode |
+
+No belonging `prefecture*` fields.
+
+### `Municipality`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | `string` | Local-government code (6 digits) |
+| `name` | `string` | Name |
+| `nameKana` | `string` | Halfwidth kana |
+| `prefectureCode` | `string` | Belonging prefecture code (2 digits) |
 | `prefectureName` | `string` | Prefecture name |
 | `prefectureNameKana` | `string` | Prefecture kana |
-| `municipalityCounts?` | `{ both, city, ward }` | Prefecture records only; counts by `designatedCity` mode |
 
 ## Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `listPrefectures()` | `LocalGov[]` | All prefectures |
-| `getPrefectureByCode(code)` | `LocalGov \| null` | Lookup by prefecture code |
-| `getPrefectureCodeByName(name)` | `string \| null` | Prefecture code from exact name |
+| `listPrefectures()` | `Prefecture[]` | All prefectures |
+| `getPrefectureByCode(code)` | `Prefecture \| null` | Lookup by 2-digit prefecture code or 6-digit entity code |
+| `getPrefectureCodeByName(name)` | `string \| null` | **2-digit prefecture code** from exact name |
 | `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | Sync count from `municipalityCounts` (no municipality JSON load) |
-| `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | Municipalities in a prefecture (lazy) |
-| `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | Lookup by 6-digit municipality code |
-| `getByCode(code)` | `Promise<LocalGov \| null>` | Auto-detect 2-digit / 6-digit |
+| `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<Municipality[]>` | Municipalities in a prefecture (lazy) |
+| `getMunicipalityByCode(code)` | `Promise<Municipality \| null>` | Lookup by 6-digit municipality code |
+| `getByCode(code)` | `Promise<LocalGov \| null>` | Auto-detect 2-digit / 6-digit (6-digit prefers prefecture entity) |
 | `searchByText(text, options?)` | `Promise<LocalGov[]>` | Partial-match search |
-| `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | Code from exact name |
+| `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | **6-digit local-government code** from exact name |
 
 ### `designatedCity` option
 

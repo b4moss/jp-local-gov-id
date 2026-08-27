@@ -11,21 +11,20 @@
 - 見つからない・一意に決まらない → `null` または `[]`（throw しない）
 - スキーマ不正 → `LocalGovSchemaError`
 - ネットワーク / HTTP 失敗 → 通常の fetch エラー
-- 都道府県コード: 2 桁（入力は `"1"` / `"01"` どちらも可）
-- 市区町村コード: 6 桁（チェックデジット込み）
+- 都道府県コード: 2 桁（入力は `"1"` / `"01"` どちらも可）。組織キー・ファイルパス・`getPrefectureCodeByName` の戻り
+- 地方公共団体コード: 6 桁（都道府県・市区町村ともエンティティの `code`）
 - 市区町村が必要な操作は async（遅延ロード）
 
-### `LocalGov`
+### `Prefecture` / `Municipality` / `LocalGov`
 
-| フィールド | 内容 |
-|------------|------|
-| `code` | 都道府県 2 桁 / 市区町村 6 桁 |
-| `name` | 名称（例: `千代田区` / `東京都` / `札幌市中央区`） |
-| `nameKana` | 半角カナ |
-| `prefectureCode` | 所属都道府県コード（都道府県自身の場合は自身） |
-| `prefectureName` | 所属都道府県名 |
-| `prefectureNameKana` | 所属都道府県カナ |
-| `municipalityCounts?` | 都道府県のみ。`{ both, city, ward }`（`designatedCity` と同キー） |
+| フィールド | Prefecture | Municipality |
+|------------|------------|--------------|
+| `code` | 6 桁地方公共団体コード | 6 桁地方公共団体コード |
+| `name` / `nameKana` | あり | あり |
+| `prefectureCode` / `prefectureName` / `prefectureNameKana` | **なし** | 所属都道府県（2 桁コード＋名称） |
+| `municipalityCounts?` | あり（`{ both, city, ward }`） | なし |
+
+`LocalGov = Prefecture | Municipality`。判別は `'prefectureCode' in value`。
 
 ### `SearchOptions`
 
@@ -90,19 +89,20 @@
 
 #### クライアントメソッド
 
-##### `listPrefectures()` → `LocalGov[]`
+##### `listPrefectures()` → `Prefecture[]`
 
-- 全都道府県（同期・初期化済み）
+- 全都道府県（同期・初期化済み）。各 `code` は 6 桁
 
-##### `getPrefectureByCode(code)` → `LocalGov | null`
+##### `getPrefectureByCode(code)` → `Prefecture | null`
 
-- 都道府県コード → エンティティ（同期）
-- `"1"` / `"01"` 同一視
+- 2 桁都道府県コード、または 6 桁地方公共団体コード → エンティティ（同期）
+- `"1"` / `"01"` 同一視。`"130001"` も可
 - 見つからなければ `null`
 
 ##### `getPrefectureCodeByName(name)` → `string | null`
 
-- 都道府県名の完全一致 → 2 桁コード
+- 都道府県名の完全一致 → **都道府県コード（2 桁）**
+- 地方公共団体コード（6 桁）は返さない
 - 見つからなければ `null`
 
 ##### `getMunicipalityCountByPrefecture(pref, options?)` → `number | null`
@@ -112,7 +112,7 @@
 - 初期化済み都道府県の `municipalityCounts[mode]` を返す（同期・県別 JSON 不要）
 - 未知の都道府県 / 件数未載荷 → `null`
 
-##### `listMunicipalitiesByPrefecture(pref, options?)` → `Promise<LocalGov[]>`
+##### `listMunicipalitiesByPrefecture(pref, options?)` → `Promise<Municipality[]>`
 
 - `pref`: コードまたは名称
 - `options.designatedCity`: `"both"` \| `"city"` \| `"ward"`（既定 `"both"`）
@@ -120,16 +120,16 @@
 - 未ロードなら当該県 JSON を取得（キャッシュ可）
 - 不正な `pref` → `[]`
 
-##### `getMunicipalityByCode(code)` → `Promise<LocalGov | null>`
+##### `getMunicipalityByCode(code)` → `Promise<Municipality | null>`
 
-- 6 桁のみ（それ以外は `null`）
+- 6 桁の市区町村コードのみ（都道府県の 6 桁エンティティコードや 2 桁は `null`）
 - 先頭 2 桁で県を特定してロード
 - 不正・不明 → `null`
 
 ##### `getByCode(code)` → `Promise<LocalGov | null>`
 
-- 2 桁 → `getPrefectureByCode`（同期相当を async で返す）
-- 6 桁 → `getMunicipalityByCode`
+- 2 桁 → 都道府県（組織キー）
+- 6 桁 → まず都道府県エンティティ、なければ市区町村
 - 不正・不明 → `null`
 
 ##### `searchByText(text, options?)` → `Promise<LocalGov[]>`
@@ -143,7 +143,8 @@
 ##### `getLocalGovCodeByName(name, options?)` → `Promise<string | null>`
 
 - **完全一致**（正規化後）
-- ヒットがちょうど 1 件のときだけその `code` を返す
+- ヒットがちょうど 1 件のときだけその `code`（**地方公共団体コード・6 桁**）を返す
+- 都道府県ヒット時も 6 桁（例: 東京都 → `"130001"`）
 - 0 件・複数件 → `null`
 - `designatedCity` で候補をフィルタしてから一致判定
 - ロード／キャッシュ方針は `searchByText` と同じ
@@ -153,10 +154,12 @@
 | 名前 | 種別 | 内容 |
 |------|------|------|
 | `LocalGovSchemaError` | class | スキーマ／不正 JSON |
-| `LOCAL_GOV_SCHEMA_VERSION` | const | 現行スキーマ版（`1`） |
+| `LOCAL_GOV_SCHEMA_VERSION` | const | 現行スキーマ版（`2`） |
 | `MUNICIPALITY_FETCH_CONCURRENCY` | const | 全国検索の並列度（`6`） |
+| `isPrefecture` / `isMunicipality` | fn | union 判別 |
+| `prefectureOrgCode` | fn | 都道府県エンティティ → 2 桁組織キー |
 
-型: `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
+型: `Prefecture`, `Municipality`, `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
 
 定数: `DEFAULT_CACHE_TTL_SECONDS`（`31536000`）、`CACHE_TTL_MS`（deprecated 互換）、`LOCAL_GOV_SCHEMA_VERSION`、`MUNICIPALITY_FETCH_CONCURRENCY`
 
