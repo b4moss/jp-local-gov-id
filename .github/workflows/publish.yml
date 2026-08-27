@@ -7,6 +7,7 @@ name: Publish
 # Tag push alone does not publish; create and publish a GitHub Release.
 # Manual workflow_dispatch is also available.
 # repository.url is injected before pack so older tags still work with provenance.
+# Prerelease versions (e.g. 1.0.0-rc.1) are published with --tag rc (npm requires a non-latest tag).
 on:
   release:
     types: [published]
@@ -123,7 +124,13 @@ jobs:
             echo "::error::Packed repository.url must be ${expected} (got '${url}')"
             exit 1
           fi
-          npm publish "$tgz" --access public --provenance
+          version=$(node -p "require('/tmp/packed-package.json').version")
+          publish_args=(--access public --provenance)
+          if [[ "$version" == *-* ]]; then
+            publish_args+=(--tag rc)
+            echo "prerelease detected (${version}); using --tag rc"
+          fi
+          npm publish "$tgz" "${publish_args[@]}"
 
       - name: Publish @b4moss/jp-local-gov-id
         if: ${{ steps.target.outputs.package == 'api' }}
@@ -155,4 +162,10 @@ jobs:
             echo "::error::Packed repository.url must be ${expected} (got '${url}')"
             exit 1
           fi
-          npm publish "$tgz" --access public --provenance
+          version=$(node -p "require('/tmp/packed-package.json').version")
+          publish_args=(--access public --provenance)
+          if [[ "$version" == *-* ]]; then
+            publish_args+=(--tag rc)
+            echo "prerelease detected (${version}); using --tag rc"
+          fi
+          npm publish "$tgz" "${publish_args[@]}"
