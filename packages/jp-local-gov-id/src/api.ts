@@ -96,6 +96,17 @@ export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
       return store.prefectureByName.get(name)?.code ?? null;
     },
 
+    getMunicipalityCountByPrefecture(
+      pref: string,
+      options?: ListMunicipalitiesOptions,
+    ): number | null {
+      const code = resolvePrefectureCode(store, pref);
+      if (!code) return null;
+      const counts = store.prefectureByCode.get(code)?.municipalityCounts;
+      if (!counts) return null;
+      return counts[options?.designatedCity ?? "both"];
+    },
+
     async listMunicipalitiesByPrefecture(
       pref: string,
       options?: ListMunicipalitiesOptions,

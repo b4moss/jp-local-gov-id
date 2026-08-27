@@ -11,6 +11,7 @@ export type {
   LocalGovMunicipalitiesFile,
   LocalGovPrefecturesFile,
   MatchField,
+  MunicipalityCounts,
   SearchOptions,
   SearchTarget,
 } from "./types";

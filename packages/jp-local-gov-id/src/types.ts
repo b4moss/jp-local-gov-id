@@ -1,3 +1,9 @@
+export type MunicipalityCounts = {
+  both: number;
+  city: number;
+  ward: number;
+};
+
 export type LocalGov = {
   code: string;
   name: string;
@@ -5,6 +11,8 @@ export type LocalGov = {
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
+  /** Present on prefecture records only (from `prefectures.json`). */
+  municipalityCounts?: MunicipalityCounts;
 };
 
 export type SearchTarget = "all" | "prefectures" | "cities";
@@ -105,6 +113,15 @@ export type LocalGovClient = {
   listPrefectures(): LocalGov[];
   getPrefectureByCode(code: string): LocalGov | null;
   getPrefectureCodeByName(name: string): string | null;
+  /**
+   * Sync count from prefecture `municipalityCounts` (no municipality file load).
+   * `pref` accepts code or name. Unknown prefecture → `null`.
+   * Default designatedCity: `"both"`.
+   */
+  getMunicipalityCountByPrefecture(
+    pref: string,
+    options?: ListMunicipalitiesOptions,
+  ): number | null;
   listMunicipalitiesByPrefecture(
     pref: string,
     options?: ListMunicipalitiesOptions,

@@ -28,6 +28,7 @@ description: LocalGovClient の公開メソッド
 | `prefectureCode` | `string` | 都道府県コード（2 桁） |
 | `prefectureName` | `string` | 都道府県名 |
 | `prefectureNameKana` | `string` | 都道府県カナ |
+| `municipalityCounts?` | `{ both, city, ward }` | 都道府県のみ。`designatedCity` モード別件数 |
 
 ## メソッド
 
@@ -36,6 +37,7 @@ description: LocalGovClient の公開メソッド
 | `listPrefectures()` | `LocalGov[]` | 全都道府県 |
 | `getPrefectureByCode(code)` | `LocalGov \| null` | 都道府県コードで取得 |
 | `getPrefectureCodeByName(name)` | `string \| null` | 正式名称から都道府県コード |
+| `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | `municipalityCounts` から同期で件数取得（県別 JSON 不要） |
 | `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | 県内の市区町村（遅延ロード） |
 | `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | 市区町村 6 桁で取得 |
 | `getByCode(code)` | `Promise<LocalGov \| null>` | 2 桁 / 6 桁を自動判定 |
@@ -52,9 +54,9 @@ description: LocalGovClient の公開メソッド
 | `"city"` | 市本体のみ（行政区を除外） |
 | `"ward"` | 区のみ（市本体を除外） |
 
-適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`
+適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`
 
-### `listMunicipalitiesByPrefecture` の options
+### `listMunicipalitiesByPrefecture` / `getMunicipalityCountByPrefecture` の options
 
 | キー | 型 | 既定 | 説明 |
 |------|-----|------|------|

@@ -28,6 +28,7 @@ Exactly one of `data` or `url` is required. `cache` / `cacheTtlSeconds` apply to
 | `prefectureCode` | `string` | Prefecture code (2 digits) |
 | `prefectureName` | `string` | Prefecture name |
 | `prefectureNameKana` | `string` | Prefecture kana |
+| `municipalityCounts?` | `{ both, city, ward }` | Prefecture records only; counts by `designatedCity` mode |
 
 ## Methods
 
@@ -36,6 +37,7 @@ Exactly one of `data` or `url` is required. `cache` / `cacheTtlSeconds` apply to
 | `listPrefectures()` | `LocalGov[]` | All prefectures |
 | `getPrefectureByCode(code)` | `LocalGov \| null` | Lookup by prefecture code |
 | `getPrefectureCodeByName(name)` | `string \| null` | Prefecture code from exact name |
+| `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | Sync count from `municipalityCounts` (no municipality JSON load) |
 | `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | Municipalities in a prefecture (lazy) |
 | `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | Lookup by 6-digit municipality code |
 | `getByCode(code)` | `Promise<LocalGov \| null>` | Auto-detect 2-digit / 6-digit |
@@ -52,9 +54,9 @@ Filters designated-city bodies vs administrative wards. Default is `"both"`. Tok
 | `"city"` | City body only (exclude wards) |
 | `"ward"` | Wards only (exclude city bodies) |
 
-Applies to: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`
+Applies to: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`
 
-### `listMunicipalitiesByPrefecture` options
+### `listMunicipalitiesByPrefecture` / `getMunicipalityCountByPrefecture` options
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
