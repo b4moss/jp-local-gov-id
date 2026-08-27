@@ -33,7 +33,8 @@
     "templates": {
       "getByCode": "コード解決 (getByCode)",
       "searchByText": "文字列検索 (searchByText)",
-      "listPrefectures": "都道府県・市区町村一覧"
+      "listPrefectures": "都道府県・市区町村一覧",
+      "getMunicipalityCount": "市区町村件数 (getMunicipalityCountByPrefecture)"
     },
     "run": "実行",
     "runShortcutMac": "⌘+Enter",
