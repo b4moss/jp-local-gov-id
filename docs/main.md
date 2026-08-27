@@ -174,6 +174,12 @@ type LocalGov = {
   prefectureCode: string       // 例: "13"
   prefectureName: string       // 例: "東京都"
   prefectureNameKana: string   // 半角カナ（例: "ﾄｳｷｮｳﾄ"）
+  /** 都道府県レコードのみ。市区町村には付かない */
+  municipalityCounts?: {
+    both: number
+    city: number
+    ward: number
+  }
 }
 
 // 都道府県の場合、prefectureCode / prefectureName / prefectureNameKana は自身の値とする
@@ -218,6 +224,14 @@ type LocalGovClient = {
   listPrefectures(): LocalGov[]
   getPrefectureByCode(code: string): LocalGov | null
   getPrefectureCodeByName(name: string): string | null
+  /**
+   * 都道府県の municipalityCounts から件数を返す（同期・県別 JSON 不要）
+   * pref はコードまたは名称。未知は null。designatedCity 既定 "both"
+   */
+  getMunicipalityCountByPrefecture(
+    pref: string,
+    options?: ListMunicipalitiesOptions,
+  ): number | null
 
   /** 未ロードなら県別 JSON を取得してから返す */
   listMunicipalitiesByPrefecture(
@@ -243,6 +257,8 @@ const client = await createLocalGovClient({
 client.listPrefectures()
 client.getPrefectureCodeByName("大阪府")
 client.getPrefectureByCode("27")
+client.getMunicipalityCountByPrefecture("01")
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" })
 
 await client.listMunicipalitiesByPrefecture("大阪府")
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }) // 政令市本体のみ

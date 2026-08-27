@@ -7,6 +7,7 @@ import {
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ExcelJS from "exceljs";
+import { filterByDesignatedCity } from "../packages/jp-local-gov-id/src/designatedCity.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
@@ -187,10 +188,22 @@ async function main(): Promise<void> {
     prefectureCodes,
   });
 
+  const prefecturesWithCounts = prefectures.map((p) => {
+    const list = byPrefecture.get(p.code) ?? [];
+    return {
+      ...p,
+      municipalityCounts: {
+        both: filterByDesignatedCity(list, "both").length,
+        city: filterByDesignatedCity(list, "city").length,
+        ward: filterByDesignatedCity(list, "ward").length,
+      },
+    };
+  });
+
   writeJson(resolve(dataDir, "prefectures.json"), {
     schemaVersion,
     asOf,
-    prefectures,
+    prefectures: prefecturesWithCounts,
   });
 
   for (const code of prefectureCodes) {
