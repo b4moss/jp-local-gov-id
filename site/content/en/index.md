@@ -11,6 +11,7 @@ A JavaScript API for working with Japan’s nationwide local government codes.
 
 - List municipalities in a given prefecture
 - Fetch prefecture information as a list
+- Get municipality counts per prefecture (sync, no municipality JSON load)
 - Look up local government codes — unique IDs useful for address normalization
 
 ## Installation

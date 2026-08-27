@@ -18,6 +18,8 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27"); // 大阪府
 client.getPrefectureCodeByName("大阪府"); // "27"
+client.getMunicipalityCountByPrefecture("01"); // 同期・県別 JSON 不要
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13"); // 東京都の市区町村等
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // 政令市本体のみ
 await client.getMunicipalityByCode("131016"); // 千代田区
@@ -37,7 +39,7 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 | `"city"` | 市本体のみ | `札幌市` のみ |
 | `"ward"` | 区のみ | `札幌市中央区` など |
 
-適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`。東京特別区は対象外です。
+適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`。東京特別区は対象外です。
 
 ```ts
 // 住所セレクト: 市のみ

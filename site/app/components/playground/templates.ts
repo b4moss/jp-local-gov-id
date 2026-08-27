@@ -1,7 +1,8 @@
 export type PlaygroundTemplateId =
   | "getByCode"
   | "searchByText"
-  | "listPrefectures";
+  | "listPrefectures"
+  | "getMunicipalityCount";
 
 export interface PlaygroundTemplate {
   id: PlaygroundTemplateId;
@@ -50,6 +51,28 @@ const municipalities = await client.listMunicipalitiesByPrefecture("01", {
   designatedCity: "city",
 });
 console.log("municipalities in 01 (city)", municipalities.length, municipalities.slice(0, 3));
+`,
+  },
+  {
+    id: "getMunicipalityCount",
+    labelKey: "getMunicipalityCount",
+    code: `import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
+import dataset from "@b4moss/jp-local-gov-id-data";
+
+const client = await createLocalGovClient({ data: dataset });
+
+// Sync — no municipality JSON load
+const both = client.getMunicipalityCountByPrefecture("01");
+const city = client.getMunicipalityCountByPrefecture("北海道", {
+  designatedCity: "city",
+});
+const ward = client.getMunicipalityCountByPrefecture("01", {
+  designatedCity: "ward",
+});
+console.log({ both, city, ward });
+
+const pref = client.getPrefectureByCode("01");
+console.log("municipalityCounts", pref?.municipalityCounts);
 `,
   },
 ];

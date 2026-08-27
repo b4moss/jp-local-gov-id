@@ -33,7 +33,8 @@
     "templates": {
       "getByCode": "Code lookup (getByCode)",
       "searchByText": "Text search (searchByText)",
-      "listPrefectures": "List prefectures & municipalities"
+      "listPrefectures": "List prefectures & municipalities",
+      "getMunicipalityCount": "Municipality count (getMunicipalityCountByPrefecture)"
     },
     "run": "Run",
     "runShortcutMac": "⌘+Enter",
