@@ -93,15 +93,18 @@ try {
     process.exit(0);
   }
 
-  execFileSync(
-    "npm",
-    ["publish", tgzPath, "--access", "public", "--provenance"],
-    {
-      cwd: staging,
-      stdio: "inherit",
-      env: process.env,
-    },
-  );
+  const version = String(packedPkg.version ?? "");
+  const publishArgs = ["publish", tgzPath, "--access", "public", "--provenance"];
+  if (version.includes("-")) {
+    publishArgs.push("--tag", "rc");
+    console.log(`prerelease detected (${version}); using --tag rc`);
+  }
+
+  execFileSync("npm", publishArgs, {
+    cwd: staging,
+    stdio: "inherit",
+    env: process.env,
+  });
 } finally {
   rmSync(staging, { recursive: true, force: true });
 }
