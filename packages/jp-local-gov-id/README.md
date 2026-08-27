@@ -27,6 +27,8 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27");
 client.getPrefectureCodeByName("大阪府"); // "27"
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13");
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // city body only
 await client.getMunicipalityByCode("131016");
@@ -36,7 +38,7 @@ await client.searchByText("ちよだ", { prefecture: "13", target: "cities" });
 await client.getLocalGovCodeByName("千代田区"); // "131016"
 ```
 
-`designatedCity` (`"both"` | `"city"` | `"ward"`, default `"both"`) filters designated-city bodies vs wards on `listMunicipalitiesByPrefecture`, `searchByText`, and `getLocalGovCodeByName`. Tokyo special wards are not affected.
+`designatedCity` (`"both"` | `"city"` | `"ward"`, default `"both"`) filters designated-city bodies vs wards on `listMunicipalitiesByPrefecture`, `searchByText`, `getLocalGovCodeByName`, and `getMunicipalityCountByPrefecture`. Tokyo special wards are not affected.
 
 Fetch from a versioned index URL:
 

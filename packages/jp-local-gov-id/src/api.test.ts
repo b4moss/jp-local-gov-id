@@ -113,6 +113,84 @@ describe("getPrefectureByCode", () => {
   });
 });
 
+describe("getMunicipalityCountByPrefecture", () => {
+  it("TC-A01: resolves code and name to the same both count", async () => {
+    const c = await client();
+    const byPadded = c.getMunicipalityCountByPrefecture("01");
+    const byUnpadded = c.getMunicipalityCountByPrefecture("1");
+    const byName = c.getMunicipalityCountByPrefecture("北海道");
+
+    expect(byPadded).toBe(195);
+    expect(byUnpadded).toBe(195);
+    expect(byName).toBe(195);
+  });
+
+  it("TC-A02: Hokkaido designatedCity modes", async () => {
+    const c = await client();
+    expect(c.getMunicipalityCountByPrefecture("01")).toBe(195);
+    expect(
+      c.getMunicipalityCountByPrefecture("01", { designatedCity: "both" }),
+    ).toBe(195);
+    expect(
+      c.getMunicipalityCountByPrefecture("01", { designatedCity: "city" }),
+    ).toBe(185);
+    expect(
+      c.getMunicipalityCountByPrefecture("01", { designatedCity: "ward" }),
+    ).toBe(194);
+  });
+
+  it("TC-A03/A05: Tokyo modes are equal (special wards included)", async () => {
+    const c = await client();
+    const both = c.getMunicipalityCountByPrefecture("13");
+    const city = c.getMunicipalityCountByPrefecture("東京都", {
+      designatedCity: "city",
+    });
+    const ward = c.getMunicipalityCountByPrefecture("13", {
+      designatedCity: "ward",
+    });
+
+    expect(both).toBe(62);
+    expect(city).toBe(62);
+    expect(ward).toBe(62);
+  });
+
+  it("TC-A04: Okinawa modes are equal", async () => {
+    const c = await client();
+    expect(c.getMunicipalityCountByPrefecture("47")).toBe(41);
+    expect(
+      c.getMunicipalityCountByPrefecture("沖縄県", { designatedCity: "city" }),
+    ).toBe(41);
+    expect(
+      c.getMunicipalityCountByPrefecture("47", { designatedCity: "ward" }),
+    ).toBe(41);
+  });
+
+  it("TC-A06: unknown prefecture returns null", async () => {
+    const c = await client();
+    expect(c.getMunicipalityCountByPrefecture("99")).toBeNull();
+    expect(c.getMunicipalityCountByPrefecture("存在しない県")).toBeNull();
+    expect(c.getMunicipalityCountByPrefecture("")).toBeNull();
+  });
+
+  it("TC-A07: municipalityCounts is on prefecture records", async () => {
+    const c = await client();
+    const expected = { both: 195, city: 185, ward: 194 };
+
+    expect(c.getPrefectureByCode("01")?.municipalityCounts).toEqual(expected);
+    expect(
+      c.listPrefectures().find((p) => p.code === "01")?.municipalityCounts,
+    ).toEqual(expected);
+  });
+
+  it("TC-A08: returns sync number without loading municipalities", async () => {
+    const c = await client();
+    const result = c.getMunicipalityCountByPrefecture("01");
+
+    expect(result).toBe(195);
+    expect(result).not.toBeInstanceOf(Promise);
+  });
+});
+
 describe("listMunicipalitiesByPrefecture", () => {
   it("accepts name, padded code, and unpadded code", async () => {
     const c = await client();

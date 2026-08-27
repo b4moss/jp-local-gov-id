@@ -1,5 +1,12 @@
 # jp-local-gov-id
 
+[![CI](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml/badge.svg)](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/b4moss/jp-local-gov-id)](https://codecov.io/gh/b4moss/jp-local-gov-id)
+[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
+[![Release](https://img.shields.io/github/v/release/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/releases)
+[![License](https://img.shields.io/github/license/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/blob/main/LICENSE)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/b4moss/jp-local-gov-id/badge)](https://securityscorecards.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
+
 [English](./README.md)
 
 日本の全国地方公共団体コードを扱うモノレポです（npm workspaces）。
@@ -8,8 +15,8 @@
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 0.6.0 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 0.1.0 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.1 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 1.0.0-rc.2 |
 
 ## インストール（利用側）
 
@@ -35,6 +42,8 @@ const client = await createLocalGovClient({ data: dataset });
 
 client.listPrefectures();
 client.getPrefectureByCode("27"); // 大阪府
+client.getMunicipalityCountByPrefecture("01"); // 同期・県別 JSON 不要
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // 東京都の市区町村等
 await client.getMunicipalityByCode("131016"); // 千代田区

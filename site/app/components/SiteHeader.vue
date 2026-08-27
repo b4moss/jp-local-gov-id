@@ -1,19 +1,12 @@
 <script setup lang="ts">
-const { t, locale, locales, setLocale } = useI18n();
+const { t } = useI18n();
 const localePath = useLocalePath();
 const { open, toggle } = useSidebar();
 const config = useRuntimeConfig();
 
-const githubUrl = "https://github.com/b4m-oss/jp-local-gov-id";
+const githubUrl = "https://github.com/b4moss/jp-local-gov-id";
 const appVersion = computed(() => String(config.public.appVersion ?? ""));
 const dataVersion = computed(() => String(config.public.dataVersion ?? ""));
-
-const selected = computed({
-  get: () => locale.value,
-  set: (code: string) => {
-    void setLocale(code);
-  },
-});
 </script>
 
 <template>
@@ -47,19 +40,7 @@ const selected = computed({
         </p>
       </div>
       <div class="header-actions">
-        <ColorModeToggle />
-        <label class="lang">
-          <span class="sr-only">{{ t("nav.language") }}</span>
-          <select v-model="selected">
-            <option
-              v-for="item in locales"
-              :key="item.code"
-              :value="item.code"
-            >
-              {{ item.name }}
-            </option>
-          </select>
-        </label>
+        <HeaderPrefsMenu />
         <a
           class="github-link"
           :href="githubUrl"
@@ -191,18 +172,8 @@ const selected = computed({
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
   flex-shrink: 0;
-}
-
-.lang select {
-  font: inherit;
-  font-size: 0.875rem;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.35rem;
-  background: var(--color-surface);
-  color: var(--color-ink);
 }
 
 .github-link {
@@ -219,17 +190,6 @@ const selected = computed({
 .github-link:hover {
   color: var(--color-ink);
   background: var(--color-accent-soft);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
 }
 
 @media (min-width: 900px) {

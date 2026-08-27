@@ -25,6 +25,7 @@
 | `prefectureCode` | 所属都道府県コード（都道府県自身の場合は自身） |
 | `prefectureName` | 所属都道府県名 |
 | `prefectureNameKana` | 所属都道府県カナ |
+| `municipalityCounts?` | 都道府県のみ。`{ both, city, ward }`（`designatedCity` と同キー） |
 
 ### `SearchOptions`
 
@@ -49,7 +50,7 @@
 2. 政令市本体: 上記区から市名プレフィックス（例: `札幌市`）を集め、同名のレコード
 3. 町村・一般市・東京特別区（`千代田区` 等）は全モードで残す
 
-適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName`
+適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`
 
 文字列比較前にクエリ・データ双方へ正規化を適用する:
 
@@ -103,6 +104,13 @@
 
 - 都道府県名の完全一致 → 2 桁コード
 - 見つからなければ `null`
+
+##### `getMunicipalityCountByPrefecture(pref, options?)` → `number | null`
+
+- `pref`: コードまたは名称（`listMunicipalitiesByPrefecture` と同じ解決）
+- `options.designatedCity`: `"both"` \| `"city"` \| `"ward"`（既定 `"both"`）
+- 初期化済み都道府県の `municipalityCounts[mode]` を返す（同期・県別 JSON 不要）
+- 未知の都道府県 / 件数未載荷 → `null`
 
 ##### `listMunicipalitiesByPrefecture(pref, options?)` → `Promise<LocalGov[]>`
 

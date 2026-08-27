@@ -1,5 +1,12 @@
 # jp-local-gov-id
 
+[![CI](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml/badge.svg)](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/b4moss/jp-local-gov-id)](https://codecov.io/gh/b4moss/jp-local-gov-id)
+[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
+[![Release](https://img.shields.io/github/v/release/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/releases)
+[![License](https://img.shields.io/github/license/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/blob/main/LICENSE)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/b4moss/jp-local-gov-id/badge)](https://securityscorecards.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
+
 [日本語](./README_ja.md)
 
 A monorepo for Japan’s nationwide local government codes (npm workspaces).
@@ -8,8 +15,8 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 0.6.0 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 0.1.0 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.1 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 1.0.0-rc.2 |
 
 ## Install (consumers)
 
@@ -35,6 +42,8 @@ const client = await createLocalGovClient({ data: dataset });
 
 client.listPrefectures();
 client.getPrefectureByCode("27"); // Osaka
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // municipalities in Tokyo, etc.
 await client.getMunicipalityByCode("131016"); // Chiyoda City
