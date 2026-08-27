@@ -3,7 +3,7 @@ title: ホーム
 description: 日本の全国地方公共団体コードを扱う npm パッケージ
 ---
 
-# jp-local-gov-id
+# 全国地方公共団体コードヘルパ
 
 日本の全国地方公共団体コードを、JavaScriptから扱えるようにするAPIです。
 

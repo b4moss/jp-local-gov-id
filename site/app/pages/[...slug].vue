@@ -3,7 +3,7 @@ import { withLeadingSlash } from "ufo";
 import type { Collections } from "@nuxt/content";
 
 const route = useRoute();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 const slug = computed(() => {
   const raw = route.params.slug;
@@ -45,7 +45,7 @@ if (!page.value) {
 }
 
 useSeoMeta({
-  title: () => page.value?.title || "jp-local-gov-id",
+  title: () => page.value?.title || t("brand"),
   description: () => page.value?.description || undefined,
 });
 </script>
