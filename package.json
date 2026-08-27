@@ -19,6 +19,9 @@
     "publish:dry-run": "node scripts/publish-package.mjs packages/jp-local-gov-id-data --dry-run && node scripts/publish-package.mjs packages/jp-local-gov-id --dry-run"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/b4moss/jp-local-gov-id"
