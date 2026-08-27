@@ -130,6 +130,10 @@ jobs:
             publish_args+=(--tag rc)
             echo "prerelease detected (${version}); using --tag rc"
           fi
+          # Prefer Trusted Publishing (OIDC). A stale/bypass-2FA token in
+          # NODE_AUTH_TOKEN causes PUT 404 and blocks provenance-based publish.
+          unset NODE_AUTH_TOKEN
+          npm config delete "//registry.npmjs.org/:_authToken" >/dev/null 2>&1 || true
           npm publish "$tgz" "${publish_args[@]}"
 
       - name: Publish @b4moss/jp-local-gov-id
@@ -168,4 +172,6 @@ jobs:
             publish_args+=(--tag rc)
             echo "prerelease detected (${version}); using --tag rc"
           fi
+          unset NODE_AUTH_TOKEN
+          npm config delete "//registry.npmjs.org/:_authToken" >/dev/null 2>&1 || true
           npm publish "$tgz" "${publish_args[@]}"
