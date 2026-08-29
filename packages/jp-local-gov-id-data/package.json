@@ -1,7 +1,7 @@
 {
   "name": "@b4moss/jp-local-gov-id-data",
-  "version": "1.0.0-rc.3",
-  "description": "全国地方公共団体コードヘルパ — 日本の全国地方公共団体コードのデータ（分割 JSON）",
+  "version": "1.0.0-rc.10",
+  "description": "全国地方公共団体コードヘルパ — 日本の全国地方公共団体コードのデータ（分割バイナリ）",
   "type": "module",
   "main": "./dataset.js",
   "types": "./index.d.ts",
@@ -12,15 +12,17 @@
       "default": "./dataset.js"
     },
     "./index.json": "./index.json",
-    "./prefectures.json": "./prefectures.json",
+    "./prefectures.bin": "./prefectures.bin",
     "./prefectures/*": "./prefectures/*",
-    "./dataset.js": "./dataset.js"
+    "./dataset.js": "./dataset.js",
+    "./decode.js": "./decode.js"
   },
   "files": [
     "index.json",
-    "prefectures.json",
-    "prefectures",
+    "prefectures.bin",
+    "prefectures/*.bin",
     "dataset.js",
+    "decode.js",
     "index.d.ts",
     "README.md",
     "README_ja.md",
