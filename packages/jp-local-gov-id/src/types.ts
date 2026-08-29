@@ -4,16 +4,26 @@ export type MunicipalityCounts = {
   ward: number;
 };
 
-export type LocalGov = {
+/** Prefecture-as-local-gov. `code` is the 6-digit 地方公共団体コード. */
+export type Prefecture = {
+  code: string;
+  name: string;
+  nameKana: string;
+  /** Present on prefecture records only (from decoded `prefectures.bin`). */
+  municipalityCounts?: MunicipalityCounts;
+};
+
+/** Municipality (市区町村). Includes belonging prefecture fields. */
+export type Municipality = {
   code: string;
   name: string;
   nameKana: string;
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
-  /** Present on prefecture records only (from decoded `prefectures.bin`). */
-  municipalityCounts?: MunicipalityCounts;
 };
+
+export type LocalGov = Prefecture | Municipality;
 
 export type SearchTarget = "all" | "prefectures" | "cities";
 
@@ -83,6 +93,7 @@ export type LocalGovIndexFile = {
      */
     searchNgrams: SearchNgramsPathSpec;
   };
+  /** 2-digit prefecture codes (`"01"` … `"47"`). */
   prefectureCodes: string[];
 };
 
@@ -90,7 +101,7 @@ export type LocalGovIndexFile = {
 export type LocalGovPrefecturesFile = {
   schemaVersion: number;
   asOf?: string;
-  prefectures: LocalGov[];
+  prefectures: Prefecture[];
 };
 
 /** Per-prefecture municipalities file (decoded from `prefectures/{code}.bin`) */
@@ -98,7 +109,7 @@ export type LocalGovMunicipalitiesFile = {
   schemaVersion: number;
   asOf?: string;
   prefectureCode: string;
-  municipalities: LocalGov[];
+  municipalities: Municipality[];
 };
 
 /**
@@ -141,8 +152,9 @@ export type CreateLocalGovOptions =
   | ({ url: string; data?: never } & CreateLocalGovCacheOptions);
 
 export type LocalGovClient = {
-  listPrefectures(): LocalGov[];
-  getPrefectureByCode(code: string): LocalGov | null;
+  listPrefectures(): Prefecture[];
+  getPrefectureByCode(code: string): Prefecture | null;
+  /** Returns 2-digit prefecture code (not 地方公共団体コード). */
   getPrefectureCodeByName(name: string): string | null;
   /**
    * Sync count from prefecture `municipalityCounts` (no municipality file load).
@@ -156,8 +168,8 @@ export type LocalGovClient = {
   listMunicipalitiesByPrefecture(
     pref: string,
     options?: ListMunicipalitiesOptions,
-  ): Promise<LocalGov[]>;
-  getMunicipalityByCode(code: string): Promise<LocalGov | null>;
+  ): Promise<Municipality[]>;
+  getMunicipalityByCode(code: string): Promise<Municipality | null>;
   getByCode(code: string): Promise<LocalGov | null>;
   searchByText(text: string, options?: SearchOptions): Promise<LocalGov[]>;
   getLocalGovCodeByName(
@@ -168,3 +180,16 @@ export type LocalGovClient = {
 
 /** @deprecated Use LocalGovIndexFile / split file types. Kept for export compatibility. */
 export type LocalGovDataFile = LocalGovDataset;
+
+/** 2-digit organizational key derived from a prefecture entity code. */
+export function prefectureOrgCode(prefecture: Prefecture): string {
+  return prefecture.code.slice(0, 2);
+}
+
+export function isMunicipality(value: LocalGov): value is Municipality {
+  return "prefectureCode" in value;
+}
+
+export function isPrefecture(value: LocalGov): value is Prefecture {
+  return !("prefectureCode" in value);
+}

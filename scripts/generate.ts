@@ -5,7 +5,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
 import { buildSync } from "esbuild";
@@ -52,7 +52,14 @@ const binaryEntry = resolve(
   "packages/jp-local-gov-id/src/binary/index.ts",
 );
 
-type LocalGov = {
+/** Public #53 prefecture shape: `code` is 6-digit 地方公共団体コード. */
+type Prefecture = {
+  code: string;
+  name: string;
+  nameKana: string;
+};
+
+type Municipality = {
   code: string;
   name: string;
   nameKana: string;
@@ -60,8 +67,6 @@ type LocalGov = {
   prefectureName: string;
   prefectureNameKana: string;
 };
-
-type PrefectureRow = LocalGov & { muniCode: string };
 
 type RawRow = {
   code6: string;
@@ -114,20 +119,15 @@ function sheetToRows(sheet: ExcelJS.Worksheet): RawRow[] {
   return result;
 }
 
-function toPrefecture(row: RawRow): PrefectureRow {
-  const prefectureCode = toPrefectureCode(row.code6);
+function toPrefecture(row: RawRow): Prefecture {
   return {
-    code: prefectureCode,
+    code: row.code6,
     name: row.prefectureName,
     nameKana: row.prefectureNameKana,
-    prefectureCode,
-    prefectureName: row.prefectureName,
-    prefectureNameKana: row.prefectureNameKana,
-    muniCode: row.code6,
   };
 }
 
-function toMunicipality(row: RawRow): LocalGov {
+function toMunicipality(row: RawRow): Municipality {
   if (!row.municipalityName) {
     throw new Error(`Municipality name missing for code ${row.code6}`);
   }
@@ -241,7 +241,7 @@ type PartitionedPostings = {
 };
 
 function buildHybridSearchNgramPostings(
-  byPrefecture: Map<string, LocalGov[]>,
+  byPrefecture: Map<string, Municipality[]>,
 ): PartitionedPostings {
   const twoGramMaps = new Map<TwoGramRegion, Map<string, SearchNgramPostingRecord>>();
   for (const region of TWO_GRAM_REGIONS) {
@@ -336,7 +336,7 @@ function postingCsvRow(
 }
 
 
-function wardFlagsForPrefecture(list: LocalGov[]): Map<string, { hasWard: 0 | 1; isWard: 0 | 1 }> {
+function wardFlagsForPrefecture(list: Municipality[]): Map<string, { hasWard: 0 | 1; isWard: 0 | 1 }> {
   const bodyNames = new Set<string>();
   for (const item of list) {
     const body = designatedCityBodyNameFromWard(item.name);
@@ -394,7 +394,7 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     "",
     "const municipalitiesByCode = {",
     ...prefectureCodes.map((code) => {
-      const pref = `prefectures.prefectures.find((p) => p.code === "${code}")`;
+      const pref = `prefectures.prefectures.find((p) => p.code.slice(0, 2) === "${code}")`;
       return [
         `  "${code}": decodeMunicipalitiesFile(readBinBr("prefectures/${code}.bin.br"), {`,
         `    prefectureCode: "${code}",`,
@@ -443,8 +443,8 @@ async function main(): Promise<void> {
   const currentRows = sheetToRows(currentSheet);
   const designatedRows = sheetToRows(designatedSheet);
 
-  const prefectures: PrefectureRow[] = [];
-  const municipalitiesByCode = new Map<string, LocalGov>();
+  const prefectures: Prefecture[] = [];
+  const municipalitiesByCode = new Map<string, Municipality>();
 
   for (const row of currentRows) {
     if (!row.municipalityName) {
@@ -467,7 +467,7 @@ async function main(): Promise<void> {
   );
   prefectures.sort((a, b) => a.code.localeCompare(b.code));
 
-  const byPrefecture = new Map<string, LocalGov[]>();
+  const byPrefecture = new Map<string, Municipality[]>();
   for (const m of municipalities) {
     const list = byPrefecture.get(m.prefectureCode);
     if (list) {
@@ -478,15 +478,16 @@ async function main(): Promise<void> {
   }
 
   const asOf = "R6.1.1";
-  const schemaVersion = 1;
+  const schemaVersion = 2;
   const generatedAt = new Date().toISOString();
-  const prefectureCodes = prefectures.map((p) => p.code);
+  const prefectureCodes = prefectures.map((p) => toPrefectureCode(p.code));
 
   cleanGeneratedArtifacts();
   emitDecodeJs();
 
   const prefecturesWithCounts = prefectures.map((p) => {
-    const list = byPrefecture.get(p.code) ?? [];
+    const orgCode = toPrefectureCode(p.code);
+    const list = byPrefecture.get(orgCode) ?? [];
     return {
       ...p,
       municipalityCounts: {
@@ -536,10 +537,10 @@ async function main(): Promise<void> {
       "muniCountWard",
     ],
     prefecturesWithCounts.map((p) => [
-      Number(p.code),
+      Number(toPrefectureCode(p.code)),
       p.name,
       p.nameKana,
-      Number(p.muniCode),
+      Number(p.code),
       p.municipalityCounts.both,
       p.municipalityCounts.city,
       p.municipalityCounts.ward,
@@ -548,10 +549,10 @@ async function main(): Promise<void> {
 
   const prefBinRecords: PrefectureBinRecord[] = prefecturesWithCounts.map(
     (p) => ({
-      prefCode: Number(p.code),
+      prefCode: Number(toPrefectureCode(p.code)),
       name: p.name,
       nameKana: p.nameKana,
-      muniCode: Number(p.muniCode),
+      muniCode: Number(p.code),
       muniCountBoth: p.municipalityCounts.both,
       muniCountCity: p.municipalityCounts.city,
       muniCountWard: p.municipalityCounts.ward,

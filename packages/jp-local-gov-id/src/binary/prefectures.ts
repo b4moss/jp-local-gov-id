@@ -1,4 +1,8 @@
-import type { LocalGov, LocalGovPrefecturesFile, MunicipalityCounts } from "../types";
+import type {
+  LocalGovPrefecturesFile,
+  MunicipalityCounts,
+  Prefecture,
+} from "../types";
 import {
   BINARY_FORMAT_VERSION,
   DECODED_SCHEMA_VERSION,
@@ -212,20 +216,16 @@ export function decodePrefectures(buffer: ArrayBuffer): DecodedPrefecturesBin {
 
 export function prefectureRecordToLocalGov(
   record: PrefectureBinRecord,
-): LocalGov {
-  const code = String(record.prefCode).padStart(2, "0");
+): Prefecture {
   const counts: MunicipalityCounts = {
     both: record.muniCountBoth,
     city: record.muniCountCity,
     ward: record.muniCountWard,
   };
   return {
-    code,
+    code: String(record.muniCode).padStart(6, "0"),
     name: record.name,
     nameKana: record.nameKana,
-    prefectureCode: code,
-    prefectureName: record.name,
-    prefectureNameKana: record.nameKana,
     municipalityCounts: counts,
   };
 }

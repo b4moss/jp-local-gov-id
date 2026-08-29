@@ -3,13 +3,15 @@ import type {
   LocalGovIndexFile,
   LocalGovMunicipalitiesFile,
   LocalGovPrefecturesFile,
+  Municipality,
+  Prefecture,
   SearchNgramsPathSpec,
   SearchNgramsThreeGramSpec,
   SearchNgramsTwoGramSpec,
 } from "./types";
 
 /** Expected schemaVersion in data files. */
-export const LOCAL_GOV_SCHEMA_VERSION = 1;
+export const LOCAL_GOV_SCHEMA_VERSION = 2;
 
 export class LocalGovSchemaError extends Error {
   override readonly name = "LocalGovSchemaError";
@@ -19,17 +21,36 @@ export class LocalGovSchemaError extends Error {
   }
 }
 
-function isLocalGov(value: unknown): value is LocalGov {
+function isPrefectureRecord(value: unknown): value is Prefecture {
+  if (value === null || typeof value !== "object") return false;
+  const o = value as Record<string, unknown>;
+  if ("prefectureCode" in o || "prefectureName" in o || "prefectureNameKana" in o) {
+    return false;
+  }
+  return (
+    typeof o.code === "string" &&
+    /^\d{6}$/.test(o.code) &&
+    typeof o.name === "string" &&
+    typeof o.nameKana === "string"
+  );
+}
+
+function isMunicipalityRecord(value: unknown): value is Municipality {
   if (value === null || typeof value !== "object") return false;
   const o = value as Record<string, unknown>;
   return (
     typeof o.code === "string" &&
+    /^\d{6}$/.test(o.code) &&
     typeof o.name === "string" &&
     typeof o.nameKana === "string" &&
     typeof o.prefectureCode === "string" &&
     typeof o.prefectureName === "string" &&
     typeof o.prefectureNameKana === "string"
   );
+}
+
+export function isLocalGov(value: unknown): value is LocalGov {
+  return isPrefectureRecord(value) || isMunicipalityRecord(value);
 }
 
 function assertSchemaVersion(value: unknown, label: string): number {
@@ -174,9 +195,12 @@ export function validatePrefecturesFile(
   const obj = asObject(data, "Prefectures file");
   const schemaVersion = assertSchemaVersion(obj.schemaVersion, "Prefectures file");
 
-  if (!Array.isArray(obj.prefectures) || !obj.prefectures.every(isLocalGov)) {
+  if (
+    !Array.isArray(obj.prefectures) ||
+    !obj.prefectures.every(isPrefectureRecord)
+  ) {
     throw new LocalGovSchemaError(
-      "Prefectures file must include a prefectures array of LocalGov objects",
+      "Prefectures file must include a prefectures array of Prefecture objects",
     );
   }
 
@@ -204,10 +228,10 @@ export function validateMunicipalitiesFile(
   }
   if (
     !Array.isArray(obj.municipalities) ||
-    !obj.municipalities.every(isLocalGov)
+    !obj.municipalities.every(isMunicipalityRecord)
   ) {
     throw new LocalGovSchemaError(
-      "Municipalities file must include a municipalities array of LocalGov objects",
+      "Municipalities file must include a municipalities array of Municipality objects",
     );
   }
 

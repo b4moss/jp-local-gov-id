@@ -122,14 +122,14 @@ describe("JLPR (TC-B01)", () => {
     expect(decoded.records).toEqual(samplePrefs);
 
     const file = decodePrefecturesFile(buf);
-    expect(file.schemaVersion).toBe(1);
+    expect(file.schemaVersion).toBe(2);
     expect(file.prefectures[0]).toMatchObject({
-      code: "01",
-      prefectureCode: "01",
+      code: "010006",
       name: "北海道",
       municipalityCounts: { both: 195, city: 185, ward: 194 },
     });
-    expect(file.prefectures[1].code).toBe("27");
+    expect(file.prefectures[0]).not.toHaveProperty("prefectureCode");
+    expect(file.prefectures[1].code).toBe("270008");
     expect(file.prefectures[0]).not.toHaveProperty("hasWard");
     expect(file.prefectures[0]).not.toHaveProperty("muniCode");
   });

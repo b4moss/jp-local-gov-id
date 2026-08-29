@@ -1,4 +1,4 @@
-import type { LocalGov, LocalGovMunicipalitiesFile } from "../types";
+import type { LocalGovMunicipalitiesFile, Municipality } from "../types";
 import {
   BINARY_FORMAT_VERSION,
   DECODED_SCHEMA_VERSION,
@@ -207,7 +207,7 @@ export function decodeMunicipalities(
 export function municipalityRecordToLocalGov(
   record: MunicipalityBinRecord,
   pref: PrefectureNameLookup,
-): LocalGov {
+): Municipality {
   const code = String(record.code).padStart(6, "0");
   return {
     code,

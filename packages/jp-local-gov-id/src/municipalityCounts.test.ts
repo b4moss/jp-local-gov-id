@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 import dataset from "@b4moss/jp-local-gov-id-data";
 import { filterByDesignatedCity } from "./designatedCity";
-import type { DesignatedCityMode } from "./types";
+import type { DesignatedCityMode, MunicipalityCounts } from "./types";
 
 const MODES: DesignatedCityMode[] = ["both", "city", "ward"];
 
-type MunicipalityCounts = {
-  both: number;
-  city: number;
-  ward: number;
-};
+function orgCode(entityCode: string): string {
+  return entityCode.slice(0, 2);
+}
 
-function countsOf(code: string): MunicipalityCounts {
-  const pref = dataset.prefectures.prefectures.find((p) => p.code === code);
+function countsOf(org: string): MunicipalityCounts {
+  const pref = dataset.prefectures.prefectures.find(
+    (p) => orgCode(p.code) === org,
+  );
   expect(pref?.municipalityCounts).toBeDefined();
   return pref!.municipalityCounts as MunicipalityCounts;
 }
@@ -34,7 +34,7 @@ describe("municipalityCounts in decoded prefectures data", () => {
 
   it("TC-02/TC-09: counts match filterByDesignatedCity for every prefecture", () => {
     for (const pref of dataset.prefectures.prefectures) {
-      const file = dataset.municipalitiesByCode[pref.code];
+      const file = dataset.municipalitiesByCode[orgCode(pref.code)];
       expect(file).toBeDefined();
       const list = file.municipalities;
       const counts = pref.municipalityCounts!;
@@ -95,9 +95,44 @@ describe("municipalityCounts in decoded prefectures data", () => {
     expect(indexJson).not.toContain("municipalityCounts");
   });
 
-  it("TC-08: schemaVersion stays 1", () => {
-    expect(dataset.prefectures.schemaVersion).toBe(1);
-    expect(dataset.index.schemaVersion).toBe(1);
-    expect(dataset.municipalitiesByCode["01"].schemaVersion).toBe(1);
+  it("TC-D06: schemaVersion is 2", () => {
+    expect(dataset.prefectures.schemaVersion).toBe(2);
+    expect(dataset.index.schemaVersion).toBe(2);
+    expect(dataset.municipalitiesByCode["01"].schemaVersion).toBe(2);
+  });
+
+  it("TC-D01/D02/D04: prefecture entities use 6-digit code without prefecture*", () => {
+    expect(dataset.prefectures.prefectures.map((p) => p.code)).toEqual(
+      expect.arrayContaining(["010006", "130001", "150002", "470007"]),
+    );
+    expect(dataset.prefectures.prefectures.map((p) => p.code)).not.toContain(
+      "13",
+    );
+
+    for (const pref of dataset.prefectures.prefectures) {
+      expect(pref.code).toMatch(/^\d{6}$/);
+      expect(pref).not.toHaveProperty("prefectureCode");
+      expect(pref).not.toHaveProperty("prefectureName");
+      expect(pref).not.toHaveProperty("prefectureNameKana");
+      expect(pref.name).toBeTruthy();
+      expect(pref.nameKana).toBeTruthy();
+    }
+  });
+
+  it("TC-D03/D05: municipalities keep affiliation; index uses 2-digit keys", () => {
+    expect(dataset.index.prefectureCodes).toHaveLength(47);
+    expect(dataset.index.prefectureCodes.every((c) => /^\d{2}$/.test(c))).toBe(
+      true,
+    );
+
+    const chiyoda = dataset.municipalitiesByCode["13"].municipalities.find(
+      (m) => m.code === "131016",
+    );
+    expect(chiyoda).toMatchObject({
+      code: "131016",
+      name: "千代田区",
+      prefectureCode: "13",
+      prefectureName: "東京都",
+    });
   });
 });

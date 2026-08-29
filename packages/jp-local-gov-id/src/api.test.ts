@@ -104,11 +104,16 @@ describe("createLocalGovClient", () => {
 });
 
 describe("listPrefectures", () => {
-  it("returns all 47 prefectures", async () => {
+  it("TC-A01: returns all 47 prefectures with 6-digit entity codes", async () => {
     const prefs = (await client()).listPrefectures();
     expect(prefs).toHaveLength(47);
-    expect(prefs.map((p) => p.code)).toContain("13");
-    expect(prefs.find((p) => p.code === "13")?.name).toBe("東京都");
+    expect(prefs.map((p) => p.code)).toContain("130001");
+    expect(prefs.map((p) => p.code)).not.toContain("13");
+    expect(prefs.find((p) => p.code === "130001")?.name).toBe("東京都");
+    for (const p of prefs) {
+      expect(p).not.toHaveProperty("prefectureCode");
+      expect(p.municipalityCounts).toBeDefined();
+    }
   });
 });
 
@@ -127,11 +132,19 @@ describe("getPrefectureCodeByName", () => {
 });
 
 describe("getPrefectureByCode", () => {
-  it("resolves prefecture by padded and unpadded code", async () => {
+  it("TC-A02: resolves prefecture by padded and unpadded org code", async () => {
     const c = await client();
     expect(c.getPrefectureByCode("13")?.name).toBe("東京都");
+    expect(c.getPrefectureByCode("13")?.code).toBe("130001");
     expect(c.getPrefectureByCode("1")?.name).toBe("北海道");
-    expect(c.getPrefectureByCode("01")?.name).toBe("北海道");
+    expect(c.getPrefectureByCode("01")?.code).toBe("010006");
+  });
+
+  it("TC-A03: resolves prefecture by 6-digit entity code", async () => {
+    const c = await client();
+    expect(c.getPrefectureByCode("130001")?.name).toBe("東京都");
+    expect(c.getPrefectureByCode("010006")?.name).toBe("北海道");
+    expect(c.getPrefectureByCode("130001")).toEqual(c.getPrefectureByCode("13"));
   });
 
   it("returns null for invalid or unknown codes", async () => {
@@ -207,7 +220,7 @@ describe("getMunicipalityCountByPrefecture", () => {
 
     expect(c.getPrefectureByCode("01")?.municipalityCounts).toEqual(expected);
     expect(
-      c.listPrefectures().find((p) => p.code === "01")?.municipalityCounts,
+      c.listPrefectures().find((p) => p.code === "010006")?.municipalityCounts,
     ).toEqual(expected);
   });
 
@@ -281,24 +294,35 @@ describe("getMunicipalityByCode", () => {
     );
   });
 
-  it("returns null for prefecture codes and invalid input", async () => {
+  it("TC-A07: returns null for prefecture codes and invalid input", async () => {
     const c = await client();
     expect(await c.getMunicipalityByCode("13")).toBeNull();
     expect(await c.getMunicipalityByCode("1")).toBeNull();
+    expect(await c.getMunicipalityByCode("130001")).toBeNull();
     expect(await c.getMunicipalityByCode("999999")).toBeNull();
   });
 });
 
 describe("getByCode", () => {
-  it("resolves prefecture by 2-digit and unpadded code", async () => {
+  it("TC-A05: resolves prefecture by 2-digit and unpadded org code", async () => {
     const c = await client();
     expect((await c.getByCode("13"))?.name).toBe("東京都");
+    expect((await c.getByCode("13"))?.code).toBe("130001");
     expect((await c.getByCode("1"))?.name).toBe("北海道");
-    expect((await c.getByCode("01"))?.name).toBe("北海道");
+    expect((await c.getByCode("01"))?.code).toBe("010006");
+  });
+
+  it("TC-A05: resolves prefecture by 6-digit entity code", async () => {
+    const c = await client();
+    const tokyo = await c.getByCode("130001");
+    expect(tokyo?.name).toBe("東京都");
+    expect(tokyo).not.toHaveProperty("prefectureCode");
   });
 
   it("resolves municipality by 6-digit code", async () => {
-    expect((await (await client()).getByCode("131016"))?.name).toBe("千代田区");
+    const muni = await (await client()).getByCode("131016");
+    expect(muni?.name).toBe("千代田区");
+    expect(muni).toHaveProperty("prefectureCode", "13");
   });
 
   it("resolves designated city body and ward", async () => {
@@ -428,7 +452,10 @@ describe("getLocalGovCodeByName", () => {
     expect(await c.getLocalGovCodeByName("千代田区")).toBe("131016");
     expect(await c.getLocalGovCodeByName("札幌市中央区")).toBe("011011");
     expect(await c.getLocalGovCodeByName("東京都", { target: "prefectures" })).toBe(
-      "13",
+      "130001",
+    );
+    expect(await c.getLocalGovCodeByName("北海道", { target: "prefectures" })).toBe(
+      "010006",
     );
   });
 
@@ -558,7 +585,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(cached.expiresAt).toBeLessThanOrEqual(
       Date.now() + CACHE_TTL_MS + 1000,
     );
-    expect(cached.data.schemaVersion).toBe(1);
+    expect(cached.data.schemaVersion).toBe(2);
 
     expect((await c.getByCode("131016"))?.name).toBe("千代田区");
     expect(fetchMock).toHaveBeenCalledTimes(3);

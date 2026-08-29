@@ -24,5 +24,5 @@ export const GRAM_TYPE_KANA = 1;
 export const KIND_PREF = 0;
 export const KIND_MUNI = 1;
 
-/** Logical schemaVersion on decoded envelopes (unchanged from JSON era). */
-export const DECODED_SCHEMA_VERSION = 1;
+/** Logical schemaVersion on decoded envelopes (#53 Prefecture/Municipality split). */
+export const DECODED_SCHEMA_VERSION = 2;

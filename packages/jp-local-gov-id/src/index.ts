@@ -11,12 +11,19 @@ export type {
   LocalGovMunicipalitiesFile,
   LocalGovPrefecturesFile,
   MatchField,
+  Municipality,
   MunicipalityCounts,
+  Prefecture,
   SearchNgramsPathSpec,
   SearchNgramsThreeGramSpec,
   SearchNgramsTwoGramSpec,
   SearchOptions,
   SearchTarget,
+} from "./types";
+export {
+  isMunicipality,
+  isPrefecture,
+  prefectureOrgCode,
 } from "./types";
 export { createLocalGovClient } from "./create";
 export {

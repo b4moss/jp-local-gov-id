@@ -28,10 +28,11 @@ import { createStore } from "./store";
 import type {
   CreateLocalGovCacheOptions,
   CreateLocalGovOptions,
-  LocalGov,
   LocalGovClient,
   LocalGovIndexFile,
+  Prefecture,
 } from "./types";
+import { prefectureOrgCode } from "./types";
 
 type ResolvedCacheConfig = {
   enabled: boolean;
@@ -117,21 +118,21 @@ async function fetchBinaryPayload(url: string): Promise<ArrayBuffer> {
 }
 
 function prefectureLookup(
-  prefectures: LocalGov[],
+  prefectures: Prefecture[],
   code: string,
 ): {
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
 } {
-  const pref = prefectures.find((p) => p.code === code);
+  const pref = prefectures.find((p) => prefectureOrgCode(p) === code);
   if (!pref) {
     throw new LocalGovSchemaError(
       `Unknown prefecture code while decoding municipalities: ${code}`,
     );
   }
   return {
-    prefectureCode: pref.code,
+    prefectureCode: code,
     prefectureName: pref.name,
     prefectureNameKana: pref.nameKana,
   };
@@ -153,7 +154,7 @@ async function loadPrefecturesPayload(url: string): Promise<unknown> {
 
 async function loadMunicipalitiesPayload(
   url: string,
-  prefectures: LocalGov[],
+  prefectures: Prefecture[],
   code: string,
 ): Promise<unknown> {
   if (!isBinaryPayloadUrl(url)) {

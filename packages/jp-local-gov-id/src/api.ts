@@ -17,19 +17,29 @@ import type {
   LocalGov,
   LocalGovClient,
   MatchField,
+  Municipality,
+  Prefecture,
   SearchOptions,
   SearchTarget,
 } from "./types";
+import { isPrefecture, prefectureOrgCode } from "./types";
 
-function resolvePrefectureCode(
+/** Resolve to 2-digit organizational prefecture code. */
+function resolvePrefectureOrgCode(
   store: LocalGovStore,
   pref: string,
 ): string | null {
-  const asCode = normalizePrefectureCode(pref);
-  if (asCode && store.prefectureByCode.has(asCode)) return asCode;
+  const asOrg = normalizePrefectureCode(pref);
+  if (asOrg && store.prefectureByOrgCode.has(asOrg)) return asOrg;
+
+  const asEntity = normalizeMunicipalityCode(pref);
+  if (asEntity) {
+    const byEntity = store.prefectureByEntityCode.get(asEntity);
+    if (byEntity) return prefectureOrgCode(byEntity);
+  }
 
   const byName = store.prefectureByName.get(pref);
-  return byName?.code ?? null;
+  return byName ? prefectureOrgCode(byName) : null;
 }
 
 function matchesText(
@@ -50,11 +60,11 @@ function matchesText(
   return check(item.name) || check(item.nameKana);
 }
 
-/** Current-compatible hit order: prefecture code, then entity code. */
+/** Current-compatible hit order: prefecture org code, then entity code. */
 function sortSearchHits(items: LocalGov[]): LocalGov[] {
   return [...items].sort((a, b) => {
-    const aPref = a.code.length === 2 ? a.code : a.prefectureCode;
-    const bPref = b.code.length === 2 ? b.code : b.prefectureCode;
+    const aPref = isPrefecture(a) ? prefectureOrgCode(a) : a.prefectureCode;
+    const bPref = isPrefecture(b) ? prefectureOrgCode(b) : b.prefectureCode;
     if (aPref !== bPref) return aPref.localeCompare(bPref);
     if (a.code.length !== b.code.length) return a.code.length - b.code.length;
     return a.code.localeCompare(b.code);
@@ -64,17 +74,17 @@ function sortSearchHits(items: LocalGov[]): LocalGov[] {
 async function collectPrefectureScoped(
   store: LocalGovStore,
   target: SearchTarget,
-  prefectureCode: string,
+  prefectureOrg: string,
 ): Promise<LocalGov[]> {
-  const prefs =
+  const prefs: Prefecture[] =
     target === "cities"
       ? []
-      : store.prefectures.filter((p) => p.code === prefectureCode);
+      : store.prefectures.filter((p) => prefectureOrgCode(p) === prefectureOrg);
 
-  let munis: LocalGov[] = [];
+  let munis: Municipality[] = [];
   if (target === "all" || target === "cities") {
-    await store.ensureMunicipalities([prefectureCode]);
-    munis = [...(store.getMunicipalities(prefectureCode) ?? [])];
+    await store.ensureMunicipalities([prefectureOrg]);
+    munis = [...(store.getMunicipalities(prefectureOrg) ?? [])];
   }
 
   return [...prefs, ...munis];
@@ -154,7 +164,7 @@ async function collectNationwideViaIndex(
   const prefCodes = [...new Set(hits.map((h) => h.prefCode))];
   await store.ensureMunicipalities(prefCodes, { persist: false });
 
-  const munis: LocalGov[] = [];
+  const munis: Municipality[] = [];
   for (const hit of hits) {
     const item = store.getMunicipalityByCode(hit.muniCode);
     if (!item) continue;
@@ -173,27 +183,32 @@ async function collectNationwideViaIndex(
 /** Build a client from an in-memory store (internal). */
 export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
   return {
-    listPrefectures(): LocalGov[] {
+    listPrefectures(): Prefecture[] {
       return [...store.prefectures];
     },
 
-    getPrefectureByCode(code: string): LocalGov | null {
-      const normalized = normalizePrefectureCode(code);
-      if (!normalized) return null;
-      return store.prefectureByCode.get(normalized) ?? null;
+    getPrefectureByCode(code: string): Prefecture | null {
+      const asOrg = normalizePrefectureCode(code);
+      if (asOrg) return store.prefectureByOrgCode.get(asOrg) ?? null;
+
+      const asEntity = normalizeMunicipalityCode(code);
+      if (asEntity) return store.prefectureByEntityCode.get(asEntity) ?? null;
+
+      return null;
     },
 
     getPrefectureCodeByName(name: string): string | null {
-      return store.prefectureByName.get(name)?.code ?? null;
+      const pref = store.prefectureByName.get(name);
+      return pref ? prefectureOrgCode(pref) : null;
     },
 
     getMunicipalityCountByPrefecture(
       pref: string,
       options?: ListMunicipalitiesOptions,
     ): number | null {
-      const code = resolvePrefectureCode(store, pref);
-      if (!code) return null;
-      const counts = store.prefectureByCode.get(code)?.municipalityCounts;
+      const orgCode = resolvePrefectureOrgCode(store, pref);
+      if (!orgCode) return null;
+      const counts = store.prefectureByOrgCode.get(orgCode)?.municipalityCounts;
       if (!counts) return null;
       return counts[options?.designatedCity ?? "both"];
     },
@@ -201,20 +216,23 @@ export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
     async listMunicipalitiesByPrefecture(
       pref: string,
       options?: ListMunicipalitiesOptions,
-    ): Promise<LocalGov[]> {
-      const code = resolvePrefectureCode(store, pref);
-      if (!code) return [];
-      await store.ensureMunicipalities([code]);
-      const munis = [...(store.getMunicipalities(code) ?? [])];
+    ): Promise<Municipality[]> {
+      const orgCode = resolvePrefectureOrgCode(store, pref);
+      if (!orgCode) return [];
+      await store.ensureMunicipalities([orgCode]);
+      const munis = [...(store.getMunicipalities(orgCode) ?? [])];
       return filterByDesignatedCity(munis, options?.designatedCity ?? "both");
     },
 
-    async getMunicipalityByCode(code: string): Promise<LocalGov | null> {
+    async getMunicipalityByCode(code: string): Promise<Municipality | null> {
       const municipalityCode = normalizeMunicipalityCode(code);
       if (!municipalityCode) return null;
 
+      // Prefecture entity codes are 6-digit but not municipalities.
+      if (store.prefectureByEntityCode.has(municipalityCode)) return null;
+
       const prefCode = municipalityCode.slice(0, 2);
-      if (!store.prefectureByCode.has(prefCode)) return null;
+      if (!store.prefectureByOrgCode.has(prefCode)) return null;
 
       await store.ensureMunicipalities([prefCode]);
       return store.getMunicipalityByCode(municipalityCode) ?? null;
@@ -225,11 +243,14 @@ export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
       if (!normalized) return null;
 
       if (normalized.kind === "prefecture") {
-        return store.prefectureByCode.get(normalized.code) ?? null;
+        return store.prefectureByOrgCode.get(normalized.code) ?? null;
       }
 
+      const entityPref = store.prefectureByEntityCode.get(normalized.code);
+      if (entityPref) return entityPref;
+
       const prefCode = normalized.code.slice(0, 2);
-      if (!store.prefectureByCode.has(prefCode)) return null;
+      if (!store.prefectureByOrgCode.has(prefCode)) return null;
 
       await store.ensureMunicipalities([prefCode]);
       return store.getMunicipalityByCode(normalized.code) ?? null;
@@ -242,21 +263,21 @@ export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
       const target = options?.target ?? "all";
       const matchField = options?.matchField ?? "both";
       const designatedCity = options?.designatedCity ?? "both";
-      const prefectureCode = options?.prefecture
-        ? resolvePrefectureCode(store, options.prefecture)
+      const prefectureOrg = options?.prefecture
+        ? resolvePrefectureOrgCode(store, options.prefecture)
         : undefined;
 
-      if (options?.prefecture && !prefectureCode) return [];
+      if (options?.prefecture && !prefectureOrg) return [];
 
       const queryNormalized = normalizeSearchText(text);
       // Normalized empty or under 2 code points → empty (Issue #63)
       if (Array.from(queryNormalized).length < 2) return [];
 
-      if (prefectureCode) {
+      if (prefectureOrg) {
         const items = await collectPrefectureScoped(
           store,
           target,
-          prefectureCode,
+          prefectureOrg,
         );
         return filterByDesignatedCity(items, designatedCity).filter((item) =>
           matchesText(item, queryNormalized, matchField, "includes"),
@@ -287,22 +308,22 @@ export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
       const target = options?.target ?? "all";
       const matchField = options?.matchField ?? "both";
       const designatedCity = options?.designatedCity ?? "both";
-      const prefectureCode = options?.prefecture
-        ? resolvePrefectureCode(store, options.prefecture)
+      const prefectureOrg = options?.prefecture
+        ? resolvePrefectureOrgCode(store, options.prefecture)
         : undefined;
 
-      if (options?.prefecture && !prefectureCode) return null;
+      if (options?.prefecture && !prefectureOrg) return null;
 
       const queryNormalized = normalizeSearchText(name);
       if (Array.from(queryNormalized).length < 2) return null;
 
       let matches: LocalGov[];
 
-      if (prefectureCode) {
+      if (prefectureOrg) {
         const items = await collectPrefectureScoped(
           store,
           target,
-          prefectureCode,
+          prefectureOrg,
         );
         matches = filterByDesignatedCity(items, designatedCity).filter((item) =>
           matchesText(item, queryNormalized, matchField, "equals"),
