@@ -1,22 +1,20 @@
 ---
-title: Contribute
+title: Contributing
 description: How to contribute
 ---
 
-# Contribute
+# Contributing
 
-Issues and pull requests are welcome. Join us on the [GitHub repository](https://github.com/b4m-oss/jp-local-gov-id).
+Issues and pull requests are welcome on the [GitHub repository](https://github.com/b4moss/jp-local-gov-id).
 
 ## Repository layout
-
-This is an npm workspaces monorepo.
 
 | Path | Contents |
 |------|----------|
 | `packages/jp-local-gov-id` | JS API |
-| `packages/jp-local-gov-id-data` | Split JSON datasets |
-| `scripts/` | Data generation from Excel, etc. |
-| `site/` | This documentation site |
+| `packages/jp-local-gov-id-data` | `index.json` + `.bin.br` (prefectures, per-pref, JLIX). CSV / uncompressed `.bin` are repo-only |
+| `scripts/` | Excel → data generation |
+| `site/` | This docs site |
 | `docs/` | Internal specs |
 
 ## Getting started
@@ -27,22 +25,29 @@ npm test
 npm run build
 ```
 
-Regenerate data (Ministry of Internal Affairs Excel → split JSON):
+### Required gate before PRs
+
+```bash
+npm run ci:local            # preferred (nektos/act + Docker)
+npm run ci:local:fallback   # when Docker is unavailable
+```
+
+Regenerate data (Excel → CSV / `.bin` for review → `.bin.br` + hybrid JLIX for npm):
 
 ```bash
 npm run generate
 ```
 
-Run the docs site locally:
+Docs site locally:
 
 ```bash
 npm run dev:site
 ```
 
-## Guidelines
+## Guidance
 
-- Bug fixes, docs improvements, and tests are welcome
-- Please open an Issue first for breaking API or data-format changes
-- See `docs/` in the repository for detailed specs
+- Bug fixes, docs, and tests are welcome
+- Breaking API or data-format changes should start with an Issue
+- See `docs/` (especially `logics.md`, `main.md`, `test-spec-63-search-ngrams.md`) for contracts
 
-Licensed under MIT.
+License: MIT.

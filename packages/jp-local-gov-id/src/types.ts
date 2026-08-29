@@ -9,7 +9,7 @@ export type Prefecture = {
   code: string;
   name: string;
   nameKana: string;
-  /** Present on prefecture records only (from `prefectures.json`). */
+  /** Present on prefecture records only (from decoded `prefectures.bin`). */
   municipalityCounts?: MunicipalityCounts;
 };
 
@@ -53,6 +53,26 @@ export type SearchOptions = {
   designatedCity?: DesignatedCityMode;
 };
 
+/** Hot 2-gram region layout under `paths.searchNgrams.twoGram`. */
+export type SearchNgramsTwoGramSpec = {
+  regions: string[];
+  /** Relative path pattern; `{region}` → region id. */
+  pattern: string;
+};
+
+/** Cold 3-gram shard layout under `paths.searchNgrams.threeGram`. */
+export type SearchNgramsThreeGramSpec = {
+  shardCount: number;
+  /** Relative path pattern; `{shard}` → `0`..`shardCount-1`. */
+  pattern: string;
+};
+
+/** JLIX search index paths (#63 hybrid 2-gram / 3-gram). */
+export type SearchNgramsPathSpec = {
+  twoGram: SearchNgramsTwoGramSpec;
+  threeGram: SearchNgramsThreeGramSpec;
+};
+
 /** Index file (`index.json`) */
 export type LocalGovIndexFile = {
   schemaVersion: number;
@@ -67,19 +87,24 @@ export type LocalGovIndexFile = {
   paths: {
     prefectures: string;
     municipalitiesByPrefecture: string;
+    /**
+     * Hybrid JLIX: hot 2-gram regions + cold 3-gram shards.
+     * Required (#63).
+     */
+    searchNgrams: SearchNgramsPathSpec;
   };
   /** 2-digit prefecture codes (`"01"` … `"47"`). */
   prefectureCodes: string[];
 };
 
-/** Prefectures-only file (`prefectures.json`) */
+/** Prefectures-only file (decoded from `prefectures.bin`) */
 export type LocalGovPrefecturesFile = {
   schemaVersion: number;
   asOf?: string;
   prefectures: Prefecture[];
 };
 
-/** Per-prefecture municipalities file (`prefectures/{code}.json`) */
+/** Per-prefecture municipalities file (decoded from `prefectures/{code}.bin`) */
 export type LocalGovMunicipalitiesFile = {
   schemaVersion: number;
   asOf?: string;
@@ -101,6 +126,12 @@ export type LocalGovDataset = {
     | LocalGovMunicipalitiesFile
     | unknown
     | Promise<LocalGovMunicipalitiesFile | unknown>;
+  /**
+   * Raw JLIX bytes keyed by partition id:
+   * - 2-gram: region id (`tokyo`, …)
+   * - 3-gram: shard id (`0`, `1`, `2`)
+   */
+  searchNgramShards?: Record<string, ArrayBuffer | Uint8Array>;
 };
 
 export type CreateLocalGovCacheOptions = {

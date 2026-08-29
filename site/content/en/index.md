@@ -1,26 +1,29 @@
 ---
 title: Home
-description: An npm package for Japan’s nationwide local government codes
+description: npm packages for Japan’s nationwide local government codes
 ---
 
 # jp-local-gov-id
 
-A JavaScript API for working with Japan’s nationwide local government codes.
+JavaScript APIs for Japan’s nationwide local government codes (全国地方公共団体コード).
 
-## What you can do
+Data is **not** shipped as a single JSON blob. The data package publishes **Brotli-compressed** `.bin.br` files split by prefecture plus a hybrid n-gram search index, so clients can lazy-load only what they need.
 
-- List municipalities in a given prefecture
-- Fetch prefecture information as a list
-- Get municipality counts per prefecture (sync, no municipality JSON load)
-- Look up local government codes — unique IDs useful for address normalization
+## Examples of what you can do
 
-## Installation
+- List municipalities in a prefecture
+- List all prefectures
+- Get municipality counts per prefecture (sync; no per-prefecture load)
+- Resolve codes for address normalization
+- Nationwide string search (hybrid n-gram index narrows candidates first)
+
+## Install
 
 ```bash
 npm install @b4moss/jp-local-gov-id @b4moss/jp-local-gov-id-data
 ```
 
-See [Installation](/en/installation) for details.
+See [Installation](./installation.md) for details.
 
 ## Quick example
 
@@ -32,18 +35,16 @@ const client = await createLocalGovClient({ data: dataset });
 await client.getByCode("131016"); // Chiyoda
 ```
 
-See [Usage](/en/usage) for details.
+See [Usage](./usage.md) for more.
 
 ## Try it
-
-Try code lookup and text search in the browser. For free-form TypeScript, open the [Playground](/en/playground).
 
 ### Code lookup
 
 ::code-lookup-demo
 ::
 
-### Text search
+### Text
 
 ::search-demo
 ::
@@ -53,8 +54,8 @@ Try code lookup and text search in the browser. For free-form TypeScript, open t
 | Package | Description |
 |---------|-------------|
 | `@b4moss/jp-local-gov-id` | JS API (data not bundled) |
-| `@b4moss/jp-local-gov-id-data` | Split JSON datasets |
+| `@b4moss/jp-local-gov-id-data` | `index.json` + Brotli binaries (`.bin.br`) + search indexes |
 
-## Questions and requests
+## Questions / requests
 
-Please use [GitHub Issues](https://github.com/b4m-oss/jp-local-gov-id/issues). (A GitHub account is required.)
+Please open a [GitHub Issue](https://github.com/b4moss/jp-local-gov-id/issues).

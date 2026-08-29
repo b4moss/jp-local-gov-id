@@ -17,7 +17,7 @@ function countsOf(org: string): MunicipalityCounts {
   return pref!.municipalityCounts as MunicipalityCounts;
 }
 
-describe("municipalityCounts in prefectures.json", () => {
+describe("municipalityCounts in decoded prefectures data", () => {
   it("TC-01: every prefecture has both/city/ward positive integers", () => {
     expect(dataset.prefectures.prefectures).toHaveLength(47);
 

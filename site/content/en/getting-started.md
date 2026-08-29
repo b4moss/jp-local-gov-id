@@ -1,24 +1,26 @@
 ---
 title: Getting started
-description: Overview and next steps for jp-local-gov-id
+description: Overview and next steps
 ---
 
 # Getting started
 
-`jp-local-gov-id` is an npm package for working with Japan’s nationwide local government codes from JavaScript.
+jp-local-gov-id is an npm package for working with Japan’s nationwide local government codes from JavaScript.
 
-It is split into two packages:
+There are two packages:
 
-- `@b4moss/jp-local-gov-id`: the application (API)
-- `@b4moss/jp-local-gov-id-data`: local government data
+- `@b4moss/jp-local-gov-id` — API
+- `@b4moss/jp-local-gov-id-data` — data (`index.json` + `.bin.br` + search indexes)
 
-See [Usage](/en/usage) for details.
+This is **not** the old single JSON dump. Payloads are Brotli-compressed binaries, and nationwide search uses a hybrid n-gram index.
+
+See [Usage](./usage.md) for details.
 
 ## Next steps
 
-1. [Installation](/en/installation) — install the packages
-2. [Usage](/en/usage) — create a client and call methods
-3. [API](/en/api) — public method reference
-4. [Playground](/en/playground) — try it in the browser
+1. [Installation](/en/installation)
+2. [Usage](/en/usage)
+3. [API](/en/api)
+4. [Playground](/en/playground)
 
-See [Examples](/en/examples) for a place to collect sample snippets.
+Examples live under [Examples](/en/examples).
