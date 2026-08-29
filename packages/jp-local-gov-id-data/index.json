@@ -2,15 +2,15 @@
   "schemaVersion": 1,
   "source": "000925835.xlsx",
   "asOf": "R6.1.1",
-  "generatedAt": "2026-08-27T01:15:54.580Z",
+  "generatedAt": "2026-08-29T06:18:26.874Z",
   "counts": {
     "prefectures": 47,
     "municipalities": 1918,
     "designatedCityWardsAdded": 171
   },
   "paths": {
-    "prefectures": "prefectures.json",
-    "municipalitiesByPrefecture": "prefectures/{code}.json"
+    "prefectures": "prefectures.bin",
+    "municipalitiesByPrefecture": "prefectures/{code}.bin"
   },
   "prefectureCodes": [
     "01",

@@ -11,7 +11,7 @@ export type LocalGov = {
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
-  /** Present on prefecture records in `prefectures.json` only. */
+  /** Present on prefecture records in `prefectures.bin` (decoded) only. */
   municipalityCounts?: MunicipalityCounts;
 };
 
