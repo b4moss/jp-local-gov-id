@@ -1,7 +1,7 @@
 # テスト仕様書: データソース CSV / 独自バイナリ移行（#73）
 
 対象マイルストーン: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`  
-関連: [main.md](./main.md) / [logics.md](./logics.md) / Issue #73  
+関連: [main.md](./main.md) / [logics.md](./logics.md) / [binary-size-73.md](./binary-size-73.md) / Issue #73  
 作業ブランチ: `dev-app-v1.0.0-rc.10`
 
 ## 1. 目的

@@ -26,6 +26,17 @@ A single file of all municipalities is **not** distributed. `schemaVersion` (cur
 
 The intermediate CSV used to generate the `.bin` files (`prefectures.csv`, `prefectures/{code}.csv`) lives in the repository for review, but is **not** published in this npm package.
 
+### Size vs previous JSON packaging
+
+Measured against the last JSON release (`1.0.0-rc.3`):
+
+| | JSON (before) | `.bin` (rc.10) |
+| --- | ---: | ---: |
+| Unpacked data payload | ~436 KiB | ~88 KiB (~20%) |
+| `npm pack` `.tgz` (gzip) | ~41.9 KB | ~47.8 KB |
+
+Unpacked size drops sharply; the published tarball can grow slightly because JSON gzip-compresses well and `decode.js` / a larger `dataset.js` are now included. Details: [docs/binary-size-73.md](../../docs/binary-size-73.md).
+
 ## Import
 
 Default dataset (for the API package):
