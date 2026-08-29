@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import dataset from "@b4moss/jp-local-gov-id-data";
 import { createLocalGovClient } from "./create";
 import { CACHE_TTL_MS } from "./cache";
@@ -13,17 +16,43 @@ async function client(): Promise<LocalGovClient> {
 const indexUrl =
   "https://cdn.example.com/jp-local-gov-id-data/0.2.0/index.json";
 
+const dataDir = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../jp-local-gov-id-data",
+);
+
+function readBin(relativePath: string): ArrayBuffer {
+  const bytes = readFileSync(join(dataDir, relativePath));
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
+}
+
 function fileMap(): Map<string, unknown> {
   const map = new Map<string, unknown>();
   map.set(indexUrl, dataset.index);
   map.set(
-    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.json",
-    dataset.prefectures,
+    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
+    readBin("prefectures.bin.br"),
   );
-  for (const [code, file] of Object.entries(dataset.municipalitiesByCode)) {
+  const index = dataset.index as LocalGovIndexFile;
+  for (const region of index.paths.searchNgrams.twoGram.regions) {
     map.set(
-      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.json`,
-      file,
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams/2gram/${region}.bin.br`,
+      readBin(`search-ngrams/2gram/${region}.bin.br`),
+    );
+  }
+  for (let i = 0; i < index.paths.searchNgrams.threeGram.shardCount; i++) {
+    map.set(
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams/3gram/${i}.bin.br`,
+      readBin(`search-ngrams/3gram/${i}.bin.br`),
+    );
+  }
+  for (const code of index.prefectureCodes) {
+    map.set(
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.bin.br`,
+      readBin(`prefectures/${code}.bin.br`),
     );
   }
   return map;
@@ -75,11 +104,16 @@ describe("createLocalGovClient", () => {
 });
 
 describe("listPrefectures", () => {
-  it("returns all 47 prefectures", async () => {
+  it("TC-A01: returns all 47 prefectures with 6-digit entity codes", async () => {
     const prefs = (await client()).listPrefectures();
     expect(prefs).toHaveLength(47);
-    expect(prefs.map((p) => p.code)).toContain("13");
-    expect(prefs.find((p) => p.code === "13")?.name).toBe("東京都");
+    expect(prefs.map((p) => p.code)).toContain("130001");
+    expect(prefs.map((p) => p.code)).not.toContain("13");
+    expect(prefs.find((p) => p.code === "130001")?.name).toBe("東京都");
+    for (const p of prefs) {
+      expect(p).not.toHaveProperty("prefectureCode");
+      expect(p.municipalityCounts).toBeDefined();
+    }
   });
 });
 
@@ -98,11 +132,19 @@ describe("getPrefectureCodeByName", () => {
 });
 
 describe("getPrefectureByCode", () => {
-  it("resolves prefecture by padded and unpadded code", async () => {
+  it("TC-A02: resolves prefecture by padded and unpadded org code", async () => {
     const c = await client();
     expect(c.getPrefectureByCode("13")?.name).toBe("東京都");
+    expect(c.getPrefectureByCode("13")?.code).toBe("130001");
     expect(c.getPrefectureByCode("1")?.name).toBe("北海道");
-    expect(c.getPrefectureByCode("01")?.name).toBe("北海道");
+    expect(c.getPrefectureByCode("01")?.code).toBe("010006");
+  });
+
+  it("TC-A03: resolves prefecture by 6-digit entity code", async () => {
+    const c = await client();
+    expect(c.getPrefectureByCode("130001")?.name).toBe("東京都");
+    expect(c.getPrefectureByCode("010006")?.name).toBe("北海道");
+    expect(c.getPrefectureByCode("130001")).toEqual(c.getPrefectureByCode("13"));
   });
 
   it("returns null for invalid or unknown codes", async () => {
@@ -178,7 +220,7 @@ describe("getMunicipalityCountByPrefecture", () => {
 
     expect(c.getPrefectureByCode("01")?.municipalityCounts).toEqual(expected);
     expect(
-      c.listPrefectures().find((p) => p.code === "01")?.municipalityCounts,
+      c.listPrefectures().find((p) => p.code === "010006")?.municipalityCounts,
     ).toEqual(expected);
   });
 
@@ -252,24 +294,35 @@ describe("getMunicipalityByCode", () => {
     );
   });
 
-  it("returns null for prefecture codes and invalid input", async () => {
+  it("TC-A07: returns null for prefecture codes and invalid input", async () => {
     const c = await client();
     expect(await c.getMunicipalityByCode("13")).toBeNull();
     expect(await c.getMunicipalityByCode("1")).toBeNull();
+    expect(await c.getMunicipalityByCode("130001")).toBeNull();
     expect(await c.getMunicipalityByCode("999999")).toBeNull();
   });
 });
 
 describe("getByCode", () => {
-  it("resolves prefecture by 2-digit and unpadded code", async () => {
+  it("TC-A05: resolves prefecture by 2-digit and unpadded org code", async () => {
     const c = await client();
     expect((await c.getByCode("13"))?.name).toBe("東京都");
+    expect((await c.getByCode("13"))?.code).toBe("130001");
     expect((await c.getByCode("1"))?.name).toBe("北海道");
-    expect((await c.getByCode("01"))?.name).toBe("北海道");
+    expect((await c.getByCode("01"))?.code).toBe("010006");
+  });
+
+  it("TC-A05: resolves prefecture by 6-digit entity code", async () => {
+    const c = await client();
+    const tokyo = await c.getByCode("130001");
+    expect(tokyo?.name).toBe("東京都");
+    expect(tokyo).not.toHaveProperty("prefectureCode");
   });
 
   it("resolves municipality by 6-digit code", async () => {
-    expect((await (await client()).getByCode("131016"))?.name).toBe("千代田区");
+    const muni = await (await client()).getByCode("131016");
+    expect(muni?.name).toBe("千代田区");
+    expect(muni).toHaveProperty("prefectureCode", "13");
   });
 
   it("resolves designated city body and ward", async () => {
@@ -292,6 +345,31 @@ describe("searchByText", () => {
     expect(hits.some((h) => h.code === "131016" && h.name === "千代田区")).toBe(
       true,
     );
+  });
+
+  it("TC-Q02: length-2 query hits hot 2-gram only (cold 2-char misses)", async () => {
+    const c = await client();
+    const hot = await c.searchByText("中央", { target: "cities" });
+    expect(hot.some((h) => h.code === "131024")).toBe(true); // 中央区 (tokyo)
+    // 那覇 is cold; 2 code points cannot use 3-gram
+    expect(await c.searchByText("那覇", { target: "cities" })).toEqual([]);
+  });
+
+  it("TC-Q03/Q04: length>=3 merges both indexes (cold via 3-gram)", async () => {
+    const c = await client();
+    const hits = await c.searchByText("那覇市", { target: "cities" });
+    expect(hits.some((h) => h.code === "472018")).toBe(true);
+    // Both hot and cold can appear for shared substrings
+    const fuchu = await c.searchByText("府中市", { target: "cities" });
+    expect(fuchu.some((h) => h.code === "132063")).toBe(true);
+    expect(fuchu.some((h) => h.code === "342084")).toBe(true);
+  });
+
+  it("returns empty for queries under 2 code points after normalize", async () => {
+    const c = await client();
+    expect(await c.searchByText("")).toEqual([]);
+    expect(await c.searchByText("区")).toEqual([]);
+    expect(await c.getLocalGovCodeByName("区")).toBeNull();
   });
 
   it("filters by target prefectures", async () => {
@@ -374,7 +452,10 @@ describe("getLocalGovCodeByName", () => {
     expect(await c.getLocalGovCodeByName("千代田区")).toBe("131016");
     expect(await c.getLocalGovCodeByName("札幌市中央区")).toBe("011011");
     expect(await c.getLocalGovCodeByName("東京都", { target: "prefectures" })).toBe(
-      "13",
+      "130001",
+    );
+    expect(await c.getLocalGovCodeByName("北海道", { target: "prefectures" })).toBe(
+      "010006",
     );
   });
 
@@ -458,6 +539,20 @@ describe("createLocalGovClient url + cache + lazy load", () => {
           json: async () => {
             throw new Error("no body");
           },
+          arrayBuffer: async () => {
+            throw new Error("no body");
+          },
+        };
+      }
+      if (body instanceof ArrayBuffer) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          arrayBuffer: async () => body.slice(0),
+          json: async () => {
+            throw new Error("not json");
+          },
         };
       }
       return {
@@ -465,6 +560,9 @@ describe("createLocalGovClient url + cache + lazy load", () => {
         status: 200,
         statusText: "OK",
         json: async () => body,
+        arrayBuffer: async () => {
+          throw new Error("not binary");
+        },
       };
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -487,13 +585,13 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(cached.expiresAt).toBeLessThanOrEqual(
       Date.now() + CACHE_TTL_MS + 1000,
     );
-    expect(cached.data.schemaVersion).toBe(1);
+    expect(cached.data.schemaVersion).toBe(2);
 
     expect((await c.getByCode("131016"))?.name).toBe("千代田区");
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(
       fetchMock.mock.calls.some((call) =>
-        String(call[0]).endsWith("/prefectures/13.json"),
+        String(call[0]).endsWith("/prefectures/13.bin.br"),
       ),
     ).toBe(true);
 
@@ -520,6 +618,14 @@ describe("createLocalGovClient url + cache + lazy load", () => {
       await new Promise((r) => setTimeout(r, 5));
       inFlight -= 1;
 
+      if (body instanceof ArrayBuffer) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          arrayBuffer: async () => body.slice(0),
+        };
+      }
       return {
         ok: true,
         status: 200,
@@ -536,28 +642,52 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(hits.some((h) => h.name === "札幌市中央区")).toBe(true);
     expect(hits.some((h) => h.name === "中央区")).toBe(true);
 
-    // 2 init + 47 prefecture municipality files
-    expect(fetchMock).toHaveBeenCalledTimes(2 + 47);
-    expect(maxInFlight).toBe(MUNICIPALITY_FETCH_CONCURRENCY);
+    // 2 init + all 2-gram regions (query length 2 → no 3-gram) + candidate prefs
+    const searchFetches = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).includes("/search-ngrams/"),
+    ).length;
+    const muniFetches = fetchMock.mock.calls.filter((call) =>
+      /\/prefectures\/\d{2}\.bin\.br$/.test(String(call[0])),
+    ).length;
+    expect(searchFetches).toBe(
+      (dataset.index as LocalGovIndexFile).paths.searchNgrams.twoGram.regions
+        .length,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2 + searchFetches + muniFetches);
+    expect(muniFetches).toBeGreaterThan(0);
+    expect(muniFetches).toBeLessThan(47);
+    expect(
+      fetchMock.mock.calls.some((call) =>
+        String(call[0]).includes("/search-ngrams/2gram/"),
+      ),
+    ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some((call) =>
+        String(call[0]).includes("/search-ngrams/3gram/"),
+      ),
+    ).toBe(false);
+    expect(maxInFlight).toBeLessThanOrEqual(MUNICIPALITY_FETCH_CONCURRENCY);
     expect(MUNICIPALITY_FETCH_CONCURRENCY).toBe(6);
 
-    // Nationwide search keeps municipality JSON in memory only
+    // Nationwide search keeps municipality payloads + JLIX in memory only
     for (const key of store.keys()) {
-      expect(key).not.toMatch(/\/prefectures\/\d{2}\.json$/);
+      expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin(\.br)?$/);
+      expect(key).not.toMatch(/search-ngrams\//);
     }
     expect(store.has(indexUrl)).toBe(true);
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.json",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
       ),
     ).toBe(true);
 
     // Second nationwide search reuses memory (no extra fetch)
+    const callsAfterFirst = fetchMock.mock.calls.length;
     await c.searchByText("中央", { target: "cities" });
-    expect(fetchMock).toHaveBeenCalledTimes(2 + 47);
+    expect(fetchMock).toHaveBeenCalledTimes(callsAfterFirst);
   });
 
-  it("getByCode persists municipality JSON to localStorage", async () => {
+  it("getByCode persists municipality payload to localStorage", async () => {
     stubLocalStorage();
     const fetchMock = stubFetch(fileMap());
     const c = await createLocalGovClient({ url: indexUrl });
@@ -565,13 +695,13 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.getByCode("131016");
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.json",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.bin.br",
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("prefecture-scoped search persists municipality JSON to localStorage", async () => {
+  it("prefecture-scoped search persists municipality payload to localStorage", async () => {
     stubLocalStorage();
     const fetchMock = stubFetch(fileMap());
     const c = await createLocalGovClient({ url: indexUrl });
@@ -579,7 +709,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.searchByText("中央", { prefecture: "01", target: "cities" });
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.json",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.bin.br",
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);

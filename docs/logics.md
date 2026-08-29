@@ -11,21 +11,20 @@
 - 見つからない・一意に決まらない → `null` または `[]`（throw しない）
 - スキーマ不正 → `LocalGovSchemaError`
 - ネットワーク / HTTP 失敗 → 通常の fetch エラー
-- 都道府県コード: 2 桁（入力は `"1"` / `"01"` どちらも可）
-- 市区町村コード: 6 桁（チェックデジット込み）
+- 都道府県コード: 2 桁（入力は `"1"` / `"01"` どちらも可）。組織キー・ファイルパス・`getPrefectureCodeByName` の戻り
+- 地方公共団体コード: 6 桁（都道府県・市区町村ともエンティティの `code`）
 - 市区町村が必要な操作は async（遅延ロード）
 
-### `LocalGov`
+### `Prefecture` / `Municipality` / `LocalGov`
 
-| フィールド | 内容 |
-|------------|------|
-| `code` | 都道府県 2 桁 / 市区町村 6 桁 |
-| `name` | 名称（例: `千代田区` / `東京都` / `札幌市中央区`） |
-| `nameKana` | 半角カナ |
-| `prefectureCode` | 所属都道府県コード（都道府県自身の場合は自身） |
-| `prefectureName` | 所属都道府県名 |
-| `prefectureNameKana` | 所属都道府県カナ |
-| `municipalityCounts?` | 都道府県のみ。`{ both, city, ward }`（`designatedCity` と同キー） |
+| フィールド | Prefecture | Municipality |
+|------------|------------|--------------|
+| `code` | 6 桁地方公共団体コード | 6 桁地方公共団体コード |
+| `name` / `nameKana` | あり | あり |
+| `prefectureCode` / `prefectureName` / `prefectureNameKana` | **なし** | 所属都道府県（2 桁コード＋名称） |
+| `municipalityCounts?` | あり（`{ both, city, ward }`） | なし |
+
+`LocalGov = Prefecture | Municipality`。判別は `'prefectureCode' in value`（または `isPrefecture` / `isMunicipality`）。
 
 ### `SearchOptions`
 
@@ -66,13 +65,14 @@
 | 初期化（index / prefectures） | する | する |
 | `getByCode` / `listMunicipalitiesByPrefecture` / `getMunicipalityByCode` | する | する |
 | 都道府県指定の `searchByText` / `getLocalGovCodeByName` | する | する |
-| **全国**の `searchByText` / `getLocalGovCodeByName`（市区町村対象） | **しない** | する |
+| **全国**の `searchByText` / `getLocalGovCodeByName`（市区町村対象）の県 `.bin.br` | **しない** | する |
+| `search-ngrams/2gram|3gram/*.bin.br`（JLIX） | **しない** | する |
 
 - `cache` 既定 `true`。`false` で localStorage 読み書きなし
 - `cacheTtlSeconds` 既定 `31536000`（1 年）。単位は秒
 - `data` モードではキャッシュしない
 
-全国検索の並列度: 同時 6（`MUNICIPALITY_FETCH_CONCURRENCY`）
+全国市区町村検索はハイブリッド JLIX（ホット団体は **2-gram 地域ファイル**、それ以外は **3-gram を 3 シャード**）で候補 `muniCode` を絞り、該当県 `.bin.br` のみ並列取得（同時 6、取得後 Brotli 展開）。索引ファイル自体は **concurrency=3・開始 100ms ずらし**でロード。正規化後長が 2 なら 2-gram のみ、3 以上なら両索引をマージ（2-gram ヒットでも 3-gram は省略しない）。`target: "prefectures"` および都道府県指定時は索引を使わない。配信ペイロードは npm / CDN とも **Brotli（`.bin.br`）**（#74）。
 
 ---
 
@@ -90,60 +90,65 @@
 
 #### クライアントメソッド
 
-##### `listPrefectures()` → `LocalGov[]`
+##### `listPrefectures()` → `Prefecture[]`
 
-- 全都道府県（同期・初期化済み）
+- 全都道府県（同期・初期化済み）。各 `code` は 6 桁
 
-##### `getPrefectureByCode(code)` → `LocalGov | null`
+##### `getPrefectureByCode(code)` → `Prefecture | null`
 
-- 都道府県コード → エンティティ（同期）
-- `"1"` / `"01"` 同一視
+- 2 桁都道府県コード、または 6 桁地方公共団体コード → エンティティ（同期）
+- `"1"` / `"01"` 同一視。`"130001"` も可
 - 見つからなければ `null`
 
 ##### `getPrefectureCodeByName(name)` → `string | null`
 
-- 都道府県名の完全一致 → 2 桁コード
+- 都道府県名の完全一致 → **都道府県コード（2 桁）**
+- 地方公共団体コード（6 桁）は返さない
 - 見つからなければ `null`
 
 ##### `getMunicipalityCountByPrefecture(pref, options?)` → `number | null`
 
 - `pref`: コードまたは名称（`listMunicipalitiesByPrefecture` と同じ解決）
 - `options.designatedCity`: `"both"` \| `"city"` \| `"ward"`（既定 `"both"`）
-- 初期化済み都道府県の `municipalityCounts[mode]` を返す（同期・県別 JSON 不要）
+- 初期化済み都道府県の `municipalityCounts[mode]` を返す（同期・県別 `.bin.br` 不要）
 - 未知の都道府県 / 件数未載荷 → `null`
 
-##### `listMunicipalitiesByPrefecture(pref, options?)` → `Promise<LocalGov[]>`
+##### `listMunicipalitiesByPrefecture(pref, options?)` → `Promise<Municipality[]>`
 
 - `pref`: コードまたは名称
 - `options.designatedCity`: `"both"` \| `"city"` \| `"ward"`（既定 `"both"`）
 - 配下の市区町村（市本体・区を含む。`designatedCity` でフィルタ可）
-- 未ロードなら当該県 JSON を取得（キャッシュ可）
+- 未ロードなら当該県の `.bin.br` を取得してデコード（キャッシュ可）
 - 不正な `pref` → `[]`
 
-##### `getMunicipalityByCode(code)` → `Promise<LocalGov | null>`
+##### `getMunicipalityByCode(code)` → `Promise<Municipality | null>`
 
-- 6 桁のみ（それ以外は `null`）
+- 6 桁の市区町村コードのみ（都道府県の 6 桁エンティティコードや 2 桁は `null`）
 - 先頭 2 桁で県を特定してロード
 - 不正・不明 → `null`
 
 ##### `getByCode(code)` → `Promise<LocalGov | null>`
 
-- 2 桁 → `getPrefectureByCode`（同期相当を async で返す）
-- 6 桁 → `getMunicipalityByCode`
+- 2 桁 → 都道府県（組織キー）
+- 6 桁 → まず都道府県エンティティ、なければ市区町村
 - 不正・不明 → `null`
 
 ##### `searchByText(text, options?)` → `Promise<LocalGov[]>`
 
 - **部分一致**（正規化後 `includes`）
+- 正規化後のコードポイント長が **2 未満** → `[]`
 - `target` / `prefecture` / `matchField` / `designatedCity` で対象を絞る
-- 全国かつ市区町村対象 → 未ロード県を 6 並列で取得（メモリのみ）
-- 都道府県のみ対象 → 追加 fetch なし
+- 全国かつ市区町村対象 → ハイブリッド JLIX（2-gram 地域 + 条件付き 3-gram シャード）で候補を絞り、該当県 `.bin.br` のみ 6 並列取得（JLIX・県 `.bin.br` ともメモリのみ）
+- 正規化後長 2 → 2-gram のみ / 長 ≥3 → 2-gram と 3-gram をマージ（2-gram ヒットでも 3-gram 省略なし）
+- `target: "all"` の都道府県ヒットは初期化済み一覧の線形検索（索引なし）とマージ
+- 都道府県のみ対象 / 都道府県指定 → 索引なし（指定時は当該県のみロード）
 - 不正な `prefecture` → `[]`
 
 ##### `getLocalGovCodeByName(name, options?)` → `Promise<string | null>`
 
 - **完全一致**（正規化後）
-- ヒットがちょうど 1 件のときだけその `code` を返す
+- ヒットがちょうど 1 件のときだけその `code`（**地方公共団体コード・6 桁**）を返す
+- 都道府県ヒット時も 6 桁（例: 東京都 → `"130001"`）
 - 0 件・複数件 → `null`
 - `designatedCity` で候補をフィルタしてから一致判定
 - ロード／キャッシュ方針は `searchByText` と同じ
@@ -152,11 +157,13 @@
 
 | 名前 | 種別 | 内容 |
 |------|------|------|
-| `LocalGovSchemaError` | class | スキーマ／不正 JSON |
-| `LOCAL_GOV_SCHEMA_VERSION` | const | 現行スキーマ版（`1`） |
+| `LocalGovSchemaError` | class | スキーマ不一致／不正な JSON・バイナリデータ |
+| `LOCAL_GOV_SCHEMA_VERSION` | const | 現行スキーマ版（`2`） |
 | `MUNICIPALITY_FETCH_CONCURRENCY` | const | 全国検索の並列度（`6`） |
+| `isPrefecture` / `isMunicipality` | fn | union 判別 |
+| `prefectureOrgCode` | fn | 都道府県エンティティ → 2 桁組織キー |
 
-型: `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
+型: `Prefecture`, `Municipality`, `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
 
 定数: `DEFAULT_CACHE_TTL_SECONDS`（`31536000`）、`CACHE_TTL_MS`（deprecated 互換）、`LOCAL_GOV_SCHEMA_VERSION`、`MUNICIPALITY_FETCH_CONCURRENCY`
 
@@ -168,11 +175,12 @@
 
 | 名前 | 内容 |
 |------|------|
-| default `dataset` | `{ index, prefectures, municipalitiesByCode, loadMunicipalities }` |
-| `index` | インデックス JSON |
-| `prefectures` | 都道府県 JSON |
-| `municipalitiesByCode` | 県コード → 市区町村 JSON |
-| `loadMunicipalities(code)` | 県コードで市区町村ファイルを返す |
+| default `dataset` | `{ index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgramShards }` |
+| `index` | インデックス（`index.json`、プレーン JSON） |
+| `prefectures` | 都道府県データ（`prefectures.bin.br` を展開・デコード済み） |
+| `municipalitiesByCode` | 県コード → 市区町村データ（`.bin.br` を展開・デコード済み） |
+| `loadMunicipalities(code)` | 県コードで市区町村ファイルを読み込み、デコードして返す |
+| `searchNgramShards` | JLIX 分割の生バイト（region / shard キー → `Uint8Array`） |
 
 ---
 
@@ -183,3 +191,4 @@
 | 2026-07-11 | 現状 API を書き出し |
 | 2026-07-11 | 整理案を確定（改名 + カナ検索 `matchField`） |
 | 2026-07-11 | `designatedCity` オプション（`both` / `city` / `ward`）を追加 |
+| 2026-08-29 | 配信を `.bin.br` + ハイブリッド JLIX（2-gram 地域 / 3-gram シャード）に更新 |

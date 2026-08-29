@@ -5,19 +5,22 @@ export function normalizePrefectureCode(input: string): string | null {
   return digits.padStart(2, "0");
 }
 
-/** getByCode 用: 2 桁都道府県 or 6 桁市区町村。それ以外は null */
+/**
+ * getByCode 用: 1–2 桁 → 都道府県組織キー、6 桁 → 地方公共団体コード候補
+ * （都道府県エンティティ / 市区町村は呼び出し側で二次判定）。
+ */
 export function normalizeLookupCode(
   input: string,
 ):
   | { kind: "prefecture"; code: string }
-  | { kind: "municipality"; code: string }
+  | { kind: "entity"; code: string }
   | null {
   const digits = input.replace(/\D/g, "");
   if (digits.length === 1 || digits.length === 2) {
     return { kind: "prefecture", code: digits.padStart(2, "0") };
   }
   if (digits.length === 6) {
-    return { kind: "municipality", code: digits };
+    return { kind: "entity", code: digits };
   }
   return null;
 }

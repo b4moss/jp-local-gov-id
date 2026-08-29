@@ -17,6 +17,9 @@ export default defineConfig({
       formats: ["es"],
       fileName: "jp-local-gov-id",
     },
+    rollupOptions: {
+      external: ["node:zlib"],
+    },
   },
   test: {
     include: ["src/**/*.test.ts"],

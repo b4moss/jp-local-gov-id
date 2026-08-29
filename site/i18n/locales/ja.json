@@ -1,4 +1,5 @@
 {
+  "brand": "全国地方公共団体コードヘルパ",
   "nav": {
     "home": "ホーム",
     "gettingStarted": "はじめに",
@@ -28,12 +29,13 @@
   },
   "playground": {
     "title": "Playground",
-    "description": "TypeScript を書いて {'@'}b4moss/jp-local-gov-id をブラウザ上で実行できます（top-level await 対応）。",
+    "description": "TypeScript を書いて全国地方公共団体コードヘルパ（{'@'}b4moss/jp-local-gov-id）をブラウザ上で実行できます（top-level await 対応）。",
     "template": "テンプレート",
     "templates": {
       "getByCode": "コード解決 (getByCode)",
       "searchByText": "文字列検索 (searchByText)",
-      "listPrefectures": "都道府県・市区町村一覧"
+      "listPrefectures": "都道府県・市区町村一覧",
+      "getMunicipalityCount": "市区町村件数 (getMunicipalityCountByPrefecture)"
     },
     "run": "実行",
     "runShortcutMac": "⌘+Enter",

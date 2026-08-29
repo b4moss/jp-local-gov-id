@@ -23,7 +23,7 @@ const dataVersion = computed(() => String(config.public.dataVersion ?? ""));
       </button>
       <div class="masthead">
         <NuxtLink :to="localePath('/')" class="brand">
-          jp-local-gov-id
+          {{ t("brand") }}
         </NuxtLink>
         <p
           v-if="appVersion || dataVersion"
@@ -143,8 +143,11 @@ const dataVersion = computed(() => String(config.public.dataVersion ?? ""));
   letter-spacing: -0.03em;
   color: var(--color-ink);
   text-decoration: none;
-  white-space: nowrap;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .brand:hover {
@@ -199,6 +202,12 @@ const dataVersion = computed(() => String(config.public.dataVersion ?? ""));
 
   .header-inner {
     padding: 0 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .brand {
+    font-size: 0.875rem;
   }
 }
 
