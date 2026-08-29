@@ -1,7 +1,8 @@
 /**
  * Brotli helpers for data payloads (#74 / #63).
- * Browser: DecompressionStream("brotli") when supported (WHATWG Compression).
- * Node: zlib.brotliDecompressSync (Uint8Array; no Buffer).
+ * 1) Web DecompressionStream("brotli") when supported
+ * 2) Browser fallback: brotli-wasm
+ * 3) Node: zlib.brotliDecompressSync (Uint8Array; no Buffer)
  *
  * Note: HTTP Content-Encoding uses the token "br"; the Streams API format is "brotli".
  */
@@ -58,14 +59,31 @@ async function decompressWithNodeZlib(
   bytes: Uint8Array,
 ): Promise<ArrayBuffer> {
   const zlib = await import("node:zlib");
-  // Prefer Uint8Array — avoid referencing global Buffer (not available in browsers).
   const out = zlib.brotliDecompressSync(bytes);
   return u8ToArrayBuffer(out);
 }
 
+let brotliWasmPromise: Promise<{
+  decompress: (input: Uint8Array) => Uint8Array;
+}> | null = null;
+
+async function decompressWithBrotliWasm(
+  bytes: Uint8Array,
+): Promise<ArrayBuffer> {
+  if (!brotliWasmPromise) {
+    brotliWasmPromise = import("brotli-wasm").then(async (mod) => {
+      // Default export is a Promise in browser builds; sync API in Node build.
+      const api = "default" in mod ? await mod.default : mod;
+      return api as { decompress: (input: Uint8Array) => Uint8Array };
+    });
+  }
+  const api = await brotliWasmPromise;
+  return u8ToArrayBuffer(api.decompress(bytes));
+}
+
 /**
  * Decompress Brotli bytes to an ArrayBuffer.
- * Prefers Web `DecompressionStream("brotli")`; falls back to Node zlib.
+ * Prefers Web `DecompressionStream("brotli")`, then brotli-wasm, then Node zlib.
  */
 export async function decompressBrotli(
   input: ArrayBuffer | Uint8Array,
@@ -83,12 +101,19 @@ export async function decompressBrotli(
     }
   }
 
+  // Prefer Node zlib before wasm (faster; avoids wasm network loads under fetch mocks).
   if (isNodeRuntime()) {
     return decompressWithNodeZlib(bytes);
   }
 
+  try {
+    return await decompressWithBrotliWasm(bytes);
+  } catch {
+    // Optional / unavailable in some graphs.
+  }
+
   throw new TypeError(
-    'Brotli decompression requires DecompressionStream("brotli") or a Node.js runtime',
+    'Brotli decompression requires DecompressionStream("brotli"), brotli-wasm, or a Node.js runtime',
   );
 }
 
