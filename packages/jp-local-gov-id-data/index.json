@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": "000925835.xlsx",
   "asOf": "R6.1.1",
-  "generatedAt": "2026-08-29T09:54:16.015Z",
+  "generatedAt": "2026-08-29T10:33:18.063Z",
   "counts": {
     "prefectures": 47,
     "municipalities": 1918,

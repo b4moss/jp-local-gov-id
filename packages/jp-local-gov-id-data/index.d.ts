@@ -4,16 +4,26 @@ export type MunicipalityCounts = {
   ward: number;
 };
 
-export type LocalGov = {
+/** Prefecture-as-local-gov. `code` is the 6-digit 地方公共団体コード. */
+export type Prefecture = {
+  code: string;
+  name: string;
+  nameKana: string;
+  /** Present on prefecture records in decoded `prefectures.bin` only. */
+  municipalityCounts?: MunicipalityCounts;
+};
+
+/** Municipality (市区町村). Includes belonging prefecture fields. */
+export type Municipality = {
   code: string;
   name: string;
   nameKana: string;
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
-  /** Present on prefecture records in `prefectures.bin` (decoded) only. */
-  municipalityCounts?: MunicipalityCounts;
 };
+
+export type LocalGov = Prefecture | Municipality;
 
 export type SearchNgramsPathSpec = {
   twoGram: {
@@ -41,20 +51,21 @@ export type LocalGovIndex = {
     municipalitiesByPrefecture: string;
     searchNgrams: SearchNgramsPathSpec;
   };
+  /** 2-digit prefecture codes (`"01"` … `"47"`). */
   prefectureCodes: string[];
 };
 
 export type LocalGovPrefectures = {
   schemaVersion: number;
   asOf: string;
-  prefectures: LocalGov[];
+  prefectures: Prefecture[];
 };
 
 export type LocalGovMunicipalities = {
   schemaVersion: number;
   asOf: string;
   prefectureCode: string;
-  municipalities: LocalGov[];
+  municipalities: Municipality[];
 };
 
 export declare const index: LocalGovIndex;

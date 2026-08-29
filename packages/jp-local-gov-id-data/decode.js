@@ -13,7 +13,7 @@ var GRAM_TYPE_NAME = 0;
 var GRAM_TYPE_KANA = 1;
 var KIND_PREF = 0;
 var KIND_MUNI = 1;
-var DECODED_SCHEMA_VERSION = 1;
+var DECODED_SCHEMA_VERSION = 2;
 
 // ../packages/jp-local-gov-id/src/binary/errors.ts
 var LocalGovBinaryError = class extends Error {
@@ -394,19 +394,15 @@ function decodePrefectures(buffer) {
   return { version, asOf, records };
 }
 function prefectureRecordToLocalGov(record) {
-  const code = String(record.prefCode).padStart(2, "0");
   const counts = {
     both: record.muniCountBoth,
     city: record.muniCountCity,
     ward: record.muniCountWard
   };
   return {
-    code,
+    code: String(record.muniCode).padStart(6, "0"),
     name: record.name,
     nameKana: record.nameKana,
-    prefectureCode: code,
-    prefectureName: record.name,
-    prefectureNameKana: record.nameKana,
     municipalityCounts: counts
   };
 }

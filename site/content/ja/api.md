@@ -25,32 +25,32 @@ description: LocalGovClient の公開メソッド
 - 正規化後長: `&lt;2` → 空 / `2` → 2-gram のみ / `≥3` → 両索引マージ
 - 索引ロードは concurrency=3・開始 100ms ずらし。候補県 `.bin.br` は同時最大 6
 - localStorage に書くのはデコード後オブジェクトの minify JSON（転送 Brotli とは別）。全国検索の県別・JLIX はメモリのみ
+- `schemaVersion` は **2**（都道府県は 6 桁団体コード、所属フィールドなし）
 
-## `LocalGov`
+## `Prefecture` / `Municipality`
 
-| フィールド | 型 | 説明 |
-|------------|-----|------|
-| `code` | `string` | 団体コード |
-| `name` | `string` | 名称 |
-| `nameKana` | `string` | 半角カナ |
-| `prefectureCode` | `string` | 都道府県コード（2 桁） |
-| `prefectureName` | `string` | 都道府県名 |
-| `prefectureNameKana` | `string` | 都道府県カナ |
-| `municipalityCounts?` | `{ both, city, ward }` | 都道府県のみ |
+| フィールド | Prefecture | Municipality |
+|------------|------------|--------------|
+| `code` | 6 桁地方公共団体コード | 6 桁地方公共団体コード |
+| `name` / `nameKana` | あり | あり |
+| `prefectureCode` / `prefectureName` / `prefectureNameKana` | **なし** | 所属都道府県（2 桁＋名称） |
+| `municipalityCounts?` | `{ both, city, ward }` | なし |
+
+`LocalGov = Prefecture | Municipality`
 
 ## メソッド
 
 | メソッド | 戻り値 | 説明 |
 |----------|--------|------|
-| `listPrefectures()` | `LocalGov[]` | 全都道府県 |
-| `getPrefectureByCode(code)` | `LocalGov \| null` | 都道府県コードで取得 |
-| `getPrefectureCodeByName(name)` | `string \| null` | 正式名称から都道府県コード |
+| `listPrefectures()` | `Prefecture[]` | 全都道府県（各 `code` は 6 桁） |
+| `getPrefectureByCode(code)` | `Prefecture \| null` | 2 桁都道府県コードまたは 6 桁団体コードで取得 |
+| `getPrefectureCodeByName(name)` | `string \| null` | 正式名称から**都道府県コード（2 桁）** |
 | `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | 同期で件数取得（県別データ不要） |
-| `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | 県内の市区町村（遅延ロード） |
-| `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | 市区町村 6 桁で取得 |
-| `getByCode(code)` | `Promise<LocalGov \| null>` | 2 桁 / 6 桁を自動判定 |
+| `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<Municipality[]>` | 県内の市区町村（遅延ロード） |
+| `getMunicipalityByCode(code)` | `Promise<Municipality \| null>` | 市区町村 6 桁で取得 |
+| `getByCode(code)` | `Promise<LocalGov \| null>` | 2 桁 / 6 桁を自動判定（6 桁は都道府県エンティティ優先） |
 | `searchByText(text, options?)` | `Promise<LocalGov[]>` | 部分一致検索 |
-| `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | 正式名称からコード |
+| `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | 正式名称から**地方公共団体コード（6 桁）** |
 
 ### `designatedCity` オプション
 

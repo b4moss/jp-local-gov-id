@@ -25,32 +25,32 @@ Exactly one of `data` or `url` is required.
 - After normalize: `&lt;2` → empty / `2` → 2-gram only / `≥3` → merge both
 - Index fetch: concurrency 3 with 100ms start stagger; candidate pref bins: concurrency 6
 - localStorage stores minified decoded JSON (not raw Brotli). Nationwide pref loads + JLIX are memory-only
+- `schemaVersion` is **2** (prefecture `code` is 6-digit; no `prefecture*` fields on prefectures)
 
-## `LocalGov`
+## `Prefecture` / `Municipality`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `code` | `string` | Entity code |
-| `name` | `string` | Name |
-| `nameKana` | `string` | Halfwidth kana |
-| `prefectureCode` | `string` | Prefecture code (2 digits) |
-| `prefectureName` | `string` | Prefecture name |
-| `prefectureNameKana` | `string` | Prefecture kana |
-| `municipalityCounts?` | `{ both, city, ward }` | Prefectures only |
+| Field | Prefecture | Municipality |
+|-------|------------|--------------|
+| `code` | 6-digit local-gov code | 6-digit local-gov code |
+| `name` / `nameKana` | yes | yes |
+| `prefectureCode` / `prefectureName` / `prefectureNameKana` | **no** | belonging prefecture (2-digit + names) |
+| `municipalityCounts?` | `{ both, city, ward }` | no |
+
+`LocalGov = Prefecture | Municipality`
 
 ## Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `listPrefectures()` | `LocalGov[]` | All prefectures |
-| `getPrefectureByCode(code)` | `LocalGov \| null` | By prefecture code |
-| `getPrefectureCodeByName(name)` | `string \| null` | Official name → code |
+| `listPrefectures()` | `Prefecture[]` | All prefectures (each `code` is 6-digit) |
+| `getPrefectureByCode(code)` | `Prefecture \| null` | 2-digit org code or 6-digit entity code |
+| `getPrefectureCodeByName(name)` | `string \| null` | Official name → **2-digit** prefecture code |
 | `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | Sync counts |
-| `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | Lazy-load municipalities |
-| `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | 6-digit code |
-| `getByCode(code)` | `Promise<LocalGov \| null>` | 2- or 6-digit |
+| `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<Municipality[]>` | Lazy-load municipalities |
+| `getMunicipalityByCode(code)` | `Promise<Municipality \| null>` | Municipality 6-digit only |
+| `getByCode(code)` | `Promise<LocalGov \| null>` | 2- or 6-digit (6-digit prefers prefecture entity) |
 | `searchByText(text, options?)` | `Promise<LocalGov[]>` | Partial match |
-| `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | Exact name → code |
+| `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | Exact name → **6-digit** local-gov code |
 
 ### `designatedCity`
 
