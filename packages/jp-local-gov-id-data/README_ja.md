@@ -26,6 +26,17 @@ npm install @b4moss/jp-local-gov-id-data
 
 `.bin` 生成に使う中間 CSV（`prefectures.csv` / `prefectures/{code}.csv`）はリポジトリ内に置いていますが、この npm パッケージには**同梱しません**。
 
+### 旧 JSON 配布との容量比較
+
+直前の JSON 配布（`1.0.0-rc.3`）との実測:
+
+| | JSON（旧） | `.bin`（rc.10） |
+| --- | ---: | ---: |
+| 展開時のデータ本体 | 約 436 KiB | 約 88 KiB（約 20%） |
+| `npm pack` の `.tgz`（gzip 後） | 約 41.9 KB | 約 47.8 KB |
+
+展開サイズは大きく減りますが、tarball は JSON の gzip 効率と `decode.js` / 肥大化した `dataset.js` の影響で微増し得ます。詳細は [docs/binary-size-73.md](../../docs/binary-size-73.md)。
+
 ## インポート
 
 API パッケージ向けのデフォルトデータセット:

@@ -49,6 +49,8 @@ JavaScript で、現在の都道府県・市区町村の地方自治体コード
 
 配信形式は独自バイナリ（`.bin`）とする。`index.json` は引き続き通常の JSON。バイナリ生成の中間形式として、リポジトリには CSV（`prefectures.csv` / `prefectures/{code}.csv`）を同梱するが、npm には配布しない（詳細は [test-spec-73-csv-binary.md](./test-spec-73-csv-binary.md) を参照）。
 
+JSON 時代との容量比較（展開サイズは大幅減、npm `.tgz` は微増などの注意点）は [binary-size-73.md](./binary-size-73.md)。
+
 | ファイル | 内容 | 配布 |
 |----------|------|------|
 | `index.json` | 各ファイルへのパス・版・`schemaVersion` などの索引（上位層） | npm |
