@@ -1,5 +1,5 @@
 import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   decompressBrotli,
   isBinaryPayloadUrl,
@@ -18,24 +18,53 @@ describe("brotli helpers (#74)", () => {
 
   it("round-trips brotli decompress", async () => {
     const raw = new TextEncoder().encode("JLIX-test-payload");
-    const compressed = brotliCompressSync(Buffer.from(raw));
+    const compressed = brotliCompressSync(raw);
     const out = new Uint8Array(await decompressBrotli(compressed));
-    expect(Buffer.from(out).equals(Buffer.from(raw))).toBe(true);
-    expect(
-      Buffer.from(
-        await maybeDecompressPayload("https://x/a.bin.br", compressed.buffer.slice(
-          compressed.byteOffset,
-          compressed.byteOffset + compressed.byteLength,
-        )),
-      ).equals(Buffer.from(raw)),
-    ).toBe(true);
+    expect(out).toEqual(raw);
+    const compressedAb = compressed.buffer.slice(
+      compressed.byteOffset,
+      compressed.byteOffset + compressed.byteLength,
+    );
+    const viaMaybe = new Uint8Array(
+      await maybeDecompressPayload("https://x/a.bin.br", compressedAb),
+    );
+    expect(viaMaybe).toEqual(raw);
     const plain = new Uint8Array([1, 2, 3]).buffer;
     expect(await maybeDecompressPayload("https://x/a.bin", plain)).toBe(plain);
   });
 
   it("node zlib sync decompress matches", () => {
-    const raw = Buffer.from("sync-check");
+    const raw = new TextEncoder().encode("sync-check");
     const compressed = brotliCompressSync(raw);
-    expect(brotliDecompressSync(compressed).equals(raw)).toBe(true);
+    expect(new Uint8Array(brotliDecompressSync(compressed))).toEqual(raw);
+  });
+
+  it("does not reference Buffer on the Node zlib path", async () => {
+    const raw = new TextEncoder().encode("no-buffer");
+    const compressed = brotliCompressSync(raw);
+    // Simulate a browser-like environment where DecompressionStream exists but
+    // rejects the format, and Buffer is missing.
+    const OriginalDS = globalThis.DecompressionStream;
+    vi.stubGlobal(
+      "DecompressionStream",
+      class {
+        constructor() {
+          throw new TypeError('unsupported format');
+        }
+      },
+    );
+    const hadBuffer = "Buffer" in globalThis;
+    const originalBuffer = globalThis.Buffer;
+    // @ts-expect-error intentional deletion for the test
+    delete globalThis.Buffer;
+
+    try {
+      const out = new Uint8Array(await decompressBrotli(compressed));
+      expect(out).toEqual(raw);
+    } finally {
+      if (OriginalDS) vi.stubGlobal("DecompressionStream", OriginalDS);
+      else Reflect.deleteProperty(globalThis, "DecompressionStream");
+      if (hadBuffer) globalThis.Buffer = originalBuffer;
+    }
   });
 });
