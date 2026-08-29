@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "prepare-data": "node scripts/prepare-data.mjs",
+    "build": "npm run prepare-data && nuxt build",
+    "dev": "npm run prepare-data && nuxt dev",
+    "generate": "npm run prepare-data && nuxt generate",
     "preview": "nuxt preview"
   },
   "dependencies": {
