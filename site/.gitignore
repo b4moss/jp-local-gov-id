@@ -6,6 +6,12 @@
 .cache
 dist
 
+# Generated Brotli demo payloads (site/scripts/prepare-data.mjs)
+public/jp-local-gov-id-data
+
+# Playground browser dataset (site/scripts/prepare-data.mjs)
+app/components/playground/generatedDataset.ts
+
 # Node dependencies
 node_modules
 

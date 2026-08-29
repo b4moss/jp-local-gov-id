@@ -21,9 +21,9 @@ npm install @b4moss/jp-local-gov-id
 
 npm / Vite / webpack を使わず、ブラウザから直接読み込むこともできます。
 
-配布されている `dist/jp-local-gov-id.js` は **ES module** です。そのため `<script type="module">` で読み込みます（クラシックな `<script src="...">` だけでは動きません）。
+配布されている `dist/jp-local-gov-id.js` は **ES module** です。そのため `<script type="module">` で読み込みます。
 
-データは `dataset.js` を同梱せず、`url` で `index.json` + `.bin` を読むのがおすすめです。
+ブラウザでは `dataset.js`（Node 向け）をバンドルせず、`url` で `index.json` + `.bin.br` を読むのがおすすめです。クライアントが Brotli を展開してからデコードします。
 
 ### CDN から読む
 
@@ -44,12 +44,10 @@ npm / Vite / webpack を使わず、ブラウザから直接読み込むこと�
 </html>
 ```
 
-`dist/jp-local-gov-id.js` は ES module として公開されています。同じファイルをダウンロードしてセルフホストしても構いません。
-
 ### dist をダウンロードして置く
 
-1. API の `dist/jp-local-gov-id.js` を取得する（npm パッケージまたは GitHub / CDN から）
-2. データは `index.json`・`prefectures.bin`・`prefectures/`（`.bin` を含む）を同じ階層で置く（`dataset.js` は不要）
+1. API の `dist/jp-local-gov-id.js` を取得する
+2. データは次を同じ階層で置く（`dataset.js` は不要）
 3. HTML から相対パスで読む
 
 ```text
@@ -59,10 +57,18 @@ your-site/
     jp-local-gov-id.js
   jp-local-gov-id-data/
     index.json
-    prefectures.bin
+    prefectures.bin.br
     prefectures/
-      01.bin
+      01.bin.br
       …
+    search-ngrams/
+      2gram/
+        tokyo.bin.br
+        …
+      3gram/
+        0.bin.br
+        1.bin.br
+        2.bin.br
 ```
 
 ```html

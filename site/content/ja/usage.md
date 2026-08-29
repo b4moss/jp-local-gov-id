@@ -5,8 +5,6 @@ description: クライアントの初期化と基本操作
 
 # 使い方
 
-まずは、一番シンプルな方法を例示します。
-
 ## 一番簡単な例
 
 ```ts
@@ -31,8 +29,6 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 ### 政令指定都市の市/区フィルタ
 
-住所フォームで「市だけ選びたい」「区だけ選びたい」場合は `designatedCity` を使います（既定 `"both"`）。
-
 | 値 | 意味 | 例（北海道） |
 |----|------|--------------|
 | `"both"` | 市本体と区の両方 | `札幌市` と `札幌市中央区` |
@@ -41,32 +37,16 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 適用 API: `listMunicipalitiesByPrefecture` / `searchByText` / `getLocalGovCodeByName` / `getMunicipalityCountByPrefecture`。東京特別区は対象外です。
 
-```ts
-// 住所セレクト: 市のみ
-await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" });
+## データは重い？ — 分割 + Brotli + 索引
 
-// 住所セレクト: 区のみ
-await client.listMunicipalitiesByPrefecture("01", { designatedCity: "ward" });
+旧 JSON 一括配布（数百 KB 超）の時代とは構成が違います。
 
-// 検索でも同じオプションが使える
-await client.searchByText("札幌", {
-  prefecture: "01",
-  target: "cities",
-  designatedCity: "ward",
-});
-```
+- **npm 配信は `.bin.br`（Brotli）のみ**。都道府県・県別・検索索引を分割
+- 初期化は `index.json` + 都道府県のみ（都道府県ファイルは約 1 KB 級）
+- 全国検索はハイブリッド JLIX で候補を絞り、**該当県だけ**追加取得（全都道府県の全件ロードはしない）
+- SPA に `dataset.js` をバンドルすると肥大化しやすいので、ブラウザでは **`url` + 静的コピー**を推奨
 
-このように、アプリケーションとデータをそれぞれ npm パッケージから呼び出し、読み込めば使用できます。
-
-## 巨大なデータソースへの対処
-
-一方で「**全国のデータをnpmから配信すると、巨大なのでは？**」という疑問もあるでしょう。
-
-はい、この質問に対しては「**YES**」です。v0.1.0のデータソースは、400KBを超えています。
-
-従って、パッケージマネージャーで、アプリ（`@b4moss/jp-local-gov-id`）と、データソース（`@b4moss/jp-local-gov-id-data`）を別々にビルドし、`index.json` と `.bin` を静的アセットとしてコピーして `url` で読み込む方法をお勧めします（`dataset.js` をアプリにバンドルしない）。
-
-### Viteの場合
+### Vite の場合
 
 ```shell
 npm i -D vite-plugin-static-copy
@@ -84,15 +64,15 @@ export default defineConfig({
           // dataset.js はコピーしない（バンドル肥大化の元）
           src: [
             "node_modules/@b4moss/jp-local-gov-id-data/index.json",
-            "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin",
+            "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin.br",
             "node_modules/@b4moss/jp-local-gov-id-data/prefectures",
+            "node_modules/@b4moss/jp-local-gov-id-data/search-ngrams",
           ],
           dest: "jp-local-gov-id-data",
         },
       ],
     }),
   ],
-  // 念のため optimize 対象から外す（誤って import しても警告しやすくする）
   optimizeDeps: {
     exclude: ["@b4moss/jp-local-gov-id-data"],
   },
@@ -100,13 +80,12 @@ export default defineConfig({
 ```
 
 ```ts
-// app.ts 等
 const client = await createLocalGovClient({
   url: "/jp-local-gov-id-data/index.json",
 });
 ```
 
-### Webpackの場合
+### Webpack の場合
 
 ```shell
 npm i -D copy-webpack-plugin
@@ -132,46 +111,24 @@ module.exports = {
           to: "jp-local-gov-id-data/index.json",
         },
         {
-          from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin",
-          to: "jp-local-gov-id-data/prefectures.bin",
+          from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin.br",
+          to: "jp-local-gov-id-data/prefectures.bin.br",
         },
         {
           from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures",
           to: "jp-local-gov-id-data/prefectures",
         },
+        {
+          from: "node_modules/@b4moss/jp-local-gov-id-data/search-ngrams",
+          to: "jp-local-gov-id-data/search-ngrams",
+        },
       ],
     }),
   ],
-  // 誤って data パッケージを bundle しない
-  externals: {
-    // 使う場合のみ。通常は単に import しないのが確実
-  },
 };
 ```
 
-```js
-// app.js 等
-const client = await createLocalGovClient({
-  url: "/jp-local-gov-id-data/index.json",
-});
-```
-
-### データソースを外部から読み込む
-
-そもそも、データソースをセルフホストしたくない、という場合もあるでしょう。
-
-その場合は、データソースを外部から読み込むことができます。
-
-インストール時に、アプリだけインストールするようにします。データソースはインストールしません。
-
-```shell
-npm install @b4moss/jp-local-gov-id
-
-# もし既にデータソースをインストールしてしまっていたら、アンインストール
-# npm uninstall @b4moss/jp-local-gov-id-data
-```
-
-その上で、クライアントを呼び出すときに、`url`オプションを指定してください。
+### CDN / セルフホストから読む
 
 ```ts
 const client = await createLocalGovClient({
@@ -179,52 +136,26 @@ const client = await createLocalGovClient({
 });
 ```
 
-ここでは、jsDelivr の URL を指定していますが、セルフホストのデータソースを配信し、そこから読み取っても構いません。
+URL は **バージョン付き**にしてください（キャッシュキーが URL のため）。
 
-その場合、URLにはversionを指定することをお勧めします。アプリにはキャッシュ機能があるため、データソースが更新された場合、URLが一意でないと、古いキャッシュが配信される可能性があります。
-
-```ts
-// キャッシュ無効
-const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
-  cache: false,
-});
-
-// TTL を 1 時間に
-const clientShortTtl = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
-  cacheTtlSeconds: 3600,
-});
-```
-
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）。保存するのはデコード後オブジェクトを `JSON.stringify` した文字列（minify。Brotli 等の圧縮はしません）
-- `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
-- 例外: **全国対象**の文字列検索で取得した県別データは localStorage に書かず、メモリのみ保持します（キャッシュの巨大化を避けるため）
-- localStorage が無い環境（Node 等）ではキャッシュをスキップします
-- 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）
-- スキーマ不一致・不正な JSON・不正な `.bin` は `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
-- クエリで見つからない・同名衝突の場合は `null` / `[]` を返します（throw しません）
-
-パッケージマネージャーなしで HTML から読み込む方法は [インストール](/ja/installation) を参照してください。
+- `url` 指定時、取得ファイルを展開・デコードして localStorage にキャッシュ（既定 ON）。保存はデコード後オブジェクトの minify JSON。**転送の `.bin.br` とは別**
+- 例外: **全国対象**の文字列検索で取得した県別データと JLIX はメモリのみ
+- 正規化後長が 2 未満 → 空 / 2 → ホット 2-gram のみ / 3 以上 → 2-gram と 3-gram をマージ
+- スキーマ不一致・不正データ → `LocalGovSchemaError`
 
 ## コード形式
 
-以下のコードに対応しています
-
-- 都道府県コード
-  - 2桁の半角数字
-  - 1桁の場合、1桁でもゼロ埋め2桁でも同じ挙動
-    - `01`と`1`は同じ挙動となる
-- 地方公共団体コード
-  - チェックデジット込みの6桁
-  - チェックデジット欠損時はエラーです
+- 都道府県コード: 2 桁半角数字（`"1"` / `"01"` 同一視）
+- 地方公共団体コード: チェックデジット込み 6 桁
 
 ## データソースの構成
 
 | ファイル | 内容 |
 |----------|------|
-| `index.json` | パス・`schemaVersion`・`asOf` などの索引 — 通常の JSON |
-| `prefectures.bin` | 都道府県のみ — バイナリ |
-| `prefectures/{code}.bin` | 当該県の市区町村（例: `13.bin`） — バイナリ |
+| `index.json` | パス・`schemaVersion`・`asOf` などの索引 |
+| `prefectures.bin.br` | 都道府県のみ |
+| `prefectures/{code}.bin.br` | 当該県の市区町村 |
+| `search-ngrams/2gram/{region}.bin.br` | ホット団体の 2-gram 索引（地域分割） |
+| `search-ngrams/3gram/{shard}.bin.br` | コールド団体の 3-gram 索引（3 シャード） |
 
 より詳しい挙動は [API](/ja/api) と [Playground](/ja/playground) を参照してください。

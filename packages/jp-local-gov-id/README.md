@@ -16,7 +16,7 @@ npm install @b4moss/jp-local-gov-id
 
 `createLocalGovClient` is async. Either `data` or `url` (a **versioned URL** to **index.json**) is required.
 
-On init it loads only the index and prefectures (decoded from `.bin`); municipalities are lazy-loaded per prefecture. Nationwide string search fetches and decodes unloaded prefecture `.bin` files with concurrency of 6.
+On init it loads only the index and prefectures (Brotli-decompress + decode from `.bin.br`). Municipalities are lazy-loaded per prefecture. Nationwide string search uses a hybrid JLIX index (hot: regional 2-gram files; cold: 3-gram shards), then fetches only candidate prefecture `.bin.br` files with concurrency 6.
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -48,13 +48,11 @@ const client = await createLocalGovClient({
 });
 ```
 
-- When `url` is set, fetched files are decoded and cached in localStorage by default (key = file URL). The cached string is a minified `JSON.stringify` of the decoded object (Brotli compression is out of scope for this release; tracked in [#74](https://github.com/b4moss/jp-local-gov-id/issues/74))
+- When `url` is set, fetched files are decompressed/decoded and cached in localStorage by default. The cached string is a minified `JSON.stringify` of the decoded object — **separate from on-wire `.bin.br` (Brotli)**; raw bytes are never stored in localStorage
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
-- Exception: municipality data loaded by **nationwide** string search is kept in memory only (not written to localStorage)
-- Environments without localStorage (e.g. Node) skip caching
-- String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)
-- Schema mismatches or invalid data (JSON or `.bin`) raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
-- Missing or ambiguous query results return `null` / `[]` (they do not throw)
+- Exception: municipality data and JLIX loaded by **nationwide** string search stay in memory only
+- After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
+- Schema mismatches or invalid data raise `LocalGovSchemaError`; missing/ambiguous results return `null` / `[]`
 
 ## Code formats
 

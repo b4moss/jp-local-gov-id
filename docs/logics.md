@@ -138,7 +138,7 @@
 - **部分一致**（正規化後 `includes`）
 - 正規化後のコードポイント長が **2 未満** → `[]`
 - `target` / `prefecture` / `matchField` / `designatedCity` で対象を絞る
-- 全国かつ市区町村対象 → ハイブリッド JLIX（2-gram 地域 + 条件付き 3-gram シャード）で候補を絞り、該当県 `.bin` のみ 6 並列取得（JLIX・県 `.bin` ともメモリのみ）
+- 全国かつ市区町村対象 → ハイブリッド JLIX（2-gram 地域 + 条件付き 3-gram シャード）で候補を絞り、該当県 `.bin.br` のみ 6 並列取得（JLIX・県 `.bin.br` ともメモリのみ）
 - 正規化後長 2 → 2-gram のみ / 長 ≥3 → 2-gram と 3-gram をマージ（2-gram ヒットでも 3-gram 省略なし）
 - `target: "all"` の都道府県ヒットは初期化済み一覧の線形検索（索引なし）とマージ
 - 都道府県のみ対象 / 都道府県指定 → 索引なし（指定時は当該県のみロード）
@@ -172,11 +172,12 @@
 
 | 名前 | 内容 |
 |------|------|
-| default `dataset` | `{ index, prefectures, municipalitiesByCode, loadMunicipalities }` |
+| default `dataset` | `{ index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgramShards }` |
 | `index` | インデックス（`index.json`、プレーン JSON） |
-| `prefectures` | 都道府県データ（`prefectures.bin` をデコード済み） |
-| `municipalitiesByCode` | 県コード → 市区町村データ（`.bin` をデコード済み） |
-| `loadMunicipalities(code)` | 県コードで市区町村ファイル（`.bin`）を読み込み、デコードして返す |
+| `prefectures` | 都道府県データ（`prefectures.bin.br` を展開・デコード済み） |
+| `municipalitiesByCode` | 県コード → 市区町村データ（`.bin.br` を展開・デコード済み） |
+| `loadMunicipalities(code)` | 県コードで市区町村ファイルを読み込み、デコードして返す |
+| `searchNgramShards` | JLIX 分割の生バイト（region / shard キー → `Uint8Array`） |
 
 ---
 
@@ -187,3 +188,4 @@
 | 2026-07-11 | 現状 API を書き出し |
 | 2026-07-11 | 整理案を確定（改名 + カナ検索 `matchField`） |
 | 2026-07-11 | `designatedCity` オプション（`both` / `city` / `ward`）を追加 |
+| 2026-08-29 | 配信を `.bin.br` + ハイブリッド JLIX（2-gram 地域 / 3-gram シャード）に更新 |
