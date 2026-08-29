@@ -6,17 +6,19 @@
  * 3) IIFE minify (CDN) via vite.cdn.config.ts --mode minify
  */
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const pkg = join(root, "..");
+const require = createRequire(import.meta.url);
+const viteBin = require.resolve("vite/bin/vite.js", { paths: [pkg] });
 
 function run(args) {
-  const result = spawnSync("npx", ["vite", ...args], {
+  const result = spawnSync(process.execPath, [viteBin, ...args], {
     cwd: pkg,
     stdio: "inherit",
-    shell: true,
   });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
