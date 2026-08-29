@@ -98,7 +98,7 @@ export function validateIndexFile(data: unknown): LocalGovIndexFile {
   };
 }
 
-/** Validates `prefectures.json`. */
+/** Validates the prefectures envelope (decoded from `prefectures.bin` in `url` mode). */
 export function validatePrefecturesFile(
   data: unknown,
 ): LocalGovPrefecturesFile {
@@ -118,7 +118,7 @@ export function validatePrefecturesFile(
   };
 }
 
-/** Validates `prefectures/{code}.json`. */
+/** Validates the per-prefecture municipalities envelope (decoded from `prefectures/{code}.bin` in `url` mode). */
 export function validateMunicipalitiesFile(
   data: unknown,
 ): LocalGovMunicipalitiesFile {

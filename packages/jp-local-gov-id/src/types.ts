@@ -11,7 +11,7 @@ export type LocalGov = {
   prefectureCode: string;
   prefectureName: string;
   prefectureNameKana: string;
-  /** Present on prefecture records only (from `prefectures.json`). */
+  /** Present on prefecture records only (from decoded `prefectures.bin`). */
   municipalityCounts?: MunicipalityCounts;
 };
 
@@ -61,14 +61,14 @@ export type LocalGovIndexFile = {
   prefectureCodes: string[];
 };
 
-/** Prefectures-only file (`prefectures.json`) */
+/** Prefectures-only file (decoded from `prefectures.bin`) */
 export type LocalGovPrefecturesFile = {
   schemaVersion: number;
   asOf?: string;
   prefectures: LocalGov[];
 };
 
-/** Per-prefecture municipalities file (`prefectures/{code}.json`) */
+/** Per-prefecture municipalities file (decoded from `prefectures/{code}.bin`) */
 export type LocalGovMunicipalitiesFile = {
   schemaVersion: number;
   asOf?: string;
