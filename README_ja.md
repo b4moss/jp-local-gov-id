@@ -101,6 +101,15 @@ npm test
 npm run build
 ```
 
+`develop` / `dev-*` 向け PR の作成・更新前に、ローカル CI を通してください。
+
+```bash
+npm run ci:local            # 推奨（nektos/act + Docker）
+npm run ci:local:fallback   # Docker が無いときのみ
+```
+
+発火条件・スキップ・publish は [docs/ci-cd.ja.md](./docs/ci-cd.ja.md) を参照。
+
 ## バージョン方針
 
 [Semantic Versioning](https://semver.org/) に従います。

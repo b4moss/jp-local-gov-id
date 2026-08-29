@@ -16,7 +16,9 @@
     "test": "npm run test -w @b4moss/jp-local-gov-id",
     "generate": "npm run generate -w jp-local-gov-id-scripts",
     "check-publish": "node scripts/check-publish.mjs",
-    "publish:dry-run": "node scripts/publish-package.mjs packages/jp-local-gov-id-data --dry-run && node scripts/publish-package.mjs packages/jp-local-gov-id --dry-run"
+    "publish:dry-run": "node scripts/publish-package.mjs packages/jp-local-gov-id-data --dry-run && node scripts/publish-package.mjs packages/jp-local-gov-id --dry-run",
+    "ci:local": "act pull_request -W .github/workflows/ci.yml",
+    "ci:local:fallback": "npm ci && npm test && npm run build"
   },
   "license": "MIT",
   "engines": {
