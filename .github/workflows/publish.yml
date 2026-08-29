@@ -74,6 +74,7 @@ jobs:
           fetch-depth: 0
 
       - name: Require tag commit on release ancestry
+        id: ancestry
         run: |
           set -euo pipefail
           git fetch origin release:refs/remotes/origin/release
@@ -84,12 +85,14 @@ jobs:
             exit 1
           fi
           echo "Tag commit is on release ancestry: $TAG_SHA"
+          echo "sha=$TAG_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Check CI success history for tag SHA
         id: ci_history
         uses: actions/github-script@v7
         env:
           FORCE_TEST: ${{ inputs.force_test || 'false' }}
+          TAG_SHA: ${{ steps.ancestry.outputs.sha }}
         with:
           script: |
             if (process.env.FORCE_TEST === 'true') {
@@ -97,7 +100,7 @@ jobs:
               core.info('force_test=true — will run Test+Build');
               return;
             }
-            const sha = context.sha;
+            const sha = process.env.TAG_SHA;
             const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
