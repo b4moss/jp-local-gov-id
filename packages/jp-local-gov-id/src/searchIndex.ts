@@ -128,8 +128,7 @@ export function toArrayBuffer(
   bytes: ArrayBuffer | Uint8Array,
 ): ArrayBuffer {
   if (bytes instanceof ArrayBuffer) return bytes;
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  );
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }

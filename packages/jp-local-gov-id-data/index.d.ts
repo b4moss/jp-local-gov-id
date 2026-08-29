@@ -52,7 +52,7 @@ export declare const municipalitiesByCode: Record<
   string,
   LocalGovMunicipalities
 >;
-/** Raw JLIX bytes (`search-ngrams.bin`). */
+/** Raw JLIX bytes (`search-ngrams.bin` after Brotli decompress). */
 export declare const searchNgrams: Uint8Array;
 
 export declare function loadMunicipalities(

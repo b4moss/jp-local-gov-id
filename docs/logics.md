@@ -66,14 +66,14 @@
 | 初期化（index / prefectures） | する | する |
 | `getByCode` / `listMunicipalitiesByPrefecture` / `getMunicipalityByCode` | する | する |
 | 都道府県指定の `searchByText` / `getLocalGovCodeByName` | する | する |
-| **全国**の `searchByText` / `getLocalGovCodeByName`（市区町村対象）の県 `.bin` | **しない** | する |
-| `search-ngrams.bin`（JLIX） | **しない** | する |
+| **全国**の `searchByText` / `getLocalGovCodeByName`（市区町村対象）の県 `.bin.br` | **しない** | する |
+| `search-ngrams.bin.br`（JLIX） | **しない** | する |
 
 - `cache` 既定 `true`。`false` で localStorage 読み書きなし
 - `cacheTtlSeconds` 既定 `31536000`（1 年）。単位は秒
 - `data` モードではキャッシュしない
 
-全国市区町村検索: JLIX で候補 `muniCode` を絞り、該当県 `.bin` のみ並列取得（同時 6）。`target: "prefectures"` および都道府県指定時は索引を使わない。
+全国市区町村検索: JLIX で候補 `muniCode` を絞り、該当県 `.bin.br` のみ並列取得（同時 6、取得後 Brotli 展開）。`target: "prefectures"` および都道府県指定時は索引を使わない。配信ペイロードは npm / CDN とも **Brotli（`.bin.br`）**（#74）。
 
 ---
 

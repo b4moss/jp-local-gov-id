@@ -33,17 +33,17 @@ function fileMap(): Map<string, unknown> {
   const map = new Map<string, unknown>();
   map.set(indexUrl, dataset.index);
   map.set(
-    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin",
-    readBin("prefectures.bin"),
+    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
+    readBin("prefectures.bin.br"),
   );
   map.set(
-    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams.bin",
-    readBin("search-ngrams.bin"),
+    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams.bin.br",
+    readBin("search-ngrams.bin.br"),
   );
   for (const code of (dataset.index as LocalGovIndexFile).prefectureCodes) {
     map.set(
-      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.bin`,
-      readBin(`prefectures/${code}.bin`),
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.bin.br`,
+      readBin(`prefectures/${code}.bin.br`),
     );
   }
   return map;
@@ -537,7 +537,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(
       fetchMock.mock.calls.some((call) =>
-        String(call[0]).endsWith("/prefectures/13.bin"),
+        String(call[0]).endsWith("/prefectures/13.bin.br"),
       ),
     ).toBe(true);
 
@@ -590,14 +590,14 @@ describe("createLocalGovClient url + cache + lazy load", () => {
 
     // 2 init + 1 JLIX + candidate prefecture bins (not all 47)
     const muniFetches = fetchMock.mock.calls.filter((call) =>
-      /\/prefectures\/\d{2}\.bin$/.test(String(call[0])),
+      /\/prefectures\/\d{2}\.bin\.br$/.test(String(call[0])),
     ).length;
     expect(fetchMock).toHaveBeenCalledTimes(2 + 1 + muniFetches);
     expect(muniFetches).toBeGreaterThan(0);
     expect(muniFetches).toBeLessThan(47);
     expect(
       fetchMock.mock.calls.some((call) =>
-        String(call[0]).endsWith("/search-ngrams.bin"),
+        String(call[0]).endsWith("/search-ngrams.bin.br"),
       ),
     ).toBe(true);
     expect(maxInFlight).toBeLessThanOrEqual(MUNICIPALITY_FETCH_CONCURRENCY);
@@ -605,13 +605,13 @@ describe("createLocalGovClient url + cache + lazy load", () => {
 
     // Nationwide search keeps municipality payloads + JLIX in memory only
     for (const key of store.keys()) {
-      expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin$/);
-      expect(key).not.toMatch(/search-ngrams\.bin$/);
+      expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin(\.br)?$/);
+      expect(key).not.toMatch(/search-ngrams\.bin(\.br)?$/);
     }
     expect(store.has(indexUrl)).toBe(true);
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
       ),
     ).toBe(true);
 
@@ -629,7 +629,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.getByCode("131016");
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.bin",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.bin.br",
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -643,7 +643,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.searchByText("中央", { prefecture: "01", target: "cities" });
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.bin",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.bin.br",
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);

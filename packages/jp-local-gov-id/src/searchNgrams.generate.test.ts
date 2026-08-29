@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { brotliDecompressSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import dataset from "@b4moss/jp-local-gov-id-data";
 import {
@@ -18,10 +19,13 @@ const dataDir = join(
 );
 
 describe("search-ngrams generate contract (TC-G #63)", () => {
-  it("TC-G02: index paths include searchNgrams", () => {
+  it("TC-G02: index paths include searchNgrams as .bin.br", () => {
     const index = dataset.index as LocalGovIndexFile;
-    expect(index.paths.searchNgrams).toBe("search-ngrams.bin");
-    expect(index.paths.prefectures).toBe("prefectures.bin");
+    expect(index.paths.searchNgrams).toBe("search-ngrams.bin.br");
+    expect(index.paths.prefectures).toBe("prefectures.bin.br");
+    expect(index.paths.municipalitiesByPrefecture).toBe(
+      "prefectures/{code}.bin.br",
+    );
   });
 
   it("TC-G05/G07: CSV row count matches JLIX and dataset raw bytes decode", () => {
@@ -46,6 +50,15 @@ describe("search-ngrams generate contract (TC-G #63)", () => {
       ),
     );
     expect(fromDataset.records).toHaveLength(dataRows);
+  });
+
+  it("npm ships Brotli payloads that round-trip to JLIX", () => {
+    const br = readFileSync(join(dataDir, "search-ngrams.bin.br"));
+    const raw = brotliDecompressSync(br);
+    const decoded = decodeSearchNgrams(
+      raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength),
+    );
+    expect(decoded.records.length).toBeGreaterThan(10_000);
   });
 
   it("TC-G03: Osaka pref posting keeps distinct codes", () => {

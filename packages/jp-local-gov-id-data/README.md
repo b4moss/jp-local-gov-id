@@ -17,14 +17,15 @@ npm install @b4moss/jp-local-gov-id-data
 | Path | Contents |
 |------|----------|
 | `index.json` | Index metadata (`schemaVersion`, `asOf`, paths, counts, …) — plain JSON |
-| `prefectures.bin` | All prefectures — binary |
-| `prefectures/{code}.bin` | Municipalities for that prefecture (e.g. `13.bin`) — binary |
-| `dataset.js` | Default export bundling the above for the API package; decodes the `.bin` files at module load time (Node-friendly) |
-| `decode.js` | Low-level decode functions for the `.bin` format, for advanced use (e.g. decoding bytes fetched in a browser) |
+| `prefectures.bin.br` | All prefectures — Brotli-compressed binary (#74) |
+| `prefectures/{code}.bin.br` | Municipalities for that prefecture — Brotli-compressed binary |
+| `search-ngrams.bin.br` | Nationwide 2-gram search index (JLIX) — Brotli-compressed (#63) |
+| `dataset.js` | Default export; decompresses `.bin.br` and decodes at module load (Node-friendly) |
+| `decode.js` | Low-level decode functions for the uncompressed `.bin` formats |
 
 A single file of all municipalities is **not** distributed. `schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`.
 
-The intermediate CSV used to generate the `.bin` files (`prefectures.csv`, `prefectures/{code}.csv`) lives in the repository for review, but is **not** published in this npm package.
+The intermediate CSV and uncompressed `.bin` used to generate the `.bin.br` files live in the repository for review, but are **not** published in this npm package (npm ships Brotli only).
 
 ### Size vs previous JSON packaging
 
@@ -48,7 +49,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 ```
 
-`dataset.js` decodes the bundled `.bin` files once, at import time, so `dataset.prefectures` / `dataset.municipalitiesByCode` are already plain objects — identical in shape to the previous JSON-based release.
+`dataset.js` decompresses the bundled `.bin.br` files and decodes them once at import time, so `dataset.prefectures` / `dataset.municipalitiesByCode` / `dataset.searchNgrams` (raw JLIX bytes) are ready for the API package.
 
 ```ts
 import index from "@b4moss/jp-local-gov-id-data/index.json";

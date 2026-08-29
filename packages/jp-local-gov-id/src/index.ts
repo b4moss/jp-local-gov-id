@@ -53,3 +53,9 @@ export type {
 } from "./binary";
 export { codePointBigrams } from "./searchNgrams";
 export { normalizeSearchText } from "./normalize";
+export {
+  decompressBrotli,
+  isBinaryPayloadUrl,
+  isBrotliPayloadUrl,
+  maybeDecompressPayload,
+} from "./brotli";

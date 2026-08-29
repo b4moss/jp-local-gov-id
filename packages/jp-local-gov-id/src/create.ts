@@ -11,6 +11,10 @@ import {
   LocalGovBinaryError,
 } from "./binary";
 import {
+  isBinaryPayloadUrl,
+  maybeDecompressPayload,
+} from "./brotli";
+import {
   LocalGovSchemaError,
   normalizeDatasetInput,
   validateIndexFile,
@@ -78,15 +82,6 @@ function municipalitiesPath(
   return index.paths.municipalitiesByPrefecture.replaceAll("{code}", code);
 }
 
-function isBinaryUrl(url: string): boolean {
-  try {
-    const pathname = new URL(url).pathname;
-    return pathname.endsWith(".bin");
-  } catch {
-    return url.includes(".bin");
-  }
-}
-
 async function fetchResponse(url: string): Promise<Response> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -119,6 +114,11 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   }
 }
 
+async function fetchBinaryPayload(url: string): Promise<ArrayBuffer> {
+  const compressedOrRaw = await fetchArrayBuffer(url);
+  return maybeDecompressPayload(url, compressedOrRaw);
+}
+
 function prefectureLookup(
   prefectures: LocalGov[],
   code: string,
@@ -143,11 +143,11 @@ function prefectureLookup(
 async function loadPrefecturesPayload(
   url: string,
 ): Promise<unknown> {
-  if (!isBinaryUrl(url)) {
+  if (!isBinaryPayloadUrl(url)) {
     return fetchJson(url);
   }
   try {
-    return decodePrefecturesFile(await fetchArrayBuffer(url));
+    return decodePrefecturesFile(await fetchBinaryPayload(url));
   } catch (error) {
     if (error instanceof LocalGovBinaryError) {
       throw new LocalGovSchemaError(error.message);
@@ -161,12 +161,12 @@ async function loadMunicipalitiesPayload(
   prefectures: LocalGov[],
   code: string,
 ): Promise<unknown> {
-  if (!isBinaryUrl(url)) {
+  if (!isBinaryPayloadUrl(url)) {
     return fetchJson(url);
   }
   try {
     return decodeMunicipalitiesFile(
-      await fetchArrayBuffer(url),
+      await fetchBinaryPayload(url),
       prefectureLookup(prefectures, code),
     );
   } catch (error) {
@@ -264,7 +264,7 @@ async function createFromUrl(
       searchIndexInFlight = (async () => {
         const url = resolveSiblingUrl(indexUrl, index.paths.searchNgrams);
         // JLIX: memory only — do not use localStorage (Issue #63)
-        const buffer = await fetchArrayBuffer(url);
+        const buffer = await fetchBinaryPayload(url);
         const built = decodeSearchIndexBytes(buffer);
         warnSearchIndexAsOfMismatch(built.asOf, prefecturesFile.asOf);
         searchIndex = built;

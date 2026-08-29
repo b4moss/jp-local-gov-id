@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
 import { buildSync } from "esbuild";
 import ExcelJS from "exceljs";
 import {
@@ -149,6 +150,13 @@ function writeCsv(path: string, headers: string[], rows: Array<Array<string | nu
   writeFileSync(path, lines.join("\n"), "utf8");
 }
 
+/** Write raw `.bin` (repo) and Brotli `.bin.br` (npm / CDN, #74). */
+function writeBinAndBr(binPath: string, buffer: ArrayBuffer): void {
+  const bin = Buffer.from(buffer);
+  writeFileSync(binPath, bin);
+  writeFileSync(`${binPath}.br`, brotliCompressSync(bin));
+}
+
 function cleanGeneratedArtifacts(): void {
   mkdirSync(dataDir, { recursive: true });
   mkdirSync(prefecturesDir, { recursive: true });
@@ -157,7 +165,8 @@ function cleanGeneratedArtifacts(): void {
     if (
       name.endsWith(".json") ||
       name.endsWith(".csv") ||
-      name.endsWith(".bin")
+      name.endsWith(".bin") ||
+      name.endsWith(".bin.br")
     ) {
       rmSync(resolve(prefecturesDir, name));
     }
@@ -168,8 +177,10 @@ function cleanGeneratedArtifacts(): void {
     "prefectures.json",
     "prefectures.csv",
     "prefectures.bin",
+    "prefectures.bin.br",
     "search-ngrams.csv",
     "search-ngrams.bin",
+    "search-ngrams.bin.br",
   ]) {
     try {
       rmSync(resolve(dataDir, name));
@@ -264,6 +275,7 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     'import { readFileSync } from "node:fs";',
     'import { dirname, join } from "node:path";',
     'import { fileURLToPath } from "node:url";',
+    'import { brotliDecompressSync } from "node:zlib";',
     'import index from "./index.json" with { type: "json" };',
     "import {",
     "  decodeMunicipalitiesFile,",
@@ -272,18 +284,19 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     "",
     "const __dirname = dirname(fileURLToPath(import.meta.url));",
     "",
-    "function readBin(relativePath) {",
-    "  const bytes = readFileSync(join(__dirname, relativePath));",
+    "function readBinBr(relativePath) {",
+    "  const compressed = readFileSync(join(__dirname, relativePath));",
+    "  const bytes = brotliDecompressSync(compressed);",
     "  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);",
     "}",
     "",
-    'const prefectures = decodePrefecturesFile(readBin("prefectures.bin"));',
+    'const prefectures = decodePrefecturesFile(readBinBr("prefectures.bin.br"));',
     "",
     "const municipalitiesByCode = {",
     ...prefectureCodes.map((code) => {
       const pref = `prefectures.prefectures.find((p) => p.code === "${code}")`;
       return [
-        `  "${code}": decodeMunicipalitiesFile(readBin("prefectures/${code}.bin"), {`,
+        `  "${code}": decodeMunicipalitiesFile(readBinBr("prefectures/${code}.bin.br"), {`,
         `    prefectureCode: "${code}",`,
         `    prefectureName: (${pref})?.name ?? "",`,
         `    prefectureNameKana: (${pref})?.nameKana ?? "",`,
@@ -292,7 +305,7 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     }),
     "};",
     "",
-    'const searchNgrams = new Uint8Array(readBin("search-ngrams.bin"));',
+    'const searchNgrams = new Uint8Array(readBinBr("search-ngrams.bin.br"));',
     "",
     "export { index, prefectures, municipalitiesByCode, searchNgrams };",
     "",
@@ -389,9 +402,9 @@ async function main(): Promise<void> {
       designatedCityWardsAdded: addedWards,
     },
     paths: {
-      prefectures: "prefectures.bin",
-      municipalitiesByPrefecture: "prefectures/{code}.bin",
-      searchNgrams: "search-ngrams.bin",
+      prefectures: "prefectures.bin.br",
+      municipalitiesByPrefecture: "prefectures/{code}.bin.br",
+      searchNgrams: "search-ngrams.bin.br",
     },
     prefectureCodes,
   });
@@ -429,9 +442,9 @@ async function main(): Promise<void> {
       muniCountWard: p.municipalityCounts.ward,
     }),
   );
-  writeFileSync(
+  writeBinAndBr(
     resolve(dataDir, "prefectures.bin"),
-    Buffer.from(encodePrefectures(prefBinRecords, { asOf })),
+    encodePrefectures(prefBinRecords, { asOf }),
   );
 
   for (const code of prefectureCodes) {
@@ -457,9 +470,9 @@ async function main(): Promise<void> {
         isWard: f.isWard,
       };
     });
-    writeFileSync(
+    writeBinAndBr(
       resolve(prefecturesDir, `${code}.bin`),
-      Buffer.from(encodeMunicipalities(muniBinRecords, { asOf })),
+      encodeMunicipalities(muniBinRecords, { asOf }),
     );
   }
 
@@ -490,18 +503,18 @@ async function main(): Promise<void> {
         r.isWard,
       ]),
   );
-  writeFileSync(
+  writeBinAndBr(
     resolve(dataDir, "search-ngrams.bin"),
-    Buffer.from(encodeSearchNgrams(ngramPostings, { asOf })),
+    encodeSearchNgrams(ngramPostings, { asOf }),
   );
 
   writeDatasetJs(prefectureCodes);
 
-  // Sanity: dataset decode path works
-  const prefBytes = readFileSync(resolve(dataDir, "prefectures.bin"));
-  void prefBytes;
+  // Sanity: Brotli round-trip for prefectures payload
+  const prefBr = readFileSync(resolve(dataDir, "prefectures.bin.br"));
+  void brotliDecompressSync(prefBr);
 
-  console.log(`Wrote CSV + bin data under ${dataDir}`);
+  console.log(`Wrote CSV + bin + bin.br data under ${dataDir}`);
   console.log(
     `prefectures=${prefectures.length}, municipalities=${municipalities.length}, wardsAdded=${addedWards}, searchNgrams=${ngramPostings.length}`,
   );

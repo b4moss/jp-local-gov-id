@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "source": "000925835.xlsx",
   "asOf": "R6.1.1",
-  "generatedAt": "2026-08-29T08:51:29.055Z",
+  "generatedAt": "2026-08-29T09:02:10.493Z",
   "counts": {
     "prefectures": 47,
     "municipalities": 1918,
     "designatedCityWardsAdded": 171
   },
   "paths": {
-    "prefectures": "prefectures.bin",
-    "municipalitiesByPrefecture": "prefectures/{code}.bin",
-    "searchNgrams": "search-ngrams.bin"
+    "prefectures": "prefectures.bin.br",
+    "municipalitiesByPrefecture": "prefectures/{code}.bin.br",
+    "searchNgrams": "search-ngrams.bin.br"
   },
   "prefectureCodes": [
     "01",
