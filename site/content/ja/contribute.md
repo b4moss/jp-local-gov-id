@@ -44,6 +44,19 @@ npm run ci:local:fallback   # Docker が無い環境のみ
 npm run generate
 ```
 
+## ソース Excel の監視
+
+総務省が公開する全国地方公共団体コード Excel を週次で取得し、リポジトリ内 `resources/000925835.xlsx` の SHA-256 と比較しています。差分や取得失敗があっても Excel は自動更新しません（詳細調査の合図です）。
+
+::source-monitor-status
+::
+
+ローカルでも同じチェックができます:
+
+```bash
+npm run check:source-hash
+```
+
 ドキュメントサイトのローカル起動:
 
 ```bash

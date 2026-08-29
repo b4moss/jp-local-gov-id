@@ -5,7 +5,9 @@
   "description": "Excel → CSV / 独自バイナリ生成スクリプト（Node.js 専用・配布対象外）",
   "type": "module",
   "scripts": {
-    "generate": "tsx generate.ts"
+    "generate": "tsx generate.ts",
+    "check:source-hash": "tsx check-source-hash.ts",
+    "test": "tsx --test check-source-hash.test.ts"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

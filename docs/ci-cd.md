@@ -43,6 +43,15 @@ Do not open or update a PR while this gate is failing.
 
 Out of scope (unchanged): `deploy-docs.yml` (`site-v*`), `scorecard.yml`.
 
+## Source Excel monitor (`.github/workflows/monitor-source-hash.yml`)
+
+| Item | Rule |
+|------|------|
+| Trigger | Weekly cron (Monday 01:30 UTC) + `workflow_dispatch` |
+| Action | Fetch MIC Excel, SHA-256 vs `resources/000925835.xlsx`, commit `site/public/source-monitor.json` |
+| On anomaly | Open/comment Issue with `source-monitor` label; fail the job |
+| Details | [test-spec-66-source-hash.md](./test-spec-66-source-hash.md) / Issue #66 |
+
 ## CD — npm publish (`.github/workflows/publish.yml`)
 
 | Item | Rule |

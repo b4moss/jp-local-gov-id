@@ -43,6 +43,15 @@ npm run ci:local:fallback   # npm ci && npm test && npm run build
 
 対象外（従来どおり）: `deploy-docs.yml`（`site-v*`）、`scorecard.yml`。
 
+## ソース Excel 監視（`.github/workflows/monitor-source-hash.yml`）
+
+| 項目 | ルール |
+|------|--------|
+| トリガ | 週次 cron（月曜 01:30 UTC）+ `workflow_dispatch` |
+| 内容 | 総務省 Excel を取得し `resources/000925835.xlsx` と SHA-256 比較 → `site/public/source-monitor.json` を更新コミット |
+| 異常時 | `source-monitor` ラベルの Issue 起票／コメント、job failure |
+| 詳細 | [test-spec-66-source-hash.md](./test-spec-66-source-hash.md) / Issue #66 |
+
 ## CD — npm publish（`.github/workflows/publish.yml`）
 
 | 項目 | ルール |
