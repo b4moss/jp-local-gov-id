@@ -18,7 +18,7 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27"); // Osaka
 client.getPrefectureCodeByName("大阪府"); // "27"
-client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality data load
 client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13"); // Tokyo municipalities, etc.
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // designated-city body only
@@ -64,7 +64,7 @@ You might wonder: **“Isn’t shipping nationwide data via npm huge?”**
 
 **YES.** The v0.1.0 dataset is over 400KB.
 
-We recommend building the app (`@b4moss/jp-local-gov-id`) and the dataset (`@b4moss/jp-local-gov-id-data`) separately with your package manager / bundler — copy the JSON as static assets and load them via `url`, instead of bundling `dataset.js` into your app.
+We recommend building the app (`@b4moss/jp-local-gov-id`) and the dataset (`@b4moss/jp-local-gov-id-data`) separately with your package manager / bundler — copy `index.json` and the `.bin` files as static assets and load them via `url`, instead of bundling `dataset.js` into your app.
 
 ### With Vite
 
@@ -84,7 +84,7 @@ export default defineConfig({
           // Do not copy dataset.js (it would bloat the bundle)
           src: [
             "node_modules/@b4moss/jp-local-gov-id-data/index.json",
-            "node_modules/@b4moss/jp-local-gov-id-data/prefectures.json",
+            "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin",
             "node_modules/@b4moss/jp-local-gov-id-data/prefectures",
           ],
           dest: "jp-local-gov-id-data",
@@ -132,8 +132,8 @@ module.exports = {
           to: "jp-local-gov-id-data/index.json",
         },
         {
-          from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures.json",
-          to: "jp-local-gov-id-data/prefectures.json",
+          from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin",
+          to: "jp-local-gov-id-data/prefectures.bin",
         },
         {
           from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures",
@@ -175,7 +175,7 @@ Then pass the `url` option when creating the client.
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
 });
 ```
 
@@ -186,23 +186,23 @@ Prefer a versioned URL. The client caches responses, so if the dataset updates u
 ```ts
 // Disable cache
 const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
   cache: false,
 });
 
 // TTL = 1 hour
 const clientShortTtl = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
   cacheTtlSeconds: 3600,
 });
 ```
 
-- With `url`, fetched files are cached in localStorage by default (key = each file URL)
+- With `url`, fetched files are cached in localStorage by default (key = each file URL); the decoded object is stored via `JSON.stringify` (minified, not Brotli-compressed)
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
-- Exception: municipality JSON loaded by **nationwide** string search stays in memory only (to avoid cache bloat)
+- Exception: municipality data loaded by **nationwide** string search stays in memory only (to avoid cache bloat)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)
-- Schema mismatch / invalid JSON → `LocalGovSchemaError`; network / HTTP failures → normal fetch errors
+- Schema mismatch / invalid data → `LocalGovSchemaError`; network / HTTP failures → normal fetch errors
 - Missing or ambiguous results → `null` / `[]` (no throw)
 
 For loading from plain HTML without a package manager, see [Installation](/en/installation).
@@ -224,7 +224,7 @@ Supported code formats:
 | File | Contents |
 |------|----------|
 | `index.json` | Index of paths, `schemaVersion`, `asOf`, etc. |
-| `prefectures.json` | Prefectures only |
-| `prefectures/{code}.json` | Municipalities for that prefecture (e.g. `13.json`) |
+| `prefectures.bin` | Prefectures only (binary) |
+| `prefectures/{code}.bin` | Municipalities for that prefecture (binary, e.g. `13.bin`) |
 
 See [API](/en/api) and [Playground](/en/playground) for more.

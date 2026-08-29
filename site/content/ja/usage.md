@@ -18,7 +18,7 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27"); // 大阪府
 client.getPrefectureCodeByName("大阪府"); // "27"
-client.getMunicipalityCountByPrefecture("01"); // 同期・県別 JSON 不要
+client.getMunicipalityCountByPrefecture("01"); // 同期・県別データ不要
 client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13"); // 東京都の市区町村等
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // 政令市本体のみ
@@ -64,7 +64,7 @@ await client.searchByText("札幌", {
 
 はい、この質問に対しては「**YES**」です。v0.1.0のデータソースは、400KBを超えています。
 
-従って、パッケージマネージャーで、アプリ（`@b4moss/jp-local-gov-id`）と、データソース（`@b4moss/jp-local-gov-id-data`）を別々にビルドする方法をお勧めします。
+従って、パッケージマネージャーで、アプリ（`@b4moss/jp-local-gov-id`）と、データソース（`@b4moss/jp-local-gov-id-data`）を別々にビルドし、`index.json` と `.bin` を静的アセットとしてコピーして `url` で読み込む方法をお勧めします（`dataset.js` をアプリにバンドルしない）。
 
 ### Viteの場合
 
@@ -84,7 +84,7 @@ export default defineConfig({
           // dataset.js はコピーしない（バンドル肥大化の元）
           src: [
             "node_modules/@b4moss/jp-local-gov-id-data/index.json",
-            "node_modules/@b4moss/jp-local-gov-id-data/prefectures.json",
+            "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin",
             "node_modules/@b4moss/jp-local-gov-id-data/prefectures",
           ],
           dest: "jp-local-gov-id-data",
@@ -132,8 +132,8 @@ module.exports = {
           to: "jp-local-gov-id-data/index.json",
         },
         {
-          from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures.json",
-          to: "jp-local-gov-id-data/prefectures.json",
+          from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures.bin",
+          to: "jp-local-gov-id-data/prefectures.bin",
         },
         {
           from: "node_modules/@b4moss/jp-local-gov-id-data/prefectures",
@@ -175,7 +175,7 @@ npm install @b4moss/jp-local-gov-id
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
 });
 ```
 
@@ -186,23 +186,23 @@ const client = await createLocalGovClient({
 ```ts
 // キャッシュ無効
 const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
   cache: false,
 });
 
 // TTL を 1 時間に
 const clientShortTtl = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@0.1.0/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
   cacheTtlSeconds: 3600,
 });
 ```
 
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）
+- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）。保存するのはデコード後オブジェクトを `JSON.stringify` した文字列（minify。Brotli 等の圧縮はしません）
 - `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
-- 例外: **全国対象**の文字列検索で取得した県別 JSON は localStorage に書かず、メモリのみ保持します（キャッシュの巨大化を避けるため）
+- 例外: **全国対象**の文字列検索で取得した県別データは localStorage に書かず、メモリのみ保持します（キャッシュの巨大化を避けるため）
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）
-- スキーマ不一致・不正 JSON は `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
+- スキーマ不一致・不正な JSON・不正な `.bin` は `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
 - クエリで見つからない・同名衝突の場合は `null` / `[]` を返します（throw しません）
 
 パッケージマネージャーなしで HTML から読み込む方法は [インストール](/ja/installation) を参照してください。
@@ -223,8 +223,8 @@ const clientShortTtl = await createLocalGovClient({
 
 | ファイル | 内容 |
 |----------|------|
-| `index.json` | パス・`schemaVersion`・`asOf` などの索引 |
-| `prefectures.json` | 都道府県のみ |
-| `prefectures/{code}.json` | 当該県の市区町村（例: `13.json`） |
+| `index.json` | パス・`schemaVersion`・`asOf` などの索引 — 通常の JSON |
+| `prefectures.bin` | 都道府県のみ — バイナリ |
+| `prefectures/{code}.bin` | 当該県の市区町村（例: `13.bin`） — バイナリ |
 
 より詳しい挙動は [API](/ja/api) と [Playground](/ja/playground) を参照してください。

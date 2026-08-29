@@ -15,8 +15,8 @@
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.2 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | 分割データ JSON | 1.0.0-rc.3 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.10 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + バイナリ（`.bin`）データ | 1.0.0-rc.10 |
 
 ## インストール（利用側）
 
@@ -32,7 +32,7 @@ npm install @b4moss/jp-local-gov-id
 
 `createLocalGovClient` は async です。`data` または `url`（**index.json** の版付き URL）のいずれかが必須です。
 
-初期化ではインデックスと都道府県のみを読み込み、市区町村は県単位で遅延ロードします。全国対象の文字列検索では、未ロードの県別 JSON を同時 6 件で取得します。
+初期化ではインデックスと都道府県のみを読み込み（`.bin` はデコード済み）、市区町村は県単位で遅延ロードします。全国対象の文字列検索では、未ロードの県別 `.bin` を同時 6 件で取得・デコードします。
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -42,7 +42,7 @@ const client = await createLocalGovClient({ data: dataset });
 
 client.listPrefectures();
 client.getPrefectureByCode("27"); // 大阪府
-client.getMunicipalityCountByPrefecture("01"); // 同期・県別 JSON 不要
+client.getMunicipalityCountByPrefecture("01"); // 同期・県別データ不要
 client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // 東京都の市区町村等
@@ -57,31 +57,33 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/0.2.0/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
 });
 ```
 
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）
+- `url` 指定時、取得したファイルをデコードして localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）。保存する文字列はデコード後オブジェクトの `JSON.stringify`（minify。空白なし）で、`.bin` の生バイト列自体はキャッシュしません（Brotli 等の追加圧縮は本リリースでは対象外。[#74](https://github.com/b4moss/jp-local-gov-id/issues/74) で別途検討）
 - `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
-- 例外: **全国対象**の文字列検索で取得した県別 JSON は localStorage に書かず、メモリのみ保持します
+- 例外: **全国対象**の文字列検索で取得した県別データは localStorage に書かず、メモリのみ保持します
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）
-- スキーマ不一致・不正 JSON は `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
+- スキーマ不一致・不正な JSON・不正な `.bin` は `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
 - クエリで見つからない・同名衝突の場合は `null` / `[]` を返します（throw しません）
 
 ### データ構成
 
-全市区町村をまとめた単一 JSON は配布しません。
+全市区町村をまとめた単一ファイルは配布しません。データパッケージはバイナリ（`.bin`）データと、通常の JSON である `index.json` から構成されます。
 
 | ファイル | 内容 |
 |----------|------|
-| `index.json` | パス・`schemaVersion`・`asOf` などの索引 |
-| `prefectures.json` | 都道府県のみ |
-| `prefectures/{code}.json` | 当該県の市区町村（例: `13.json`） |
+| `index.json` | パス・`schemaVersion`・`asOf` などの索引 — 通常の JSON |
+| `prefectures.bin` | 都道府県のみ — バイナリ |
+| `prefectures/{code}.bin` | 当該県の市区町村（例: `13.bin`） — バイナリ |
+
+`schemaVersion`（現行 `1`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。`.bin` 生成用の中間 CSV はリポジトリに置いていますが、npm には配布しません。
 
 ### 自前データ配信について
 
-自前で JSON を配信する場合も、公式と同様に**バージョン付き URL**と同等の分割ファイル構成で提供してください。可用性・CORS・内容の正しさ・URL 運用などについて、当パッケージ開発者は一切の責任を負いません。CORS は配信側で許可してください。
+自前で配信する場合も、公式と同様に**バージョン付き URL**と同等の `index.json` + `.bin` 構成で提供してください。可用性・CORS・内容の正しさ・URL 運用などについて、当パッケージ開発者は一切の責任を負いません。CORS は配信側で許可してください。
 
 ## コード形式
 
@@ -94,7 +96,7 @@ const client = await createLocalGovClient({
 
 ```bash
 npm install
-npm run generate   # Excel → packages/jp-local-gov-id-data/ 分割 JSON
+npm run generate   # Excel → CSV（リポジトリのみ） → packages/jp-local-gov-id-data/ 分割 .bin + index.json
 npm test
 npm run build
 ```
@@ -115,7 +117,7 @@ npm run build
 - 時点: 令和 6 年 1 月 1 日（R6.1.1）
 - ソースファイル: `https://www.soumu.go.jp/denshijiti/code.html`
 - 廃止・合併済みの団体は含みません（現行のみ）
-- API パッケージには JSON を同梱しません（`@b4moss/jp-local-gov-id-data` または URL で渡してください）
+- API パッケージにはデータを同梱しません（`@b4moss/jp-local-gov-id-data` または URL で渡してください）
 
 詳細は [docs/main.md](./docs/main.md) を参照してください。
 

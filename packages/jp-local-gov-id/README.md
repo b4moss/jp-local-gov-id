@@ -16,7 +16,7 @@ npm install @b4moss/jp-local-gov-id
 
 `createLocalGovClient` is async. Either `data` or `url` (a **versioned URL** to **index.json**) is required.
 
-On init it loads only the index and prefectures; municipalities are lazy-loaded per prefecture. Nationwide string search fetches unloaded prefecture JSON with concurrency of 6.
+On init it loads only the index and prefectures (decoded from `.bin`); municipalities are lazy-loaded per prefecture. Nationwide string search fetches and decodes unloaded prefecture `.bin` files with concurrency of 6.
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -27,7 +27,7 @@ const client = await createLocalGovClient({ data: dataset });
 client.listPrefectures();
 client.getPrefectureByCode("27");
 client.getPrefectureCodeByName("大阪府"); // "27"
-client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality data load
 client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 await client.listMunicipalitiesByPrefecture("13");
 await client.listMunicipalitiesByPrefecture("01", { designatedCity: "city" }); // city body only
@@ -44,16 +44,16 @@ Fetch from a versioned index URL:
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/0.2.0/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
 });
 ```
 
-- When `url` is set, fetched files are cached in localStorage by default (key = file URL)
+- When `url` is set, fetched files are decoded and cached in localStorage by default (key = file URL). The cached string is a minified `JSON.stringify` of the decoded object (Brotli compression is out of scope for this release; tracked in [#74](https://github.com/b4moss/jp-local-gov-id/issues/74))
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
-- Exception: municipality JSON loaded by **nationwide** string search is kept in memory only (not written to localStorage)
+- Exception: municipality data loaded by **nationwide** string search is kept in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)
-- Schema mismatches / invalid JSON raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
+- Schema mismatches or invalid data (JSON or `.bin`) raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
 - Missing or ambiguous query results return `null` / `[]` (they do not throw)
 
 ## Code formats

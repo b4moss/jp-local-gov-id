@@ -14,7 +14,7 @@ This is an npm workspaces monorepo.
 | Path | Contents |
 |------|----------|
 | `packages/jp-local-gov-id` | JS API |
-| `packages/jp-local-gov-id-data` | Split JSON datasets |
+| `packages/jp-local-gov-id-data` | `index.json` + binary (`.bin`) datasets (CSV intermediates repo-only) |
 | `scripts/` | Data generation from Excel, etc. |
 | `site/` | This documentation site |
 | `docs/` | Internal specs |
@@ -27,7 +27,7 @@ npm test
 npm run build
 ```
 
-Regenerate data (Ministry of Internal Affairs Excel → split JSON):
+Regenerate data (Ministry of Internal Affairs Excel → CSV in the repo → `.bin` for npm):
 
 ```bash
 npm run generate

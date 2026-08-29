@@ -11,7 +11,7 @@ A JavaScript API for working with Japan’s nationwide local government codes.
 
 - List municipalities in a given prefecture
 - Fetch prefecture information as a list
-- Get municipality counts per prefecture (sync, no municipality JSON load)
+- Get municipality counts per prefecture (sync, no municipality data load)
 - Look up local government codes — unique IDs useful for address normalization
 
 ## Installation
@@ -53,7 +53,7 @@ Try code lookup and text search in the browser. For free-form TypeScript, open t
 | Package | Description |
 |---------|-------------|
 | `@b4moss/jp-local-gov-id` | JS API (data not bundled) |
-| `@b4moss/jp-local-gov-id-data` | Split JSON datasets |
+| `@b4moss/jp-local-gov-id-data` | `index.json` + binary (`.bin`) datasets |
 
 ## Questions and requests
 

@@ -15,8 +15,8 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.2 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | Split JSON datasets | 1.0.0-rc.3 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.10 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + binary (`.bin`) datasets | 1.0.0-rc.10 |
 
 ## Install (consumers)
 
@@ -32,7 +32,7 @@ npm install @b4moss/jp-local-gov-id
 
 `createLocalGovClient` is async. Either `data` or `url` (a **versioned URL** to **index.json**) is required.
 
-On init it loads only the index and prefectures; municipalities are lazy-loaded per prefecture. Nationwide string search fetches unloaded prefecture JSON files with concurrency of 6.
+On init it loads only the index and prefectures (decoded from `.bin`); municipalities are lazy-loaded per prefecture. Nationwide string search fetches and decodes unloaded prefecture `.bin` files with concurrency of 6.
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -42,7 +42,7 @@ const client = await createLocalGovClient({ data: dataset });
 
 client.listPrefectures();
 client.getPrefectureByCode("27"); // Osaka
-client.getMunicipalityCountByPrefecture("01"); // sync; no municipality JSON load
+client.getMunicipalityCountByPrefecture("01"); // sync; no municipality data load
 client.getMunicipalityCountByPrefecture("北海道", { designatedCity: "city" });
 client.getPrefectureCodeByName("大阪府"); // "27"
 await client.listMunicipalitiesByPrefecture("13"); // municipalities in Tokyo, etc.
@@ -57,31 +57,33 @@ Fetch from a versioned index URL:
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/0.2.0/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
 });
 ```
 
-- When `url` is set, fetched files are cached in localStorage by default (key = file URL)
+- When `url` is set, fetched files are decoded and cached in localStorage by default (key = file URL). The cached value is a minified `JSON.stringify` of the decoded object — the `.bin` bytes themselves are never cached (Brotli compression is out of scope for this release; tracked in [#74](https://github.com/b4moss/jp-local-gov-id/issues/74))
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
-- Exception: municipality JSON loaded by **nationwide** string search is kept in memory only (not written to localStorage)
+- Exception: municipality data loaded by **nationwide** string search is kept in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)
-- Schema mismatches / invalid JSON raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
+- Schema mismatches, invalid JSON, or invalid `.bin` data raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
 - Missing or ambiguous query results return `null` / `[]` (they do not throw)
 
 ### Data layout
 
-A single JSON file of all municipalities is not distributed.
+A single file of all municipalities is not distributed. The data package ships binary (`.bin`) datasets plus a plain-JSON `index.json`.
 
 | File | Contents |
 |------|----------|
-| `index.json` | Index of paths, `schemaVersion`, `asOf`, etc. |
-| `prefectures.json` | Prefectures only |
-| `prefectures/{code}.json` | Municipalities for that prefecture (e.g. `13.json`) |
+| `index.json` | Index of paths, `schemaVersion`, `asOf`, etc. — plain JSON |
+| `prefectures.bin` | Prefectures only — binary |
+| `prefectures/{code}.bin` | Municipalities for that prefecture (e.g. `13.bin`) — binary |
+
+`schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. The intermediate CSV used to generate the `.bin` files lives in the repository for review but is not published to npm.
 
 ### Hosting your own data
 
-If you host the JSON yourself, serve it with a **versioned URL** and the same split-file layout as the official package. The package maintainers take no responsibility for availability, CORS, correctness, or URL management. Enable CORS on the hosting side.
+If you host the data yourself, serve it with a **versioned URL** and the same `index.json` + `.bin` layout as the official package. The package maintainers take no responsibility for availability, CORS, correctness, or URL management. Enable CORS on the hosting side.
 
 ## Code formats
 
@@ -94,7 +96,7 @@ If you host the JSON yourself, serve it with a **versioned URL** and the same sp
 
 ```bash
 npm install
-npm run generate   # Excel → split JSON under packages/jp-local-gov-id-data/
+npm run generate   # Excel → CSV (repo-only) → split .bin + index.json under packages/jp-local-gov-id-data/
 npm test
 npm run build
 ```
@@ -115,7 +117,7 @@ Follows [Semantic Versioning](https://semver.org/).
 - As of: 1 January 2024 (R6.1.1)
 - Source file: `resources/000925835.xlsx`
 - Abolished / merged entities are not included (current only)
-- The API package does not ship JSON (pass `@b4moss/jp-local-gov-id-data` or a URL)
+- The API package does not ship data (pass `@b4moss/jp-local-gov-id-data` or a URL)
 
 See [docs/main.md](./docs/main.md) for details.
 
