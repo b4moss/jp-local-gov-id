@@ -18,7 +18,7 @@ export default defineConfig({
       fileName: "jp-local-gov-id",
     },
     rollupOptions: {
-      external: ["node:zlib"],
+      external: ["node:zlib", "brotli-wasm"],
     },
   },
   test: {
