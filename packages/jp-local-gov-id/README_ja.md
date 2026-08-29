@@ -12,6 +12,8 @@ npm install @b4moss/jp-local-gov-id @b4moss/jp-local-gov-id-data
 npm install @b4moss/jp-local-gov-id
 ```
 
+ESM と CommonJS の両方を配布しています（`import` / `require`）。HTML / CDN では minify 済み IIFE（`dist/jp-local-gov-id.iife.min.js`）と、**同じ版**のデータ `index.json` URL をセットで使うのがおすすめです。詳細は [インストール](https://jplocalgov.oss.b4m.jp/ja/installation) を参照してください。
+
 ## 使い方
 
 `createLocalGovClient` は async です。`data` または `url`（**index.json** の版付き URL）のいずれかが必須です。
