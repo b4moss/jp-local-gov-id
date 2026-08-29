@@ -815,4 +815,23 @@ describe("createLocalGovClient url + cache + lazy load", () => {
       createLocalGovClient({ url: indexUrl, cacheTtlSeconds: -1 }),
     ).rejects.toThrow(/cacheTtlSeconds/);
   });
+
+  it("resolves path-only index URLs via location", async () => {
+    stubLocalStorage();
+    const files = fileMap();
+    const fetchMock = stubFetch(files);
+    vi.stubGlobal("location", { href: "https://cdn.example.com/docs/ja/" });
+
+    const c = await createLocalGovClient({
+      url: "/jp-local-gov-id-data/0.2.0/index.json",
+      cache: false,
+    });
+    expect(c.listPrefectures()).toHaveLength(47);
+    expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual(
+      expect.arrayContaining([
+        indexUrl,
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
+      ]),
+    );
+  });
 });

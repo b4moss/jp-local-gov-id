@@ -69,8 +69,28 @@ function hasUrl(
   return "url" in options && typeof options.url === "string";
 }
 
+function toAbsoluteUrl(url: string): string {
+  try {
+    return new URL(url).href;
+  } catch {
+    // Path-only bases like "/data/index.json" need an origin (browser demos).
+    const locationHref =
+      typeof globalThis !== "undefined" &&
+      typeof (globalThis as { location?: { href?: unknown } }).location
+        ?.href === "string"
+        ? ((globalThis as { location: { href: string } }).location.href as string)
+        : undefined;
+    if (locationHref) {
+      return new URL(url, locationHref).href;
+    }
+    throw new TypeError(
+      `"${url}" cannot be parsed as a URL (pass an absolute URL, or use in a browser)`,
+    );
+  }
+}
+
 function resolveSiblingUrl(indexUrl: string, relativePath: string): string {
-  return new URL(relativePath, indexUrl).href;
+  return new URL(relativePath, toAbsoluteUrl(indexUrl)).href;
 }
 
 function municipalitiesPath(
@@ -200,15 +220,18 @@ async function createFromUrl(
   indexUrl: string,
   cache: ResolvedCacheConfig,
 ): Promise<LocalGovClient> {
+  // Normalize path-only bases (e.g. "/data/index.json") so sibling resolution works.
+  const absoluteIndexUrl = toAbsoluteUrl(indexUrl);
+
   const index = await fetchAndCache(
-    indexUrl,
-    async () => fetchJson(indexUrl),
+    absoluteIndexUrl,
+    async () => fetchJson(absoluteIndexUrl),
     validateIndexFile,
     cache,
   );
 
   const prefecturesUrl = resolveSiblingUrl(
-    indexUrl,
+    absoluteIndexUrl,
     index.paths.prefectures,
   );
   const prefecturesFile = await fetchAndCache(
@@ -222,7 +245,7 @@ async function createFromUrl(
     spec: index.paths.searchNgrams,
     prefecturesAsOf: prefecturesFile.asOf,
     loadPartitionBytes: async (relativePath) => {
-      const url = resolveSiblingUrl(indexUrl, relativePath);
+      const url = resolveSiblingUrl(absoluteIndexUrl, relativePath);
       // JLIX: memory only — do not use localStorage (Issue #63)
       return fetchBinaryPayload(url);
     },
@@ -233,7 +256,7 @@ async function createFromUrl(
     prefecturesFile.prefectures,
     async (code, loadOptions) => {
       const url = resolveSiblingUrl(
-        indexUrl,
+        absoluteIndexUrl,
         municipalitiesPath(index, code),
       );
       const file = await fetchAndCache(
