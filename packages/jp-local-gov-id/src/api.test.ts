@@ -36,6 +36,10 @@ function fileMap(): Map<string, unknown> {
     "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin",
     readBin("prefectures.bin"),
   );
+  map.set(
+    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams.bin",
+    readBin("search-ngrams.bin"),
+  );
   for (const code of (dataset.index as LocalGovIndexFile).prefectureCodes) {
     map.set(
       `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.bin`,
@@ -310,6 +314,13 @@ describe("searchByText", () => {
     );
   });
 
+  it("returns empty for queries under 2 code points after normalize", async () => {
+    const c = await client();
+    expect(await c.searchByText("")).toEqual([]);
+    expect(await c.searchByText("区")).toEqual([]);
+    expect(await c.getLocalGovCodeByName("区")).toBeNull();
+  });
+
   it("filters by target prefectures", async () => {
     const hits = await (await client()).searchByText("大阪", {
       target: "prefectures",
@@ -577,14 +588,25 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(hits.some((h) => h.name === "札幌市中央区")).toBe(true);
     expect(hits.some((h) => h.name === "中央区")).toBe(true);
 
-    // 2 init + 47 prefecture municipality files
-    expect(fetchMock).toHaveBeenCalledTimes(2 + 47);
-    expect(maxInFlight).toBe(MUNICIPALITY_FETCH_CONCURRENCY);
+    // 2 init + 1 JLIX + candidate prefecture bins (not all 47)
+    const muniFetches = fetchMock.mock.calls.filter((call) =>
+      /\/prefectures\/\d{2}\.bin$/.test(String(call[0])),
+    ).length;
+    expect(fetchMock).toHaveBeenCalledTimes(2 + 1 + muniFetches);
+    expect(muniFetches).toBeGreaterThan(0);
+    expect(muniFetches).toBeLessThan(47);
+    expect(
+      fetchMock.mock.calls.some((call) =>
+        String(call[0]).endsWith("/search-ngrams.bin"),
+      ),
+    ).toBe(true);
+    expect(maxInFlight).toBeLessThanOrEqual(MUNICIPALITY_FETCH_CONCURRENCY);
     expect(MUNICIPALITY_FETCH_CONCURRENCY).toBe(6);
 
-    // Nationwide search keeps municipality payloads in memory only
+    // Nationwide search keeps municipality payloads + JLIX in memory only
     for (const key of store.keys()) {
       expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin$/);
+      expect(key).not.toMatch(/search-ngrams\.bin$/);
     }
     expect(store.has(indexUrl)).toBe(true);
     expect(
@@ -594,8 +616,9 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     ).toBe(true);
 
     // Second nationwide search reuses memory (no extra fetch)
+    const callsAfterFirst = fetchMock.mock.calls.length;
     await c.searchByText("中央", { target: "cities" });
-    expect(fetchMock).toHaveBeenCalledTimes(2 + 47);
+    expect(fetchMock).toHaveBeenCalledTimes(callsAfterFirst);
   });
 
   it("getByCode persists municipality payload to localStorage", async () => {

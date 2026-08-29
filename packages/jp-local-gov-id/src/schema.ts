@@ -160,6 +160,7 @@ export function normalizeDatasetInput(data: unknown): {
   prefectures: unknown;
   municipalitiesByCode?: Record<string, unknown>;
   loadMunicipalities?: (code: string) => unknown | Promise<unknown>;
+  searchNgrams?: ArrayBuffer | Uint8Array;
 } {
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     throw new LocalGovSchemaError(
@@ -171,6 +172,16 @@ export function normalizeDatasetInput(data: unknown): {
 
   // Namespace / default export shape: { index, prefectures, ... }
   if ("index" in obj && "prefectures" in obj) {
+    const rawNgrams = obj.searchNgrams;
+    let searchNgrams: ArrayBuffer | Uint8Array | undefined;
+    if (rawNgrams instanceof ArrayBuffer || rawNgrams instanceof Uint8Array) {
+      searchNgrams = rawNgrams;
+    } else if (rawNgrams !== undefined && rawNgrams !== null) {
+      throw new LocalGovSchemaError(
+        "Dataset searchNgrams must be ArrayBuffer or Uint8Array when provided",
+      );
+    }
+
     return {
       index: obj.index,
       prefectures: obj.prefectures,
@@ -185,6 +196,7 @@ export function normalizeDatasetInput(data: unknown): {
         typeof obj.loadMunicipalities === "function"
           ? (obj.loadMunicipalities as (code: string) => unknown | Promise<unknown>)
           : undefined,
+      searchNgrams,
     };
   }
 

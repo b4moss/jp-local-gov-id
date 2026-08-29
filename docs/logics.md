@@ -66,13 +66,14 @@
 | 初期化（index / prefectures） | する | する |
 | `getByCode` / `listMunicipalitiesByPrefecture` / `getMunicipalityByCode` | する | する |
 | 都道府県指定の `searchByText` / `getLocalGovCodeByName` | する | する |
-| **全国**の `searchByText` / `getLocalGovCodeByName`（市区町村対象） | **しない** | する |
+| **全国**の `searchByText` / `getLocalGovCodeByName`（市区町村対象）の県 `.bin` | **しない** | する |
+| `search-ngrams.bin`（JLIX） | **しない** | する |
 
 - `cache` 既定 `true`。`false` で localStorage 読み書きなし
 - `cacheTtlSeconds` 既定 `31536000`（1 年）。単位は秒
 - `data` モードではキャッシュしない
 
-全国検索の並列度: 同時 6（`MUNICIPALITY_FETCH_CONCURRENCY`）
+全国市区町村検索: JLIX で候補 `muniCode` を絞り、該当県 `.bin` のみ並列取得（同時 6）。`target: "prefectures"` および都道府県指定時は索引を使わない。
 
 ---
 
@@ -135,9 +136,11 @@
 ##### `searchByText(text, options?)` → `Promise<LocalGov[]>`
 
 - **部分一致**（正規化後 `includes`）
+- 正規化後のコードポイント長が **2 未満** → `[]`
 - `target` / `prefecture` / `matchField` / `designatedCity` で対象を絞る
-- 全国かつ市区町村対象 → 未ロード県を 6 並列で取得（メモリのみ）
-- 都道府県のみ対象 → 追加 fetch なし
+- 全国かつ市区町村対象 → JLIX（2-gram 積集合）で候補を絞り、該当県 `.bin` のみ 6 並列取得（JLIX・県 `.bin` ともメモリのみ）
+- `target: "all"` の都道府県ヒットは初期化済み一覧の線形検索（索引なし）とマージ
+- 都道府県のみ対象 / 都道府県指定 → 索引なし（指定時は当該県のみロード）
 - 不正な `prefecture` → `[]`
 
 ##### `getLocalGovCodeByName(name, options?)` → `Promise<string | null>`
