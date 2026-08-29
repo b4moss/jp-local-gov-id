@@ -174,4 +174,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
-        run: npm publish --access public --provenance "$TARBALL"
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          args=(--access public --provenance)
+          # npm requires a non-latest dist-tag for prerelease versions (e.g. 1.0.0-rc.10)
+          if [[ "$version" == *-* ]]; then
+            args+=(--tag rc)
+            echo "prerelease detected (${version}); using --tag rc"
+          fi
+          npm publish "${args[@]}" "$TARBALL"
