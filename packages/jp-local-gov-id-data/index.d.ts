@@ -28,6 +28,7 @@ export type LocalGovIndex = {
   paths: {
     prefectures: string;
     municipalitiesByPrefecture: string;
+    searchNgrams: string;
   };
   prefectureCodes: string[];
 };
@@ -51,6 +52,8 @@ export declare const municipalitiesByCode: Record<
   string,
   LocalGovMunicipalities
 >;
+/** Raw JLIX bytes (`search-ngrams.bin`). */
+export declare const searchNgrams: Uint8Array;
 
 export declare function loadMunicipalities(
   code: string,
@@ -61,6 +64,7 @@ declare const dataset: {
   prefectures: LocalGovPrefectures;
   municipalitiesByCode: Record<string, LocalGovMunicipalities>;
   loadMunicipalities: (code: string) => Promise<LocalGovMunicipalities>;
+  searchNgrams: Uint8Array;
 };
 
 export default dataset;

@@ -255,7 +255,9 @@ const municipalitiesByCode = {
   }),
 };
 
-export { index, prefectures, municipalitiesByCode };
+const searchNgrams = new Uint8Array(readBin("search-ngrams.bin"));
+
+export { index, prefectures, municipalitiesByCode, searchNgrams };
 
 export function loadMunicipalities(code) {
   const padded = String(code).padStart(2, "0");
@@ -266,5 +268,5 @@ export function loadMunicipalities(code) {
   return Promise.resolve(file);
 }
 
-const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities };
+const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgrams };
 export default dataset;

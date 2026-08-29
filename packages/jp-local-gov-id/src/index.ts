@@ -30,19 +30,26 @@ export {
   DECODED_SCHEMA_VERSION,
   LocalGovBinaryError,
   MAGIC_JLDT,
+  MAGIC_JLIX,
   MAGIC_JLPR,
   MUNICIPALITY_RECORD_SIZE,
+  NGRAM_POSTING_RECORD_SIZE,
   PREFECTURE_RECORD_SIZE,
   decodeMunicipalities,
   decodeMunicipalitiesFile,
   decodePrefectures,
   decodePrefecturesFile,
+  decodeSearchNgrams,
   encodeMunicipalities,
   encodePrefectures,
+  encodeSearchNgrams,
   prefectureCodeFromMunicipalityCode,
 } from "./binary";
 export type {
   MunicipalityBinRecord,
   PrefectureBinRecord,
   PrefectureNameLookup,
+  SearchNgramPostingRecord,
 } from "./binary";
+export { codePointBigrams } from "./searchNgrams";
+export { normalizeSearchText } from "./normalize";

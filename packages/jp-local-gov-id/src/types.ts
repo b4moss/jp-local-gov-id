@@ -57,6 +57,8 @@ export type LocalGovIndexFile = {
   paths: {
     prefectures: string;
     municipalitiesByPrefecture: string;
+    /** JLIX search index (`search-ngrams.bin`). Required (#63). */
+    searchNgrams: string;
   };
   prefectureCodes: string[];
 };
@@ -90,6 +92,8 @@ export type LocalGovDataset = {
     | LocalGovMunicipalitiesFile
     | unknown
     | Promise<LocalGovMunicipalitiesFile | unknown>;
+  /** Raw JLIX bytes (`search-ngrams.bin`). Used by search Phase 2+. */
+  searchNgrams?: ArrayBuffer | Uint8Array;
 };
 
 export type CreateLocalGovCacheOptions = {

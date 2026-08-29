@@ -13,6 +13,7 @@
     },
     "./index.json": "./index.json",
     "./prefectures.bin": "./prefectures.bin",
+    "./search-ngrams.bin": "./search-ngrams.bin",
     "./prefectures/*": "./prefectures/*",
     "./dataset.js": "./dataset.js",
     "./decode.js": "./decode.js"
@@ -20,6 +21,7 @@
   "files": [
     "index.json",
     "prefectures.bin",
+    "search-ngrams.bin",
     "prefectures/*.bin",
     "dataset.js",
     "decode.js",

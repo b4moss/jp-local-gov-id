@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "source": "000925835.xlsx",
   "asOf": "R6.1.1",
-  "generatedAt": "2026-08-29T06:18:26.874Z",
+  "generatedAt": "2026-08-29T08:51:29.055Z",
   "counts": {
     "prefectures": 47,
     "municipalities": 1918,
@@ -10,7 +10,8 @@
   },
   "paths": {
     "prefectures": "prefectures.bin",
-    "municipalitiesByPrefecture": "prefectures/{code}.bin"
+    "municipalitiesByPrefecture": "prefectures/{code}.bin",
+    "searchNgrams": "search-ngrams.bin"
   },
   "prefectureCodes": [
     "01",

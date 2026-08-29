@@ -17,9 +17,17 @@ import {
 import {
   encodeMunicipalities,
   encodePrefectures,
+  encodeSearchNgrams,
+  GRAM_TYPE_KANA,
+  GRAM_TYPE_NAME,
+  KIND_MUNI,
+  KIND_PREF,
   type MunicipalityBinRecord,
   type PrefectureBinRecord,
+  type SearchNgramPostingRecord,
 } from "../packages/jp-local-gov-id/src/binary/index.ts";
+import { normalizeSearchText } from "../packages/jp-local-gov-id/src/normalize.ts";
+import { codePointBigrams } from "../packages/jp-local-gov-id/src/searchNgrams.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
@@ -160,6 +168,8 @@ function cleanGeneratedArtifacts(): void {
     "prefectures.json",
     "prefectures.csv",
     "prefectures.bin",
+    "search-ngrams.csv",
+    "search-ngrams.bin",
   ]) {
     try {
       rmSync(resolve(dataDir, name));
@@ -168,6 +178,58 @@ function cleanGeneratedArtifacts(): void {
     }
   }
 }
+
+function appendNgrams(
+  out: Map<string, SearchNgramPostingRecord>,
+  field: "name" | "nameKana",
+  raw: string,
+  base: Omit<SearchNgramPostingRecord, "gram" | "gramType">,
+): void {
+  const gramType = field === "name" ? GRAM_TYPE_NAME : GRAM_TYPE_KANA;
+  for (const gram of codePointBigrams(normalizeSearchText(raw))) {
+    const key = `${gram}\0${gramType}\0${base.muniCode}`;
+    if (out.has(key)) continue;
+    out.set(key, { ...base, gram, gramType });
+  }
+}
+
+function buildSearchNgramPostings(
+  prefectures: PrefectureRow[],
+  byPrefecture: Map<string, LocalGov[]>,
+): SearchNgramPostingRecord[] {
+  const map = new Map<string, SearchNgramPostingRecord>();
+
+  for (const pref of prefectures) {
+    const base = {
+      kind: KIND_PREF as const,
+      muniCode: Number(pref.muniCode),
+      prefCode: Number(pref.code),
+      hasWard: 0 as const,
+      isWard: 0 as const,
+    };
+    appendNgrams(map, "name", pref.name, base);
+    appendNgrams(map, "nameKana", pref.nameKana, base);
+  }
+
+  for (const [prefCode, list] of byPrefecture) {
+    const flags = wardFlagsForPrefecture(list);
+    for (const m of list) {
+      const f = flags.get(m.code) ?? { hasWard: 0 as const, isWard: 0 as const };
+      const base = {
+        kind: KIND_MUNI as const,
+        muniCode: Number(m.code),
+        prefCode: Number(prefCode),
+        hasWard: f.hasWard,
+        isWard: f.isWard,
+      };
+      appendNgrams(map, "name", m.name, base);
+      appendNgrams(map, "nameKana", m.nameKana, base);
+    }
+  }
+
+  return [...map.values()];
+}
+
 
 function wardFlagsForPrefecture(list: LocalGov[]): Map<string, { hasWard: 0 | 1; isWard: 0 | 1 }> {
   const bodyNames = new Set<string>();
@@ -230,7 +292,9 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     }),
     "};",
     "",
-    "export { index, prefectures, municipalitiesByCode };",
+    'const searchNgrams = new Uint8Array(readBin("search-ngrams.bin"));',
+    "",
+    "export { index, prefectures, municipalitiesByCode, searchNgrams };",
     "",
     "export function loadMunicipalities(code) {",
     '  const padded = String(code).padStart(2, "0");',
@@ -241,7 +305,7 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     "  return Promise.resolve(file);",
     "}",
     "",
-    "const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities };",
+    "const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgrams };",
     "export default dataset;",
     "",
   ];
@@ -327,6 +391,7 @@ async function main(): Promise<void> {
     paths: {
       prefectures: "prefectures.bin",
       municipalitiesByPrefecture: "prefectures/{code}.bin",
+      searchNgrams: "search-ngrams.bin",
     },
     prefectureCodes,
   });
@@ -398,6 +463,38 @@ async function main(): Promise<void> {
     );
   }
 
+  const ngramPostings = buildSearchNgramPostings(
+    prefecturesWithCounts,
+    byPrefecture,
+  );
+  writeCsv(
+    resolve(dataDir, "search-ngrams.csv"),
+    ["gram", "gramType", "kind", "muniCode", "prefCode", "hasWard", "isWard"],
+    [...ngramPostings]
+      .sort((a, b) =>
+        a.gram !== b.gram
+          ? a.gram < b.gram
+            ? -1
+            : 1
+          : a.gramType !== b.gramType
+            ? a.gramType - b.gramType
+            : a.muniCode - b.muniCode,
+      )
+      .map((r) => [
+        r.gram,
+        r.gramType === GRAM_TYPE_NAME ? "name" : "kana",
+        r.kind === KIND_PREF ? "pref" : "muni",
+        r.muniCode,
+        r.prefCode,
+        r.hasWard,
+        r.isWard,
+      ]),
+  );
+  writeFileSync(
+    resolve(dataDir, "search-ngrams.bin"),
+    Buffer.from(encodeSearchNgrams(ngramPostings, { asOf })),
+  );
+
   writeDatasetJs(prefectureCodes);
 
   // Sanity: dataset decode path works
@@ -406,7 +503,7 @@ async function main(): Promise<void> {
 
   console.log(`Wrote CSV + bin data under ${dataDir}`);
   console.log(
-    `prefectures=${prefectures.length}, municipalities=${municipalities.length}, wardsAdded=${addedWards}`,
+    `prefectures=${prefectures.length}, municipalities=${municipalities.length}, wardsAdded=${addedWards}, searchNgrams=${ngramPostings.length}`,
   );
 }
 

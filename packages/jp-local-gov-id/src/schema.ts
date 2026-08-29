@@ -65,10 +65,11 @@ export function validateIndexFile(data: unknown): LocalGovIndexFile {
   const paths = obj.paths as Record<string, unknown>;
   if (
     typeof paths.prefectures !== "string" ||
-    typeof paths.municipalitiesByPrefecture !== "string"
+    typeof paths.municipalitiesByPrefecture !== "string" ||
+    typeof paths.searchNgrams !== "string"
   ) {
     throw new LocalGovSchemaError(
-      "Index paths must include string prefectures and municipalitiesByPrefecture",
+      "Index paths must include string prefectures, municipalitiesByPrefecture, and searchNgrams",
     );
   }
   if (!Array.isArray(obj.prefectureCodes) || !obj.prefectureCodes.every((c) => typeof c === "string")) {
@@ -93,6 +94,7 @@ export function validateIndexFile(data: unknown): LocalGovIndexFile {
     paths: {
       prefectures: paths.prefectures,
       municipalitiesByPrefecture: paths.municipalitiesByPrefecture,
+      searchNgrams: paths.searchNgrams,
     },
     prefectureCodes: obj.prefectureCodes as string[],
   };
