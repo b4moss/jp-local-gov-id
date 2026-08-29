@@ -5,6 +5,11 @@ import {
 } from "./cache";
 import { buildLocalGovClient } from "./api";
 import {
+  decodeMunicipalitiesFile,
+  decodePrefecturesFile,
+  LocalGovBinaryError,
+} from "./binary";
+import {
   LocalGovSchemaError,
   normalizeDatasetInput,
   validateIndexFile,
@@ -15,6 +20,7 @@ import { createStore } from "./store";
 import type {
   CreateLocalGovCacheOptions,
   CreateLocalGovOptions,
+  LocalGov,
   LocalGovClient,
   LocalGovIndexFile,
 } from "./types";
@@ -65,28 +71,108 @@ function municipalitiesPath(
   return index.paths.municipalitiesByPrefecture.replaceAll("{code}", code);
 }
 
-async function fetchJson(url: string): Promise<unknown> {
+function isBinaryUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname;
+    return pathname.endsWith(".bin");
+  } catch {
+    return url.includes(".bin");
+  }
+}
+
+async function fetchResponse(url: string): Promise<Response> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch local gov data: ${response.status} ${response.statusText}`,
     );
   }
+  return response;
+}
 
-  let parsed: unknown;
+async function fetchJson(url: string): Promise<unknown> {
+  const response = await fetchResponse(url);
   try {
-    parsed = await response.json();
+    return await response.json();
   } catch {
     throw new LocalGovSchemaError(
       "Failed to parse local gov data as JSON from URL",
     );
   }
+}
 
-  return parsed;
+async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
+  const response = await fetchResponse(url);
+  try {
+    return await response.arrayBuffer();
+  } catch {
+    throw new LocalGovSchemaError(
+      "Failed to read local gov binary data from URL",
+    );
+  }
+}
+
+function prefectureLookup(
+  prefectures: LocalGov[],
+  code: string,
+): {
+  prefectureCode: string;
+  prefectureName: string;
+  prefectureNameKana: string;
+} {
+  const pref = prefectures.find((p) => p.code === code);
+  if (!pref) {
+    throw new LocalGovSchemaError(
+      `Unknown prefecture code while decoding municipalities: ${code}`,
+    );
+  }
+  return {
+    prefectureCode: pref.code,
+    prefectureName: pref.name,
+    prefectureNameKana: pref.nameKana,
+  };
+}
+
+async function loadPrefecturesPayload(
+  url: string,
+): Promise<unknown> {
+  if (!isBinaryUrl(url)) {
+    return fetchJson(url);
+  }
+  try {
+    return decodePrefecturesFile(await fetchArrayBuffer(url));
+  } catch (error) {
+    if (error instanceof LocalGovBinaryError) {
+      throw new LocalGovSchemaError(error.message);
+    }
+    throw error;
+  }
+}
+
+async function loadMunicipalitiesPayload(
+  url: string,
+  prefectures: LocalGov[],
+  code: string,
+): Promise<unknown> {
+  if (!isBinaryUrl(url)) {
+    return fetchJson(url);
+  }
+  try {
+    return decodeMunicipalitiesFile(
+      await fetchArrayBuffer(url),
+      prefectureLookup(prefectures, code),
+    );
+  } catch (error) {
+    if (error instanceof LocalGovBinaryError) {
+      throw new LocalGovSchemaError(error.message);
+    }
+    throw error;
+  }
 }
 
 async function fetchAndCache<T>(
   url: string,
+  load: () => Promise<unknown>,
   validate: (data: unknown) => T,
   cache: ResolvedCacheConfig,
   options?: { persist?: boolean },
@@ -97,10 +183,10 @@ async function fetchAndCache<T>(
     return validate(cached);
   }
 
-  const parsed = await fetchJson(url);
+  const parsed = await load();
   const validated = validate(parsed);
   if (options?.persist !== false) {
-    setCachedData(url, parsed, {
+    setCachedData(url, validated, {
       enabled: cache.enabled,
       ttlSeconds: cache.ttlSeconds,
     });
@@ -112,7 +198,12 @@ async function createFromUrl(
   indexUrl: string,
   cache: ResolvedCacheConfig,
 ): Promise<LocalGovClient> {
-  const index = await fetchAndCache(indexUrl, validateIndexFile, cache);
+  const index = await fetchAndCache(
+    indexUrl,
+    async () => fetchJson(indexUrl),
+    validateIndexFile,
+    cache,
+  );
 
   const prefecturesUrl = resolveSiblingUrl(
     indexUrl,
@@ -120,6 +211,7 @@ async function createFromUrl(
   );
   const prefecturesFile = await fetchAndCache(
     prefecturesUrl,
+    async () => loadPrefecturesPayload(prefecturesUrl),
     validatePrefecturesFile,
     cache,
   );
@@ -134,6 +226,8 @@ async function createFromUrl(
       );
       const file = await fetchAndCache(
         url,
+        async () =>
+          loadMunicipalitiesPayload(url, prefecturesFile.prefectures, code),
         validateMunicipalitiesFile,
         cache,
         {
@@ -180,12 +274,13 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
 
 /**
  * Load index + prefectures, validate schemas, then return a client.
- * Municipality JSON is loaded lazily (concurrency 6 for nationwide search).
+ * Municipality payloads are loaded lazily (concurrency 6 for nationwide search).
  * Pass either `{ data }` (dataset) or `{ url }` (versioned index.json URL).
  *
  * For `url` mode, localStorage caching is on by default (`cache: true`,
- * `cacheTtlSeconds` defaults to 1 year). Nationwide string search still skips
- * writing municipality JSON to localStorage.
+ * `cacheTtlSeconds` defaults to 1 year). Cached values are decoded objects
+ * stored via `JSON.stringify` (minified). Nationwide string search still skips
+ * writing municipality payloads to localStorage.
  */
 export async function createLocalGovClient(
   options: CreateLocalGovOptions,

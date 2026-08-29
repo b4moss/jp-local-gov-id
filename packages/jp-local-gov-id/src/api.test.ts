@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import dataset from "@b4moss/jp-local-gov-id-data";
 import { createLocalGovClient } from "./create";
 import { CACHE_TTL_MS } from "./cache";
@@ -13,17 +16,30 @@ async function client(): Promise<LocalGovClient> {
 const indexUrl =
   "https://cdn.example.com/jp-local-gov-id-data/0.2.0/index.json";
 
+const dataDir = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../jp-local-gov-id-data",
+);
+
+function readBin(relativePath: string): ArrayBuffer {
+  const bytes = readFileSync(join(dataDir, relativePath));
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
+}
+
 function fileMap(): Map<string, unknown> {
   const map = new Map<string, unknown>();
   map.set(indexUrl, dataset.index);
   map.set(
-    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.json",
-    dataset.prefectures,
+    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin",
+    readBin("prefectures.bin"),
   );
-  for (const [code, file] of Object.entries(dataset.municipalitiesByCode)) {
+  for (const code of (dataset.index as LocalGovIndexFile).prefectureCodes) {
     map.set(
-      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.json`,
-      file,
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.bin`,
+      readBin(`prefectures/${code}.bin`),
     );
   }
   return map;
@@ -458,6 +474,20 @@ describe("createLocalGovClient url + cache + lazy load", () => {
           json: async () => {
             throw new Error("no body");
           },
+          arrayBuffer: async () => {
+            throw new Error("no body");
+          },
+        };
+      }
+      if (body instanceof ArrayBuffer) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          arrayBuffer: async () => body.slice(0),
+          json: async () => {
+            throw new Error("not json");
+          },
         };
       }
       return {
@@ -465,6 +495,9 @@ describe("createLocalGovClient url + cache + lazy load", () => {
         status: 200,
         statusText: "OK",
         json: async () => body,
+        arrayBuffer: async () => {
+          throw new Error("not binary");
+        },
       };
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -493,7 +526,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(
       fetchMock.mock.calls.some((call) =>
-        String(call[0]).endsWith("/prefectures/13.json"),
+        String(call[0]).endsWith("/prefectures/13.bin"),
       ),
     ).toBe(true);
 
@@ -520,6 +553,14 @@ describe("createLocalGovClient url + cache + lazy load", () => {
       await new Promise((r) => setTimeout(r, 5));
       inFlight -= 1;
 
+      if (body instanceof ArrayBuffer) {
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          arrayBuffer: async () => body.slice(0),
+        };
+      }
       return {
         ok: true,
         status: 200,
@@ -541,14 +582,14 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(maxInFlight).toBe(MUNICIPALITY_FETCH_CONCURRENCY);
     expect(MUNICIPALITY_FETCH_CONCURRENCY).toBe(6);
 
-    // Nationwide search keeps municipality JSON in memory only
+    // Nationwide search keeps municipality payloads in memory only
     for (const key of store.keys()) {
-      expect(key).not.toMatch(/\/prefectures\/\d{2}\.json$/);
+      expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin$/);
     }
     expect(store.has(indexUrl)).toBe(true);
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.json",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin",
       ),
     ).toBe(true);
 
@@ -557,7 +598,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2 + 47);
   });
 
-  it("getByCode persists municipality JSON to localStorage", async () => {
+  it("getByCode persists municipality payload to localStorage", async () => {
     stubLocalStorage();
     const fetchMock = stubFetch(fileMap());
     const c = await createLocalGovClient({ url: indexUrl });
@@ -565,13 +606,13 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.getByCode("131016");
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.json",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.bin",
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("prefecture-scoped search persists municipality JSON to localStorage", async () => {
+  it("prefecture-scoped search persists municipality payload to localStorage", async () => {
     stubLocalStorage();
     const fetchMock = stubFetch(fileMap());
     const c = await createLocalGovClient({ url: indexUrl });
@@ -579,7 +620,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.searchByText("中央", { prefecture: "01", target: "cities" });
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.json",
+        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.bin",
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
