@@ -19,7 +19,8 @@ npm install @b4moss/jp-local-gov-id-data
 | `index.json` | Index metadata (`schemaVersion`, `asOf`, paths, counts, …) — plain JSON |
 | `prefectures.bin.br` | All prefectures — Brotli-compressed binary (#74) |
 | `prefectures/{code}.bin.br` | Municipalities for that prefecture — Brotli-compressed binary |
-| `search-ngrams.bin.br` | Nationwide 2-gram search index (JLIX) — Brotli-compressed (#63) |
+| `search-ngrams/2gram/{region}.bin.br` | Hot-set 2-gram search index (JLIX, regional splits) — Brotli (#63) |
+| `search-ngrams/3gram/{shard}.bin.br` | Cold-set 3-gram search index (JLIX, 3 shards) — Brotli (#63) |
 | `dataset.js` | Default export; decompresses `.bin.br` and decodes at module load (Node-friendly) |
 | `decode.js` | Low-level decode functions for the uncompressed `.bin` formats |
 
@@ -49,7 +50,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 ```
 
-`dataset.js` decompresses the bundled `.bin.br` files and decodes them once at import time, so `dataset.prefectures` / `dataset.municipalitiesByCode` / `dataset.searchNgrams` (raw JLIX bytes) are ready for the API package.
+`dataset.js` decompresses the bundled `.bin.br` files and decodes them once at import time, so `dataset.prefectures` / `dataset.municipalitiesByCode` / `dataset.searchNgramShards` (raw JLIX partition bytes) are ready for the API package.
 
 ```ts
 import index from "@b4moss/jp-local-gov-id-data/index.json";

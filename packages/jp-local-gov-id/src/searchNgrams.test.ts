@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { normalizeSearchText } from "./normalize";
-import { codePointBigrams } from "./searchNgrams";
+import {
+  THREE_GRAM_SHARD_COUNT,
+  codePointBigrams,
+  codePointTrigrams,
+  gramShardIndex,
+} from "./searchNgrams";
 
 describe("codePointBigrams (TC-N)", () => {
   it("TC-N01/N03: splits by code points into adjacent pairs", () => {
@@ -14,7 +19,6 @@ describe("codePointBigrams (TC-N)", () => {
   });
 
   it("TC-N01: halfwidth dakuten stays on code-point boundaries", () => {
-    // ｶ + ﾞ are separate code points after normalization of ガ
     const normalized = normalizeSearchText("ガ");
     const grams = codePointBigrams(normalized + "ﾜ");
     expect(normalized).toBe("ｶﾞ");
@@ -24,9 +28,22 @@ describe("codePointBigrams (TC-N)", () => {
   });
 
   it("TC-N04: connects with normalizeSearchText", () => {
-    // ちよだ → チヨダ → ﾁﾖﾀﾞ (ﾞ is its own code point after ﾀ)
     const n = normalizeSearchText("ちよだ");
     expect(n).toBe("ﾁﾖﾀﾞ");
     expect(codePointBigrams(n)).toEqual(["ﾁﾖ", "ﾖﾀ", "ﾀﾞ"]);
+  });
+});
+
+describe("codePointTrigrams (TC-N)", () => {
+  it("TC-N02/N03: length under 3 empty; length 3 yields one trigram", () => {
+    expect(codePointTrigrams("中央")).toEqual([]);
+    expect(codePointTrigrams("中央区")).toEqual(["中央区"]);
+  });
+
+  it("TC-N05: shard index is stable in 0..shardCount-1", () => {
+    const id = gramShardIndex("那覇市", THREE_GRAM_SHARD_COUNT);
+    expect(id).toBeGreaterThanOrEqual(0);
+    expect(id).toBeLessThan(THREE_GRAM_SHARD_COUNT);
+    expect(gramShardIndex("那覇市", THREE_GRAM_SHARD_COUNT)).toBe(id);
   });
 });

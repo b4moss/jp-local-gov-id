@@ -7,7 +7,6 @@ import { buildLocalGovClient } from "./api";
 import {
   decodeMunicipalitiesFile,
   decodePrefecturesFile,
-  decodeSearchNgrams,
   LocalGovBinaryError,
 } from "./binary";
 import {
@@ -22,11 +21,9 @@ import {
   validatePrefecturesFile,
 } from "./schema";
 import {
-  buildSearchIndex,
-  toArrayBuffer,
-  warnSearchIndexAsOfMismatch,
-  type SearchIndex,
-} from "./searchIndex";
+  createDatasetSearchIndexLoader,
+  createHybridSearchIndexLoader,
+} from "./searchIndexLoader";
 import { createStore } from "./store";
 import type {
   CreateLocalGovCacheOptions,
@@ -140,9 +137,7 @@ function prefectureLookup(
   };
 }
 
-async function loadPrefecturesPayload(
-  url: string,
-): Promise<unknown> {
+async function loadPrefecturesPayload(url: string): Promise<unknown> {
   if (!isBinaryPayloadUrl(url)) {
     return fetchJson(url);
   }
@@ -177,17 +172,6 @@ async function loadMunicipalitiesPayload(
   }
 }
 
-function decodeSearchIndexBytes(buffer: ArrayBuffer): SearchIndex {
-  try {
-    return buildSearchIndex(decodeSearchNgrams(buffer));
-  } catch (error) {
-    if (error instanceof LocalGovBinaryError) {
-      throw new LocalGovSchemaError(error.message);
-    }
-    throw error;
-  }
-}
-
 async function fetchAndCache<T>(
   url: string,
   load: () => Promise<unknown>,
@@ -197,7 +181,6 @@ async function fetchAndCache<T>(
 ): Promise<T> {
   const cached = getCachedData(url, { enabled: cache.enabled });
   if (cached !== null) {
-    // Re-validate cached payloads so schema changes surface clearly
     return validate(cached);
   }
 
@@ -234,8 +217,15 @@ async function createFromUrl(
     cache,
   );
 
-  let searchIndex: SearchIndex | null = null;
-  let searchIndexInFlight: Promise<SearchIndex> | null = null;
+  const ensureSearchIndexes = createHybridSearchIndexLoader({
+    spec: index.paths.searchNgrams,
+    prefecturesAsOf: prefecturesFile.asOf,
+    loadPartitionBytes: async (relativePath) => {
+      const url = resolveSiblingUrl(indexUrl, relativePath);
+      // JLIX: memory only — do not use localStorage (Issue #63)
+      return fetchBinaryPayload(url);
+    },
+  });
 
   const store = createStore(
     index,
@@ -257,24 +247,7 @@ async function createFromUrl(
       );
       return file.municipalities;
     },
-    async () => {
-      if (searchIndex) return searchIndex;
-      if (searchIndexInFlight) return searchIndexInFlight;
-
-      searchIndexInFlight = (async () => {
-        const url = resolveSiblingUrl(indexUrl, index.paths.searchNgrams);
-        // JLIX: memory only — do not use localStorage (Issue #63)
-        const buffer = await fetchBinaryPayload(url);
-        const built = decodeSearchIndexBytes(buffer);
-        warnSearchIndexAsOfMismatch(built.asOf, prefecturesFile.asOf);
-        searchIndex = built;
-        return built;
-      })().finally(() => {
-        searchIndexInFlight = null;
-      });
-
-      return searchIndexInFlight;
-    },
+    ensureSearchIndexes,
     { prefecturesAsOf: prefecturesFile.asOf },
   );
 
@@ -286,12 +259,17 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
   const index = validateIndexFile(input.index);
   const prefecturesFile = validatePrefecturesFile(input.prefectures);
 
-  // Node / { data }: eager decode when bytes are present (Issue #63)
-  let searchIndex: SearchIndex | null = null;
-  if (input.searchNgrams) {
-    searchIndex = decodeSearchIndexBytes(toArrayBuffer(input.searchNgrams));
-    warnSearchIndexAsOfMismatch(searchIndex.asOf, prefecturesFile.asOf);
-  }
+  const ensureSearchIndexes = input.searchNgramShards
+    ? createDatasetSearchIndexLoader({
+        spec: index.paths.searchNgrams,
+        prefecturesAsOf: prefecturesFile.asOf,
+        shards: input.searchNgramShards,
+      })
+    : async () => {
+        throw new LocalGovSchemaError(
+          "Dataset is missing searchNgramShards (JLIX partition bytes) required for nationwide string search",
+        );
+      };
 
   const store = createStore(
     index,
@@ -314,12 +292,7 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
         `No municipalities data for prefecture ${code}: provide municipalitiesByCode or loadMunicipalities`,
       );
     },
-    async () => {
-      if (searchIndex) return searchIndex;
-      throw new LocalGovSchemaError(
-        "Dataset is missing searchNgrams (JLIX bytes) required for nationwide string search",
-      );
-    },
+    ensureSearchIndexes,
     { prefecturesAsOf: prefecturesFile.asOf },
   );
 
@@ -329,8 +302,9 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
 /**
  * Load index + prefectures, validate schemas, then return a client.
  * Municipality payloads are loaded lazily (concurrency 6).
- * Nationwide city search uses JLIX (`paths.searchNgrams`) then loads only
- * candidate prefecture `.bin` files (memory-only for those loads and for JLIX).
+ * Nationwide city search uses hybrid JLIX (hot 2-gram regions + cold 3-gram
+ * shards) then loads only candidate prefecture `.bin.br` files (memory-only
+ * for those loads and for JLIX).
  * Pass either `{ data }` (dataset) or `{ url }` (versioned index.json URL).
  *
  * For `url` mode, localStorage caching is on by default (`cache: true`,
@@ -367,7 +341,6 @@ export async function createLocalGovClient(
     return createFromUrl(options.url, cache);
   }
 
-  // Validate cache options even for data mode so bad values fail fast
   resolveCacheConfig(options);
   return createFromData(options.data);
 }

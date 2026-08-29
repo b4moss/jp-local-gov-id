@@ -257,9 +257,15 @@ const municipalitiesByCode = {
   }),
 };
 
-const searchNgrams = new Uint8Array(readBinBr("search-ngrams.bin.br"));
+const searchNgramShards = {};
+for (const region of ["tokyo", "kanagawa", "saitama", "chiba", "osaka", "chukyo", "hyogo", "kyoto", "fukuoka", "designated-other"]) {
+  searchNgramShards[region] = new Uint8Array(readBinBr(`search-ngrams/2gram/${region}.bin.br`));
+}
+for (const shard of ["0", "1", "2"]) {
+  searchNgramShards[shard] = new Uint8Array(readBinBr(`search-ngrams/3gram/${shard}.bin.br`));
+}
 
-export { index, prefectures, municipalitiesByCode, searchNgrams };
+export { index, prefectures, municipalitiesByCode, searchNgramShards };
 
 export function loadMunicipalities(code) {
   const padded = String(code).padStart(2, "0");
@@ -270,5 +276,5 @@ export function loadMunicipalities(code) {
   return Promise.resolve(file);
 }
 
-const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgrams };
+const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgramShards };
 export default dataset;

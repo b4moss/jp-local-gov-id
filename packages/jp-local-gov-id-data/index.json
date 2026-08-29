@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "source": "000925835.xlsx",
   "asOf": "R6.1.1",
-  "generatedAt": "2026-08-29T09:02:10.493Z",
+  "generatedAt": "2026-08-29T09:54:16.015Z",
   "counts": {
     "prefectures": 47,
     "municipalities": 1918,
@@ -11,7 +11,27 @@
   "paths": {
     "prefectures": "prefectures.bin.br",
     "municipalitiesByPrefecture": "prefectures/{code}.bin.br",
-    "searchNgrams": "search-ngrams.bin.br"
+    "searchNgrams": {
+      "twoGram": {
+        "regions": [
+          "tokyo",
+          "kanagawa",
+          "saitama",
+          "chiba",
+          "osaka",
+          "chukyo",
+          "hyogo",
+          "kyoto",
+          "fukuoka",
+          "designated-other"
+        ],
+        "pattern": "search-ngrams/2gram/{region}.bin.br"
+      },
+      "threeGram": {
+        "shardCount": 3,
+        "pattern": "search-ngrams/3gram/{shard}.bin.br"
+      }
+    }
   },
   "prefectureCodes": [
     "01",

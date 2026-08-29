@@ -5,8 +5,12 @@ import {
   normalizePrefectureCode,
   normalizeSearchText,
 } from "./normalize";
-import { codePointBigrams } from "./searchNgrams";
-import { querySearchIndex } from "./searchIndex";
+import { codePointBigrams, codePointTrigrams } from "./searchNgrams";
+import {
+  querySearchIndex,
+  unionSearchHits,
+  type SearchIndexHit,
+} from "./searchIndex";
 import type { LocalGovStore } from "./store";
 import type {
   ListMunicipalitiesOptions,
@@ -99,17 +103,49 @@ async function collectNationwideViaIndex(
     return prefs;
   }
 
-  const grams = codePointBigrams(queryNormalized);
-  if (grams.length === 0) {
+  const codePoints = Array.from(queryNormalized);
+  if (codePoints.length < 2) {
     return sortSearchHits(prefs);
   }
 
-  const index = await store.ensureSearchIndex();
-  const hits = querySearchIndex(index, {
-    grams,
-    matchField,
-    designatedCity: designatedCity ?? "both",
+  const needTwoGram = true;
+  const needThreeGram = codePoints.length >= 3;
+
+  const indexes = await store.ensureSearchIndexes({
+    twoGram: needTwoGram,
+    threeGram: needThreeGram,
   });
+
+  const designated = designatedCity ?? "both";
+  const hitGroups: SearchIndexHit[][] = [];
+
+  if (indexes.twoGram) {
+    const bigrams = codePointBigrams(queryNormalized);
+    if (bigrams.length > 0) {
+      hitGroups.push(
+        querySearchIndex(indexes.twoGram, {
+          grams: bigrams,
+          matchField,
+          designatedCity: designated,
+        }),
+      );
+    }
+  }
+
+  if (indexes.threeGram) {
+    const trigrams = codePointTrigrams(queryNormalized);
+    if (trigrams.length > 0) {
+      hitGroups.push(
+        querySearchIndex(indexes.threeGram, {
+          grams: trigrams,
+          matchField,
+          designatedCity: designated,
+        }),
+      );
+    }
+  }
+
+  const hits = unionSearchHits(hitGroups);
 
   if (hits.length === 0) {
     return sortSearchHits(prefs);

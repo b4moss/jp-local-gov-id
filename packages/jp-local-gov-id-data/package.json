@@ -13,7 +13,8 @@
     },
     "./index.json": "./index.json",
     "./prefectures.bin.br": "./prefectures.bin.br",
-    "./search-ngrams.bin.br": "./search-ngrams.bin.br",
+    "./search-ngrams/2gram/*": "./search-ngrams/2gram/*",
+    "./search-ngrams/3gram/*": "./search-ngrams/3gram/*",
     "./prefectures/*": "./prefectures/*",
     "./dataset.js": "./dataset.js",
     "./decode.js": "./decode.js"
@@ -21,7 +22,8 @@
   "files": [
     "index.json",
     "prefectures.bin.br",
-    "search-ngrams.bin.br",
+    "search-ngrams/2gram/*.bin.br",
+    "search-ngrams/3gram/*.bin.br",
     "prefectures/*.bin.br",
     "dataset.js",
     "decode.js",

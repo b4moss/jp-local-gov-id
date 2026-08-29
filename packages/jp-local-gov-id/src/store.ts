@@ -15,7 +15,19 @@ export type LoadMunicipalitiesFn = (
   options?: LoadMunicipalitiesOptions,
 ) => Promise<readonly LocalGov[]>;
 
-export type EnsureSearchIndexFn = () => Promise<SearchIndex>;
+export type EnsureSearchIndexesNeed = {
+  twoGram: boolean;
+  threeGram: boolean;
+};
+
+export type SearchIndexes = {
+  twoGram: SearchIndex | null;
+  threeGram: SearchIndex | null;
+};
+
+export type EnsureSearchIndexesFn = (
+  need: EnsureSearchIndexesNeed,
+) => Promise<SearchIndexes>;
 
 export type LocalGovStore = {
   index: LocalGovIndexFile;
@@ -31,15 +43,15 @@ export type LocalGovStore = {
   getMunicipalities: (code: string) => readonly LocalGov[] | undefined;
   getMunicipalityByCode: (code: string) => LocalGov | undefined;
   allPrefectureCodes: readonly string[];
-  /** Load / return JLIX search index (eager or lazy depending on create path). */
-  ensureSearchIndex: () => Promise<SearchIndex>;
+  /** Load / return hybrid JLIX indexes covering the requested layers. */
+  ensureSearchIndexes: EnsureSearchIndexesFn;
 };
 
 export function createStore(
   index: LocalGovIndexFile,
   prefectures: readonly LocalGov[],
   loadMunicipalities: LoadMunicipalitiesFn,
-  ensureSearchIndex: EnsureSearchIndexFn,
+  ensureSearchIndexes: EnsureSearchIndexesFn,
   options?: { prefecturesAsOf?: string },
 ): LocalGovStore {
   const prefectureByCode = new Map(
@@ -110,6 +122,6 @@ export function createStore(
     getMunicipalities: (code) => municipalitiesByPrefectureCode.get(code),
     getMunicipalityByCode: (code) => municipalityByCode.get(code),
     allPrefectureCodes,
-    ensureSearchIndex,
+    ensureSearchIndexes,
   };
 }

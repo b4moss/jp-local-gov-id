@@ -19,7 +19,8 @@ npm install @b4moss/jp-local-gov-id-data
 | `index.json` | 索引メタデータ（`schemaVersion`・`asOf`・パス・件数など）— 通常の JSON |
 | `prefectures.bin.br` | 都道府県のみ — Brotli 圧縮バイナリ（#74） |
 | `prefectures/{code}.bin.br` | 当該県の市区町村 — Brotli 圧縮バイナリ |
-| `search-ngrams.bin.br` | 全国 2-gram 検索インデックス（JLIX）— Brotli 圧縮（#63） |
+| `search-ngrams/2gram/{region}.bin.br` | ホット団体の 2-gram 検索索引（JLIX・地域分割）— Brotli（#63） |
+| `search-ngrams/3gram/{shard}.bin.br` | コールド団体の 3-gram 検索索引（JLIX・3 シャード）— Brotli（#63） |
 | `dataset.js` | API 向けデフォルト export。`.bin.br` を展開・デコードしてから公開形を組み立てます |
 | `decode.js` | 非圧縮 `.bin` 形式の低レベルデコード関数 |
 
@@ -49,7 +50,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 ```
 
-`dataset.js` は import 時に同梱の `.bin` を一度だけデコードするため、`dataset.prefectures` / `dataset.municipalitiesByCode` は従来の JSON 版と同じ形のオブジェクトです。
+`dataset.js` は import 時に同梱の `.bin.br` を一度だけ展開・デコードするため、`dataset.prefectures` / `dataset.municipalitiesByCode` / `dataset.searchNgramShards`（JLIX 分割の生バイト）は API パッケージからすぐ使えます。
 
 ```ts
 import index from "@b4moss/jp-local-gov-id-data/index.json";

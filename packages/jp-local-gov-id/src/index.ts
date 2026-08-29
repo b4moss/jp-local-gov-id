@@ -12,6 +12,9 @@ export type {
   LocalGovPrefecturesFile,
   MatchField,
   MunicipalityCounts,
+  SearchNgramsPathSpec,
+  SearchNgramsThreeGramSpec,
+  SearchNgramsTwoGramSpec,
   SearchOptions,
   SearchTarget,
 } from "./types";
@@ -25,6 +28,11 @@ export {
   LocalGovSchemaError,
 } from "./schema";
 export { MUNICIPALITY_FETCH_CONCURRENCY } from "./pool";
+export {
+  SEARCH_INDEX_FETCH_CONCURRENCY,
+  SEARCH_INDEX_FETCH_STAGGER_MS,
+  mapWithStaggeredConcurrency,
+} from "./staggerPool";
 export {
   BINARY_FORMAT_VERSION,
   DECODED_SCHEMA_VERSION,
@@ -51,7 +59,18 @@ export type {
   PrefectureNameLookup,
   SearchNgramPostingRecord,
 } from "./binary";
-export { codePointBigrams } from "./searchNgrams";
+export {
+  THREE_GRAM_SHARD_COUNT,
+  codePointBigrams,
+  codePointTrigrams,
+  gramShardId,
+  gramShardIndex,
+} from "./searchNgrams";
+export {
+  TWO_GRAM_REGIONS,
+  assignTwoGramRegion,
+  isHotMunicipality,
+} from "./searchHotSet";
 export { normalizeSearchText } from "./normalize";
 export {
   decompressBrotli,

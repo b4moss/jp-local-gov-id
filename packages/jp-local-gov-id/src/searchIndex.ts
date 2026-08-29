@@ -31,6 +31,41 @@ export function buildSearchIndex(decoded: {
   };
 }
 
+/** Merge partition indexes; concatenate posting lists for the same gram. */
+export function mergeSearchIndexes(parts: readonly SearchIndex[]): SearchIndex {
+  if (parts.length === 0) {
+    return { version: 0, asOf: "", byGram: new Map() };
+  }
+  if (parts.length === 1) return parts[0]!;
+
+  const byGram = new Map<string, SearchNgramPostingRecord[]>();
+  for (const part of parts) {
+    for (const [gram, list] of part.byGram) {
+      const existing = byGram.get(gram);
+      if (existing) existing.push(...list);
+      else byGram.set(gram, [...list]);
+    }
+  }
+  return {
+    version: parts[0]!.version,
+    asOf: parts[0]!.asOf,
+    byGram,
+  };
+}
+
+/** Union hits by muniCode (first wins for prefCode). */
+export function unionSearchHits(
+  groups: readonly SearchIndexHit[][],
+): SearchIndexHit[] {
+  const map = new Map<string, SearchIndexHit>();
+  for (const group of groups) {
+    for (const hit of group) {
+      if (!map.has(hit.muniCode)) map.set(hit.muniCode, hit);
+    }
+  }
+  return [...map.values()];
+}
+
 function gramTypesFor(matchField: MatchField): ReadonlySet<number> {
   if (matchField === "name") return new Set([GRAM_TYPE_NAME]);
   if (matchField === "nameKana") return new Set([GRAM_TYPE_KANA]);

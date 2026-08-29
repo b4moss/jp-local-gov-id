@@ -36,11 +36,20 @@ function fileMap(): Map<string, unknown> {
     "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
     readBin("prefectures.bin.br"),
   );
-  map.set(
-    "https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams.bin.br",
-    readBin("search-ngrams.bin.br"),
-  );
-  for (const code of (dataset.index as LocalGovIndexFile).prefectureCodes) {
+  const index = dataset.index as LocalGovIndexFile;
+  for (const region of index.paths.searchNgrams.twoGram.regions) {
+    map.set(
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams/2gram/${region}.bin.br`,
+      readBin(`search-ngrams/2gram/${region}.bin.br`),
+    );
+  }
+  for (let i = 0; i < index.paths.searchNgrams.threeGram.shardCount; i++) {
+    map.set(
+      `https://cdn.example.com/jp-local-gov-id-data/0.2.0/search-ngrams/3gram/${i}.bin.br`,
+      readBin(`search-ngrams/3gram/${i}.bin.br`),
+    );
+  }
+  for (const code of index.prefectureCodes) {
     map.set(
       `https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/${code}.bin.br`,
       readBin(`prefectures/${code}.bin.br`),
@@ -312,6 +321,24 @@ describe("searchByText", () => {
     expect(hits.some((h) => h.code === "131016" && h.name === "千代田区")).toBe(
       true,
     );
+  });
+
+  it("TC-Q02: length-2 query hits hot 2-gram only (cold 2-char misses)", async () => {
+    const c = await client();
+    const hot = await c.searchByText("中央", { target: "cities" });
+    expect(hot.some((h) => h.code === "131024")).toBe(true); // 中央区 (tokyo)
+    // 那覇 is cold; 2 code points cannot use 3-gram
+    expect(await c.searchByText("那覇", { target: "cities" })).toEqual([]);
+  });
+
+  it("TC-Q03/Q04: length>=3 merges both indexes (cold via 3-gram)", async () => {
+    const c = await client();
+    const hits = await c.searchByText("那覇市", { target: "cities" });
+    expect(hits.some((h) => h.code === "472018")).toBe(true);
+    // Both hot and cold can appear for shared substrings
+    const fuchu = await c.searchByText("府中市", { target: "cities" });
+    expect(fuchu.some((h) => h.code === "132063")).toBe(true);
+    expect(fuchu.some((h) => h.code === "342084")).toBe(true);
   });
 
   it("returns empty for queries under 2 code points after normalize", async () => {
@@ -588,25 +615,37 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(hits.some((h) => h.name === "札幌市中央区")).toBe(true);
     expect(hits.some((h) => h.name === "中央区")).toBe(true);
 
-    // 2 init + 1 JLIX + candidate prefecture bins (not all 47)
+    // 2 init + all 2-gram regions (query length 2 → no 3-gram) + candidate prefs
+    const searchFetches = fetchMock.mock.calls.filter((call) =>
+      String(call[0]).includes("/search-ngrams/"),
+    ).length;
     const muniFetches = fetchMock.mock.calls.filter((call) =>
       /\/prefectures\/\d{2}\.bin\.br$/.test(String(call[0])),
     ).length;
-    expect(fetchMock).toHaveBeenCalledTimes(2 + 1 + muniFetches);
+    expect(searchFetches).toBe(
+      (dataset.index as LocalGovIndexFile).paths.searchNgrams.twoGram.regions
+        .length,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2 + searchFetches + muniFetches);
     expect(muniFetches).toBeGreaterThan(0);
     expect(muniFetches).toBeLessThan(47);
     expect(
       fetchMock.mock.calls.some((call) =>
-        String(call[0]).endsWith("/search-ngrams.bin.br"),
+        String(call[0]).includes("/search-ngrams/2gram/"),
       ),
     ).toBe(true);
+    expect(
+      fetchMock.mock.calls.some((call) =>
+        String(call[0]).includes("/search-ngrams/3gram/"),
+      ),
+    ).toBe(false);
     expect(maxInFlight).toBeLessThanOrEqual(MUNICIPALITY_FETCH_CONCURRENCY);
     expect(MUNICIPALITY_FETCH_CONCURRENCY).toBe(6);
 
     // Nationwide search keeps municipality payloads + JLIX in memory only
     for (const key of store.keys()) {
       expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin(\.br)?$/);
-      expect(key).not.toMatch(/search-ngrams\.bin(\.br)?$/);
+      expect(key).not.toMatch(/search-ngrams\//);
     }
     expect(store.has(indexUrl)).toBe(true);
     expect(
