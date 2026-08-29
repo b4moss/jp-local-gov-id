@@ -109,7 +109,7 @@
 
 - `pref`: コードまたは名称（`listMunicipalitiesByPrefecture` と同じ解決）
 - `options.designatedCity`: `"both"` \| `"city"` \| `"ward"`（既定 `"both"`）
-- 初期化済み都道府県の `municipalityCounts[mode]` を返す（同期・県別 JSON 不要）
+- 初期化済み都道府県の `municipalityCounts[mode]` を返す（同期・県別データ不要）
 - 未知の都道府県 / 件数未載荷 → `null`
 
 ##### `listMunicipalitiesByPrefecture(pref, options?)` → `Promise<LocalGov[]>`
@@ -117,7 +117,7 @@
 - `pref`: コードまたは名称
 - `options.designatedCity`: `"both"` \| `"city"` \| `"ward"`（既定 `"both"`）
 - 配下の市区町村（市本体・区を含む。`designatedCity` でフィルタ可）
-- 未ロードなら当該県 JSON を取得（キャッシュ可）
+- 未ロードなら当該県の `.bin` を取得してデコード（キャッシュ可）
 - 不正な `pref` → `[]`
 
 ##### `getMunicipalityByCode(code)` → `Promise<LocalGov | null>`
@@ -152,7 +152,7 @@
 
 | 名前 | 種別 | 内容 |
 |------|------|------|
-| `LocalGovSchemaError` | class | スキーマ／不正 JSON |
+| `LocalGovSchemaError` | class | スキーマ不一致／不正な JSON・バイナリデータ |
 | `LOCAL_GOV_SCHEMA_VERSION` | const | 現行スキーマ版（`1`） |
 | `MUNICIPALITY_FETCH_CONCURRENCY` | const | 全国検索の並列度（`6`） |
 
@@ -169,10 +169,10 @@
 | 名前 | 内容 |
 |------|------|
 | default `dataset` | `{ index, prefectures, municipalitiesByCode, loadMunicipalities }` |
-| `index` | インデックス JSON |
-| `prefectures` | 都道府県 JSON |
-| `municipalitiesByCode` | 県コード → 市区町村 JSON |
-| `loadMunicipalities(code)` | 県コードで市区町村ファイルを返す |
+| `index` | インデックス（`index.json`、プレーン JSON） |
+| `prefectures` | 都道府県データ（`prefectures.bin` をデコード済み） |
+| `municipalitiesByCode` | 県コード → 市区町村データ（`.bin` をデコード済み） |
+| `loadMunicipalities(code)` | 県コードで市区町村ファイル（`.bin`）を読み込み、デコードして返す |
 
 ---
 

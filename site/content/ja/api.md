@@ -37,7 +37,7 @@ description: LocalGovClient の公開メソッド
 | `listPrefectures()` | `LocalGov[]` | 全都道府県 |
 | `getPrefectureByCode(code)` | `LocalGov \| null` | 都道府県コードで取得 |
 | `getPrefectureCodeByName(name)` | `string \| null` | 正式名称から都道府県コード |
-| `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | `municipalityCounts` から同期で件数取得（県別 JSON 不要） |
+| `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | `municipalityCounts` から同期で件数取得（県別データ不要） |
 | `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | 県内の市区町村（遅延ロード） |
 | `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | 市区町村 6 桁で取得 |
 | `getByCode(code)` | `Promise<LocalGov \| null>` | 2 桁 / 6 桁を自動判定 |
@@ -75,13 +75,13 @@ description: LocalGovClient の公開メソッド
 
 ## エラーと空結果
 
-- スキーマ不一致・不正 JSON → `LocalGovSchemaError`
+- スキーマ不一致・不正なデータ → `LocalGovSchemaError`
 - ネットワーク / HTTP 失敗 → 通常の fetch エラー
 - 見つからない・同名衝突 → `null` / `[]`（throw しない）
 
 ## `url` モードのキャッシュ
 
-- 既定で取得ファイルを localStorage にキャッシュ（キーは URL）
+- 既定で取得ファイルを localStorage にキャッシュ（キーは URL）。保存するのはデコード後オブジェクトを `JSON.stringify` した文字列（minify。Brotli 等の圧縮はしません）
 - `cache: false` で無効化できる
 - `cacheTtlSeconds` で TTL を秒単位で指定（既定 1 年 = `31536000`）
-- **全国対象**の文字列検索で読み込んだ県別 JSON はメモリのみ（localStorage に書かない）
+- **全国対象**の文字列検索で読み込んだ県別データはメモリのみ（localStorage に書かない）

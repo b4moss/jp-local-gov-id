@@ -37,7 +37,7 @@ Exactly one of `data` or `url` is required. `cache` / `cacheTtlSeconds` apply to
 | `listPrefectures()` | `LocalGov[]` | All prefectures |
 | `getPrefectureByCode(code)` | `LocalGov \| null` | Lookup by prefecture code |
 | `getPrefectureCodeByName(name)` | `string \| null` | Prefecture code from exact name |
-| `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | Sync count from `municipalityCounts` (no municipality JSON load) |
+| `getMunicipalityCountByPrefecture(pref, options?)` | `number \| null` | Sync count from `municipalityCounts` (no municipality data load) |
 | `listMunicipalitiesByPrefecture(pref, options?)` | `Promise<LocalGov[]>` | Municipalities in a prefecture (lazy) |
 | `getMunicipalityByCode(code)` | `Promise<LocalGov \| null>` | Lookup by 6-digit municipality code |
 | `getByCode(code)` | `Promise<LocalGov \| null>` | Auto-detect 2-digit / 6-digit |
@@ -75,13 +75,13 @@ String search normalizes hiragana / fullwidth kana to halfwidth kana.
 
 ## Errors and empty results
 
-- Schema mismatch / invalid JSON → `LocalGovSchemaError`
+- Schema mismatch / invalid data → `LocalGovSchemaError`
 - Network / HTTP failures → normal fetch errors
 - Missing or ambiguous results → `null` / `[]` (no throw)
 
 ## Caching in `url` mode
 
-- By default, fetched files are cached in localStorage (key = URL)
+- By default, fetched files are cached in localStorage (key = URL); the decoded object is stored via `JSON.stringify` (minified, not Brotli-compressed)
 - Disable with `cache: false`
 - Set TTL with `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
-- Municipality JSON loaded by **nationwide** string search stays in memory only
+- Municipality data loaded by **nationwide** string search stays in memory only

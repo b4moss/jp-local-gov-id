@@ -23,7 +23,7 @@ npm / Vite / webpack を使わず、ブラウザから直接読み込むこと�
 
 配布されている `dist/jp-local-gov-id.js` は **ES module** です。そのため `<script type="module">` で読み込みます（クラシックな `<script src="...">` だけでは動きません）。
 
-データは `dataset.js` を同梱せず、`url` で分割 JSON を読むのがおすすめです。
+データは `dataset.js` を同梱せず、`url` で `index.json` + `.bin` を読むのがおすすめです。
 
 ### CDN から読む
 
@@ -32,10 +32,10 @@ npm / Vite / webpack を使わず、ブラウザから直接読み込むこと�
 <html lang="ja">
   <body>
     <script type="module">
-      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.2/dist/jp-local-gov-id.js";
+      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.10/dist/jp-local-gov-id.js";
 
       const client = await createLocalGovClient({
-        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.3/index.json",
+        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
       });
 
       console.log(await client.getByCode("131016"));
@@ -49,7 +49,7 @@ npm / Vite / webpack を使わず、ブラウザから直接読み込むこと�
 ### dist をダウンロードして置く
 
 1. API の `dist/jp-local-gov-id.js` を取得する（npm パッケージまたは GitHub / CDN から）
-2. データは `index.json`・`prefectures.json`・`prefectures/` を同じ階層で置く（`dataset.js` は不要）
+2. データは `index.json`・`prefectures.bin`・`prefectures/`（`.bin` を含む）を同じ階層で置く（`dataset.js` は不要）
 3. HTML から相対パスで読む
 
 ```text
@@ -59,9 +59,9 @@ your-site/
     jp-local-gov-id.js
   jp-local-gov-id-data/
     index.json
-    prefectures.json
+    prefectures.bin
     prefectures/
-      01.json
+      01.bin
       …
 ```
 

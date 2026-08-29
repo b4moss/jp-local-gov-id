@@ -14,7 +14,7 @@ npm workspaces のモノレポです。
 | パス | 内容 |
 |------|------|
 | `packages/jp-local-gov-id` | JS API |
-| `packages/jp-local-gov-id-data` | 分割データ JSON |
+| `packages/jp-local-gov-id-data` | `index.json` + バイナリ（`.bin`）データ（中間 CSV はリポジトリのみ） |
 | `scripts/` | Excel からのデータ生成など |
 | `site/` | このドキュメントサイト |
 | `docs/` | 内部仕様書 |
@@ -27,7 +27,7 @@ npm test
 npm run build
 ```
 
-データの再生成（総務省の Excel → 分割 JSON）:
+データの再生成（総務省の Excel → CSV（リポジトリのみ）→ `.bin`（npm 公開））:
 
 ```bash
 npm run generate
