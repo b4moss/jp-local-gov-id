@@ -16,7 +16,7 @@ npm install @b4moss/jp-local-gov-id
 
 `createLocalGovClient` は async です。`data` または `url`（**index.json** の版付き URL）のいずれかが必須です。
 
-初期化ではインデックスと都道府県のみを読み込み（`.bin` はデコード済み）、市区町村は県単位で遅延ロードします。全国対象の文字列検索では、未ロードの県別 `.bin` を同時 6 件で取得・デコードします。
+初期化では `index.json` と都道府県（`.bin.br` を展開・デコード）のみを読み込み、市区町村は県単位で遅延ロードします。全国文字列検索はハイブリッド JLIX（ホットは 2-gram 地域、その他は 3-gram シャード）で候補を絞り、該当県の `.bin.br` だけを同時最大 6 件で取得します。
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -48,13 +48,11 @@ const client = await createLocalGovClient({
 });
 ```
 
-- `url` 指定時、取得したファイルを localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）。保存するのはデコード後オブジェクトを `JSON.stringify` した文字列（minify。Brotli 等の圧縮はしません）
-- `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
-- 例外: **全国対象**の文字列検索で取得した県別データは localStorage に書かず、メモリのみ保持します
-- localStorage が無い環境（Node 等）ではキャッシュをスキップします
-- 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）
-- スキーマ不一致・不正なデータは `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
-- クエリで見つからない・同名衝突の場合は `null` / `[]` を返します（throw しません）
+- `url` 指定時、取得したファイルを展開・デコードして localStorage にキャッシュします（既定 ON）。保存するのはデコード後オブジェクトの minify JSON。**転送の `.bin.br`（Brotli）とは別**で、localStorage に生バイトは置きません
+- `cache: false` で無効化、`cacheTtlSeconds` で TTL（秒。既定 1 年）
+- 例外: **全国対象**の文字列検索で取得した県別データと JLIX はメモリのみ
+- 正規化後長が 2 未満 → 空 / 2 → ホット 2-gram のみ / 3 以上 → 2-gram と 3-gram をマージ
+- スキーマ不一致・不正データ → `LocalGovSchemaError`。見つからない・衝突 → `null` / `[]`
 
 ## コード形式
 

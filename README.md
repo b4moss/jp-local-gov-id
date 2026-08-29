@@ -16,7 +16,7 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 | Package | Description | Version |
 |---------|-------------|---------|
 | [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.10 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + binary (`.bin`) datasets | 1.0.0-rc.10 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli binary (`.bin.br`) datasets | 1.0.0-rc.10 |
 
 ## Install (consumers)
 
@@ -32,7 +32,7 @@ npm install @b4moss/jp-local-gov-id
 
 `createLocalGovClient` is async. Either `data` or `url` (a **versioned URL** to **index.json**) is required.
 
-On init it loads only the index and prefectures (decoded from `.bin`); municipalities are lazy-loaded per prefecture. Nationwide string search fetches and decodes unloaded prefecture `.bin` files with concurrency of 6.
+On init it loads only the index and prefectures (Brotli-decompress + decode from `.bin.br`). Municipalities are lazy-loaded per prefecture. Nationwide string search uses a hybrid JLIX index (hot entities: regional 2-gram files; others: 3-gram shards), then fetches only candidate prefecture `.bin.br` files with concurrency 6.
 
 ```ts
 import { createLocalGovClient } from "@b4moss/jp-local-gov-id";
@@ -61,12 +61,12 @@ const client = await createLocalGovClient({
 });
 ```
 
-- When `url` is set, fetched files are decoded and cached in localStorage by default (key = file URL). The cached value is a minified `JSON.stringify` of the decoded object — the `.bin` bytes themselves are never cached (Brotli compression is out of scope for this release; tracked in [#74](https://github.com/b4moss/jp-local-gov-id/issues/74))
+- When `url` is set, fetched files are decompressed/decoded and cached in localStorage by default (key = file URL). The cached value is a minified `JSON.stringify` of the decoded object — **separate from on-wire `.bin.br` (Brotli)**; raw bytes are never stored in localStorage
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
-- Exception: municipality data loaded by **nationwide** string search is kept in memory only (not written to localStorage)
+- Exception: municipality data and JLIX (`search-ngrams/**`) loaded by **nationwide** string search stay in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
-- String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`)
-- Schema mismatches, invalid JSON, or invalid `.bin` data raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
+- String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`). After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
+- Schema mismatches, invalid JSON, or invalid binary raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
 - Missing or ambiguous query results return `null` / `[]` (they do not throw)
 
 ### Data layout
@@ -78,13 +78,14 @@ A single file of all municipalities is not distributed. The data package ships *
 | `index.json` | Index of paths, `schemaVersion`, `asOf`, etc. — plain JSON |
 | `prefectures.bin.br` | Prefectures only — Brotli binary |
 | `prefectures/{code}.bin.br` | Municipalities for that prefecture — Brotli binary |
-| `search-ngrams.bin.br` | Nationwide 2-gram search index (JLIX) — Brotli binary |
+| `search-ngrams/2gram/{region}.bin.br` | Hot-set 2-gram search index (JLIX, regional splits) |
+| `search-ngrams/3gram/{shard}.bin.br` | Cold-set 3-gram search index (JLIX, 3 shards) |
 
 `schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. Intermediate CSV / uncompressed `.bin` live in the repository for review but are not published to npm.
 
 ### Hosting your own data
 
-If you host the data yourself, serve it with a **versioned URL** and the same `index.json` + `.bin` layout as the official package. The package maintainers take no responsibility for availability, CORS, correctness, or URL management. Enable CORS on the hosting side.
+If you host the data yourself, serve it with a **versioned URL** and the same `index.json` + `.bin.br` layout (prefectures, per-prefecture files, and search indexes) as the official package. The package maintainers take no responsibility for availability, CORS, correctness, or URL management. Enable CORS on the hosting side.
 
 ## Code formats
 
@@ -97,7 +98,7 @@ If you host the data yourself, serve it with a **versioned URL** and the same `i
 
 ```bash
 npm install
-npm run generate   # Excel → CSV (repo-only) → split .bin + index.json under packages/jp-local-gov-id-data/
+npm run generate   # Excel → CSV (repo) → .bin (review) → .bin.br (npm) + hybrid JLIX + index.json
 npm test
 npm run build
 ```

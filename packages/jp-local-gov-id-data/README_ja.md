@@ -2,7 +2,7 @@
 
 [English](./README.md)
 
-全国地方公共団体コードヘルパ向けの、日本の全国地方公共団体コードのバイナリ（`.bin`）データです。
+全国地方公共団体コードヘルパ向けの、日本の全国地方公共団体コードの **Brotli 圧縮バイナリ（`.bin.br`）** データです。
 
 このパッケージは**データのみ**を提供します。検索・取得 API が必要な場合は [`@b4moss/jp-local-gov-id`](https://www.npmjs.com/package/@b4moss/jp-local-gov-id) と組み合わせて使うか、同等のファイルを版付きインデックス URL で自前配信してください。
 
@@ -32,12 +32,12 @@ npm install @b4moss/jp-local-gov-id-data
 
 直前の JSON 配布（`1.0.0-rc.3`）との実測:
 
-| | JSON（旧） | `.bin`（rc.10） |
-| --- | ---: | ---: |
-| 展開時のデータ本体 | 約 436 KiB | 約 88 KiB（約 20%） |
-| `npm pack` の `.tgz`（gzip 後） | 約 41.9 KB | 約 47.8 KB |
+| | JSON（旧・rc.3） | 非圧縮 `.bin`（#73） | npm 配信 `.bin.br`（現行） |
+| --- | ---: | ---: | ---: |
+| 展開時のデータ本体（都道府県＋県別） | 約 436 KiB | 約 88 KiB | （転送は Brotli。展開後は `.bin` 相当） |
+| 検索索引 | （なし／別方式） | （単一 JLIX 時代あり） | ハイブリッド 2-gram / 3-gram 分割 |
 
-展開サイズは大きく減りますが、tarball は JSON の gzip 効率と `decode.js` / 肥大化した `dataset.js` の影響で微増し得ます。詳細は [docs/binary-size-73.md](../../docs/binary-size-73.md)。
+容量の経緯は [docs/binary-size-73.md](../../docs/binary-size-73.md)（JSON→`.bin`）と [docs/test-spec-63-search-ngrams.md](../../docs/test-spec-63-search-ngrams.md)（ハイブリッド JLIX）を参照。
 
 ## インポート
 
@@ -56,7 +56,7 @@ const client = await createLocalGovClient({ data: dataset });
 import index from "@b4moss/jp-local-gov-id-data/index.json";
 ```
 
-`index.json` は従来どおり JSON のまま直接インポートできます。`.bin` 自体はバイナリのため、JS モジュールとして直接 `import` するものではありません。`dataset.js` 経由で読むか、バイト列を自前で取得し `createLocalGovClient` に `{ url }` を渡して処理させてください（詳細は [API パッケージのドキュメント](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)を参照）。
+`index.json` は従来どおり JSON のまま直接インポートできます。`.bin.br` はバイナリのため、JS モジュールとして直接 `import` するものではありません。`dataset.js` 経由で読むか、バイト列を自前で取得し `createLocalGovClient` に `{ url }` を渡して処理させてください（詳細は [API パッケージのドキュメント](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)を参照）。
 
 ### データセットの export
 
@@ -66,10 +66,11 @@ import index from "@b4moss/jp-local-gov-id-data/index.json";
 | `prefectures` | 全都道府県（デコード済み） |
 | `municipalitiesByCode` | 都道府県コードをキーにしたデコード済み市区町村データ |
 | `loadMunicipalities(code)` | 都道府県コードで市区町村を読み込む |
+| `searchNgramShards` | JLIX 分割の生バイト（2-gram region / 3-gram shard キー） |
 
 ## 自前データ配信
 
-自前で配信する場合も、**バージョン付き URL**と同等の `index.json` + `.bin` 構成で提供してください。可用性・CORS・内容の正しさ・URL 運用は配信側の責任です。CORS は配信側で許可してください。
+自前で配信する場合も、**バージョン付き URL**と同等の `index.json` + `.bin.br`（都道府県・県別・`search-ngrams/**`）構成で提供してください。可用性・CORS・内容の正しさ・URL 運用は配信側の責任です。CORS は配信側で許可してください。
 
 ## データについて
 

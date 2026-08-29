@@ -2,7 +2,7 @@
 
 [日本語](./README_ja.md)
 
-Binary (`.bin`) datasets of Japan’s nationwide local government codes (全国地方公共団体コード).
+Brotli-compressed binary (`.bin.br`) datasets of Japan’s nationwide local government codes (全国地方公共団体コード).
 
 This package ships **data only**. For search and lookup APIs, use [`@b4moss/jp-local-gov-id`](https://www.npmjs.com/package/@b4moss/jp-local-gov-id) with this package, or serve the same files yourself behind a versioned index URL.
 
@@ -32,12 +32,12 @@ The intermediate CSV and uncompressed `.bin` used to generate the `.bin.br` file
 
 Measured against the last JSON release (`1.0.0-rc.3`):
 
-| | JSON (before) | `.bin` (rc.10) |
-| --- | ---: | ---: |
-| Unpacked data payload | ~436 KiB | ~88 KiB (~20%) |
-| `npm pack` `.tgz` (gzip) | ~41.9 KB | ~47.8 KB |
+| | JSON (old, rc.3) | Uncompressed `.bin` (#73) | Published `.bin.br` (current) |
+| --- | ---: | ---: | ---: |
+| Unpacked prefecture + municipality payload | ~436 KiB | ~88 KiB | (wire is Brotli; decode yields `.bin`-sized bytes) |
+| Search index | (none / older approach) | (monolith JLIX era) | Hybrid 2-gram / 3-gram partitions |
 
-Unpacked size drops sharply; the published tarball can grow slightly because JSON gzip-compresses well and `decode.js` / a larger `dataset.js` are now included. Details: [docs/binary-size-73.md](../../docs/binary-size-73.md).
+Size history: [docs/binary-size-73.md](../../docs/binary-size-73.md) (JSON→`.bin`) and [docs/test-spec-63-search-ngrams.md](../../docs/test-spec-63-search-ngrams.md) (hybrid JLIX).
 
 ## Import
 
@@ -56,7 +56,7 @@ const client = await createLocalGovClient({ data: dataset });
 import index from "@b4moss/jp-local-gov-id-data/index.json";
 ```
 
-`index.json` remains plain JSON and can still be imported directly. The `.bin` files themselves are binary and are not meant to be `import`ed as JS modules — load them via `dataset.js`, or fetch the raw bytes yourself and pass `{ url }` to `createLocalGovClient` (see the [API package docs](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)).
+`index.json` remains plain JSON and can still be imported directly. `.bin.br` files are binary and are not meant to be `import`ed as JS modules — load them via `dataset.js`, or fetch the raw bytes yourself and pass `{ url }` to `createLocalGovClient` (see the [API package docs](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)).
 
 ### Dataset exports
 
@@ -66,10 +66,11 @@ import index from "@b4moss/jp-local-gov-id-data/index.json";
 | `prefectures` | All prefectures (decoded) |
 | `municipalitiesByCode` | Decoded municipality data keyed by prefecture code |
 | `loadMunicipalities(code)` | Load municipalities for a prefecture code |
+| `searchNgramShards` | Raw JLIX partition bytes (2-gram region / 3-gram shard keys) |
 
 ## Self-hosted data
 
-If you host the data yourself, serve it with a **versioned URL** and the same `index.json` + `.bin` layout. Availability, CORS, correctness, and URL operations are your responsibility. Enable CORS on the hosting side.
+If you host the data yourself, serve it with a **versioned URL** and the same `index.json` + `.bin.br` layout (prefectures, per-prefecture files, and `search-ngrams/**`). Availability, CORS, correctness, and URL operations are your responsibility. Enable CORS on the hosting side.
 
 ## About the data
 
