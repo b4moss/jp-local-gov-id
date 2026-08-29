@@ -15,8 +15,8 @@
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.10 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0-rc.10 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.11 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0-rc.11 |
 
 ## インストール（利用側）
 
@@ -57,7 +57,7 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
 });
 ```
 

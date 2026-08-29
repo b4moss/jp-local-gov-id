@@ -15,8 +15,8 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.10 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli binary (`.bin.br`) datasets | 1.0.0-rc.10 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.11 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli binary (`.bin.br`) datasets | 1.0.0-rc.11 |
 
 ## Install (consumers)
 
@@ -57,7 +57,7 @@ Fetch from a versioned index URL:
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
 });
 ```
 
