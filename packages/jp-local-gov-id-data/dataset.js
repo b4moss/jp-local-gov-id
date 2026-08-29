@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { brotliDecompressSync } from "node:zlib";
 import index from "./index.json" with { type: "json" };
 import {
   decodeMunicipalitiesFile,
@@ -10,252 +11,261 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-function readBin(relativePath) {
-  const bytes = readFileSync(join(__dirname, relativePath));
+function readBinBr(relativePath) {
+  const compressed = readFileSync(join(__dirname, relativePath));
+  const bytes = brotliDecompressSync(compressed);
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 }
 
-const prefectures = decodePrefecturesFile(readBin("prefectures.bin"));
+const prefectures = decodePrefecturesFile(readBinBr("prefectures.bin.br"));
 
 const municipalitiesByCode = {
-  "01": decodeMunicipalitiesFile(readBin("prefectures/01.bin"), {
+  "01": decodeMunicipalitiesFile(readBinBr("prefectures/01.bin.br"), {
     prefectureCode: "01",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "01"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "01"))?.nameKana ?? "",
   }),
-  "02": decodeMunicipalitiesFile(readBin("prefectures/02.bin"), {
+  "02": decodeMunicipalitiesFile(readBinBr("prefectures/02.bin.br"), {
     prefectureCode: "02",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "02"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "02"))?.nameKana ?? "",
   }),
-  "03": decodeMunicipalitiesFile(readBin("prefectures/03.bin"), {
+  "03": decodeMunicipalitiesFile(readBinBr("prefectures/03.bin.br"), {
     prefectureCode: "03",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "03"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "03"))?.nameKana ?? "",
   }),
-  "04": decodeMunicipalitiesFile(readBin("prefectures/04.bin"), {
+  "04": decodeMunicipalitiesFile(readBinBr("prefectures/04.bin.br"), {
     prefectureCode: "04",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "04"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "04"))?.nameKana ?? "",
   }),
-  "05": decodeMunicipalitiesFile(readBin("prefectures/05.bin"), {
+  "05": decodeMunicipalitiesFile(readBinBr("prefectures/05.bin.br"), {
     prefectureCode: "05",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "05"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "05"))?.nameKana ?? "",
   }),
-  "06": decodeMunicipalitiesFile(readBin("prefectures/06.bin"), {
+  "06": decodeMunicipalitiesFile(readBinBr("prefectures/06.bin.br"), {
     prefectureCode: "06",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "06"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "06"))?.nameKana ?? "",
   }),
-  "07": decodeMunicipalitiesFile(readBin("prefectures/07.bin"), {
+  "07": decodeMunicipalitiesFile(readBinBr("prefectures/07.bin.br"), {
     prefectureCode: "07",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "07"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "07"))?.nameKana ?? "",
   }),
-  "08": decodeMunicipalitiesFile(readBin("prefectures/08.bin"), {
+  "08": decodeMunicipalitiesFile(readBinBr("prefectures/08.bin.br"), {
     prefectureCode: "08",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "08"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "08"))?.nameKana ?? "",
   }),
-  "09": decodeMunicipalitiesFile(readBin("prefectures/09.bin"), {
+  "09": decodeMunicipalitiesFile(readBinBr("prefectures/09.bin.br"), {
     prefectureCode: "09",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "09"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "09"))?.nameKana ?? "",
   }),
-  "10": decodeMunicipalitiesFile(readBin("prefectures/10.bin"), {
+  "10": decodeMunicipalitiesFile(readBinBr("prefectures/10.bin.br"), {
     prefectureCode: "10",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "10"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "10"))?.nameKana ?? "",
   }),
-  "11": decodeMunicipalitiesFile(readBin("prefectures/11.bin"), {
+  "11": decodeMunicipalitiesFile(readBinBr("prefectures/11.bin.br"), {
     prefectureCode: "11",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "11"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "11"))?.nameKana ?? "",
   }),
-  "12": decodeMunicipalitiesFile(readBin("prefectures/12.bin"), {
+  "12": decodeMunicipalitiesFile(readBinBr("prefectures/12.bin.br"), {
     prefectureCode: "12",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "12"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "12"))?.nameKana ?? "",
   }),
-  "13": decodeMunicipalitiesFile(readBin("prefectures/13.bin"), {
+  "13": decodeMunicipalitiesFile(readBinBr("prefectures/13.bin.br"), {
     prefectureCode: "13",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "13"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "13"))?.nameKana ?? "",
   }),
-  "14": decodeMunicipalitiesFile(readBin("prefectures/14.bin"), {
+  "14": decodeMunicipalitiesFile(readBinBr("prefectures/14.bin.br"), {
     prefectureCode: "14",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "14"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "14"))?.nameKana ?? "",
   }),
-  "15": decodeMunicipalitiesFile(readBin("prefectures/15.bin"), {
+  "15": decodeMunicipalitiesFile(readBinBr("prefectures/15.bin.br"), {
     prefectureCode: "15",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "15"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "15"))?.nameKana ?? "",
   }),
-  "16": decodeMunicipalitiesFile(readBin("prefectures/16.bin"), {
+  "16": decodeMunicipalitiesFile(readBinBr("prefectures/16.bin.br"), {
     prefectureCode: "16",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "16"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "16"))?.nameKana ?? "",
   }),
-  "17": decodeMunicipalitiesFile(readBin("prefectures/17.bin"), {
+  "17": decodeMunicipalitiesFile(readBinBr("prefectures/17.bin.br"), {
     prefectureCode: "17",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "17"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "17"))?.nameKana ?? "",
   }),
-  "18": decodeMunicipalitiesFile(readBin("prefectures/18.bin"), {
+  "18": decodeMunicipalitiesFile(readBinBr("prefectures/18.bin.br"), {
     prefectureCode: "18",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "18"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "18"))?.nameKana ?? "",
   }),
-  "19": decodeMunicipalitiesFile(readBin("prefectures/19.bin"), {
+  "19": decodeMunicipalitiesFile(readBinBr("prefectures/19.bin.br"), {
     prefectureCode: "19",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "19"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "19"))?.nameKana ?? "",
   }),
-  "20": decodeMunicipalitiesFile(readBin("prefectures/20.bin"), {
+  "20": decodeMunicipalitiesFile(readBinBr("prefectures/20.bin.br"), {
     prefectureCode: "20",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "20"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "20"))?.nameKana ?? "",
   }),
-  "21": decodeMunicipalitiesFile(readBin("prefectures/21.bin"), {
+  "21": decodeMunicipalitiesFile(readBinBr("prefectures/21.bin.br"), {
     prefectureCode: "21",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "21"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "21"))?.nameKana ?? "",
   }),
-  "22": decodeMunicipalitiesFile(readBin("prefectures/22.bin"), {
+  "22": decodeMunicipalitiesFile(readBinBr("prefectures/22.bin.br"), {
     prefectureCode: "22",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "22"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "22"))?.nameKana ?? "",
   }),
-  "23": decodeMunicipalitiesFile(readBin("prefectures/23.bin"), {
+  "23": decodeMunicipalitiesFile(readBinBr("prefectures/23.bin.br"), {
     prefectureCode: "23",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "23"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "23"))?.nameKana ?? "",
   }),
-  "24": decodeMunicipalitiesFile(readBin("prefectures/24.bin"), {
+  "24": decodeMunicipalitiesFile(readBinBr("prefectures/24.bin.br"), {
     prefectureCode: "24",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "24"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "24"))?.nameKana ?? "",
   }),
-  "25": decodeMunicipalitiesFile(readBin("prefectures/25.bin"), {
+  "25": decodeMunicipalitiesFile(readBinBr("prefectures/25.bin.br"), {
     prefectureCode: "25",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "25"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "25"))?.nameKana ?? "",
   }),
-  "26": decodeMunicipalitiesFile(readBin("prefectures/26.bin"), {
+  "26": decodeMunicipalitiesFile(readBinBr("prefectures/26.bin.br"), {
     prefectureCode: "26",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "26"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "26"))?.nameKana ?? "",
   }),
-  "27": decodeMunicipalitiesFile(readBin("prefectures/27.bin"), {
+  "27": decodeMunicipalitiesFile(readBinBr("prefectures/27.bin.br"), {
     prefectureCode: "27",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "27"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "27"))?.nameKana ?? "",
   }),
-  "28": decodeMunicipalitiesFile(readBin("prefectures/28.bin"), {
+  "28": decodeMunicipalitiesFile(readBinBr("prefectures/28.bin.br"), {
     prefectureCode: "28",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "28"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "28"))?.nameKana ?? "",
   }),
-  "29": decodeMunicipalitiesFile(readBin("prefectures/29.bin"), {
+  "29": decodeMunicipalitiesFile(readBinBr("prefectures/29.bin.br"), {
     prefectureCode: "29",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "29"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "29"))?.nameKana ?? "",
   }),
-  "30": decodeMunicipalitiesFile(readBin("prefectures/30.bin"), {
+  "30": decodeMunicipalitiesFile(readBinBr("prefectures/30.bin.br"), {
     prefectureCode: "30",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "30"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "30"))?.nameKana ?? "",
   }),
-  "31": decodeMunicipalitiesFile(readBin("prefectures/31.bin"), {
+  "31": decodeMunicipalitiesFile(readBinBr("prefectures/31.bin.br"), {
     prefectureCode: "31",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "31"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "31"))?.nameKana ?? "",
   }),
-  "32": decodeMunicipalitiesFile(readBin("prefectures/32.bin"), {
+  "32": decodeMunicipalitiesFile(readBinBr("prefectures/32.bin.br"), {
     prefectureCode: "32",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "32"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "32"))?.nameKana ?? "",
   }),
-  "33": decodeMunicipalitiesFile(readBin("prefectures/33.bin"), {
+  "33": decodeMunicipalitiesFile(readBinBr("prefectures/33.bin.br"), {
     prefectureCode: "33",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "33"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "33"))?.nameKana ?? "",
   }),
-  "34": decodeMunicipalitiesFile(readBin("prefectures/34.bin"), {
+  "34": decodeMunicipalitiesFile(readBinBr("prefectures/34.bin.br"), {
     prefectureCode: "34",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "34"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "34"))?.nameKana ?? "",
   }),
-  "35": decodeMunicipalitiesFile(readBin("prefectures/35.bin"), {
+  "35": decodeMunicipalitiesFile(readBinBr("prefectures/35.bin.br"), {
     prefectureCode: "35",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "35"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "35"))?.nameKana ?? "",
   }),
-  "36": decodeMunicipalitiesFile(readBin("prefectures/36.bin"), {
+  "36": decodeMunicipalitiesFile(readBinBr("prefectures/36.bin.br"), {
     prefectureCode: "36",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "36"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "36"))?.nameKana ?? "",
   }),
-  "37": decodeMunicipalitiesFile(readBin("prefectures/37.bin"), {
+  "37": decodeMunicipalitiesFile(readBinBr("prefectures/37.bin.br"), {
     prefectureCode: "37",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "37"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "37"))?.nameKana ?? "",
   }),
-  "38": decodeMunicipalitiesFile(readBin("prefectures/38.bin"), {
+  "38": decodeMunicipalitiesFile(readBinBr("prefectures/38.bin.br"), {
     prefectureCode: "38",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "38"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "38"))?.nameKana ?? "",
   }),
-  "39": decodeMunicipalitiesFile(readBin("prefectures/39.bin"), {
+  "39": decodeMunicipalitiesFile(readBinBr("prefectures/39.bin.br"), {
     prefectureCode: "39",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "39"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "39"))?.nameKana ?? "",
   }),
-  "40": decodeMunicipalitiesFile(readBin("prefectures/40.bin"), {
+  "40": decodeMunicipalitiesFile(readBinBr("prefectures/40.bin.br"), {
     prefectureCode: "40",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "40"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "40"))?.nameKana ?? "",
   }),
-  "41": decodeMunicipalitiesFile(readBin("prefectures/41.bin"), {
+  "41": decodeMunicipalitiesFile(readBinBr("prefectures/41.bin.br"), {
     prefectureCode: "41",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "41"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "41"))?.nameKana ?? "",
   }),
-  "42": decodeMunicipalitiesFile(readBin("prefectures/42.bin"), {
+  "42": decodeMunicipalitiesFile(readBinBr("prefectures/42.bin.br"), {
     prefectureCode: "42",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "42"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "42"))?.nameKana ?? "",
   }),
-  "43": decodeMunicipalitiesFile(readBin("prefectures/43.bin"), {
+  "43": decodeMunicipalitiesFile(readBinBr("prefectures/43.bin.br"), {
     prefectureCode: "43",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "43"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "43"))?.nameKana ?? "",
   }),
-  "44": decodeMunicipalitiesFile(readBin("prefectures/44.bin"), {
+  "44": decodeMunicipalitiesFile(readBinBr("prefectures/44.bin.br"), {
     prefectureCode: "44",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "44"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "44"))?.nameKana ?? "",
   }),
-  "45": decodeMunicipalitiesFile(readBin("prefectures/45.bin"), {
+  "45": decodeMunicipalitiesFile(readBinBr("prefectures/45.bin.br"), {
     prefectureCode: "45",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "45"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "45"))?.nameKana ?? "",
   }),
-  "46": decodeMunicipalitiesFile(readBin("prefectures/46.bin"), {
+  "46": decodeMunicipalitiesFile(readBinBr("prefectures/46.bin.br"), {
     prefectureCode: "46",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "46"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "46"))?.nameKana ?? "",
   }),
-  "47": decodeMunicipalitiesFile(readBin("prefectures/47.bin"), {
+  "47": decodeMunicipalitiesFile(readBinBr("prefectures/47.bin.br"), {
     prefectureCode: "47",
     prefectureName: (prefectures.prefectures.find((p) => p.code === "47"))?.name ?? "",
     prefectureNameKana: (prefectures.prefectures.find((p) => p.code === "47"))?.nameKana ?? "",
   }),
 };
 
-export { index, prefectures, municipalitiesByCode };
+const searchNgramShards = {};
+for (const region of ["tokyo", "kanagawa", "saitama", "chiba", "osaka", "chukyo", "hyogo", "kyoto", "fukuoka", "designated-other"]) {
+  searchNgramShards[region] = new Uint8Array(readBinBr(`search-ngrams/2gram/${region}.bin.br`));
+}
+for (const shard of ["0", "1", "2"]) {
+  searchNgramShards[shard] = new Uint8Array(readBinBr(`search-ngrams/3gram/${shard}.bin.br`));
+}
+
+export { index, prefectures, municipalitiesByCode, searchNgramShards };
 
 export function loadMunicipalities(code) {
   const padded = String(code).padStart(2, "0");
@@ -266,5 +276,5 @@ export function loadMunicipalities(code) {
   return Promise.resolve(file);
 }
 
-const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities };
+const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgramShards };
 export default dataset;

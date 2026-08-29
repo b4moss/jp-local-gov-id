@@ -71,15 +71,16 @@ const client = await createLocalGovClient({
 
 ### Data layout
 
-A single file of all municipalities is not distributed. The data package ships binary (`.bin`) datasets plus a plain-JSON `index.json`.
+A single file of all municipalities is not distributed. The data package ships **Brotli-compressed** binary (`.bin.br`) datasets plus a plain-JSON `index.json`.
 
 | File | Contents |
 |------|----------|
 | `index.json` | Index of paths, `schemaVersion`, `asOf`, etc. — plain JSON |
-| `prefectures.bin` | Prefectures only — binary |
-| `prefectures/{code}.bin` | Municipalities for that prefecture (e.g. `13.bin`) — binary |
+| `prefectures.bin.br` | Prefectures only — Brotli binary |
+| `prefectures/{code}.bin.br` | Municipalities for that prefecture — Brotli binary |
+| `search-ngrams.bin.br` | Nationwide 2-gram search index (JLIX) — Brotli binary |
 
-`schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. The intermediate CSV used to generate the `.bin` files lives in the repository for review but is not published to npm.
+`schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. Intermediate CSV / uncompressed `.bin` live in the repository for review but are not published to npm.
 
 ### Hosting your own data
 

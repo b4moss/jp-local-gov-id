@@ -17,14 +17,16 @@ npm install @b4moss/jp-local-gov-id-data
 | パス | 内容 |
 |------|------|
 | `index.json` | 索引メタデータ（`schemaVersion`・`asOf`・パス・件数など）— 通常の JSON |
-| `prefectures.bin` | 都道府県のみ — バイナリ |
-| `prefectures/{code}.bin` | 当該県の市区町村（例: `13.bin`）— バイナリ |
-| `dataset.js` | API パッケージ向けのデフォルト export。モジュール読み込み時に `.bin` をデコードします（Node フレンドリー） |
-| `decode.js` | `.bin` 形式の低レベルデコード関数（ブラウザ等で自前取得したバイト列をデコードする場合など、高度な用途向け） |
+| `prefectures.bin.br` | 都道府県のみ — Brotli 圧縮バイナリ（#74） |
+| `prefectures/{code}.bin.br` | 当該県の市区町村 — Brotli 圧縮バイナリ |
+| `search-ngrams/2gram/{region}.bin.br` | ホット団体の 2-gram 検索索引（JLIX・地域分割）— Brotli（#63） |
+| `search-ngrams/3gram/{shard}.bin.br` | コールド団体の 3-gram 検索索引（JLIX・3 シャード）— Brotli（#63） |
+| `dataset.js` | API 向けデフォルト export。`.bin.br` を展開・デコードしてから公開形を組み立てます |
+| `decode.js` | 非圧縮 `.bin` 形式の低レベルデコード関数 |
 
 全市区町村をまとめた単一ファイルは**配布しません**。`schemaVersion`（現在 `1`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。
 
-`.bin` 生成に使う中間 CSV（`prefectures.csv` / `prefectures/{code}.csv`）はリポジトリ内に置いていますが、この npm パッケージには**同梱しません**。
+中間 CSV と非圧縮 `.bin` はリポジトリ内に置きますが、npm には**同梱しません**（npm は Brotli のみ）。
 
 ### 旧 JSON 配布との容量比較
 
@@ -48,7 +50,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 ```
 
-`dataset.js` は import 時に同梱の `.bin` を一度だけデコードするため、`dataset.prefectures` / `dataset.municipalitiesByCode` は従来の JSON 版と同じ形のオブジェクトです。
+`dataset.js` は import 時に同梱の `.bin.br` を一度だけ展開・デコードするため、`dataset.prefectures` / `dataset.municipalitiesByCode` / `dataset.searchNgramShards`（JLIX 分割の生バイト）は API パッケージからすぐ使えます。
 
 ```ts
 import index from "@b4moss/jp-local-gov-id-data/index.json";

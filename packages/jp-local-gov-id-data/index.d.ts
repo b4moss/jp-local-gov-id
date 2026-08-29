@@ -15,6 +15,17 @@ export type LocalGov = {
   municipalityCounts?: MunicipalityCounts;
 };
 
+export type SearchNgramsPathSpec = {
+  twoGram: {
+    regions: string[];
+    pattern: string;
+  };
+  threeGram: {
+    shardCount: number;
+    pattern: string;
+  };
+};
+
 export type LocalGovIndex = {
   schemaVersion: number;
   source: string;
@@ -28,6 +39,7 @@ export type LocalGovIndex = {
   paths: {
     prefectures: string;
     municipalitiesByPrefecture: string;
+    searchNgrams: SearchNgramsPathSpec;
   };
   prefectureCodes: string[];
 };
@@ -51,6 +63,8 @@ export declare const municipalitiesByCode: Record<
   string,
   LocalGovMunicipalities
 >;
+/** Raw JLIX partition bytes keyed by 2-gram region id or 3-gram shard id. */
+export declare const searchNgramShards: Record<string, Uint8Array>;
 
 export declare function loadMunicipalities(
   code: string,
@@ -61,6 +75,7 @@ declare const dataset: {
   prefectures: LocalGovPrefectures;
   municipalitiesByCode: Record<string, LocalGovMunicipalities>;
   loadMunicipalities: (code: string) => Promise<LocalGovMunicipalities>;
+  searchNgramShards: Record<string, Uint8Array>;
 };
 
 export default dataset;

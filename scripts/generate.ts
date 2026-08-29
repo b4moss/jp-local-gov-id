@@ -7,6 +7,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
 import { buildSync } from "esbuild";
 import ExcelJS from "exceljs";
 import {
@@ -17,15 +18,35 @@ import {
 import {
   encodeMunicipalities,
   encodePrefectures,
+  encodeSearchNgrams,
+  GRAM_TYPE_KANA,
+  GRAM_TYPE_NAME,
+  KIND_MUNI,
   type MunicipalityBinRecord,
   type PrefectureBinRecord,
+  type SearchNgramPostingRecord,
 } from "../packages/jp-local-gov-id/src/binary/index.ts";
+import { normalizeSearchText } from "../packages/jp-local-gov-id/src/normalize.ts";
+import {
+  assignTwoGramRegion,
+  TWO_GRAM_REGIONS,
+  type TwoGramRegion,
+} from "../packages/jp-local-gov-id/src/searchHotSet.ts";
+import {
+  THREE_GRAM_SHARD_COUNT,
+  codePointBigrams,
+  codePointTrigrams,
+  gramShardId,
+} from "../packages/jp-local-gov-id/src/searchNgrams.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const sourcePath = resolve(root, "resources/000925835.xlsx");
 const dataDir = resolve(root, "packages/jp-local-gov-id-data");
 const prefecturesDir = resolve(dataDir, "prefectures");
+const searchNgramsDir = resolve(dataDir, "search-ngrams");
+const searchNgrams2Dir = resolve(searchNgramsDir, "2gram");
+const searchNgrams3Dir = resolve(searchNgramsDir, "3gram");
 const binaryEntry = resolve(
   root,
   "packages/jp-local-gov-id/src/binary/index.ts",
@@ -141,17 +162,39 @@ function writeCsv(path: string, headers: string[], rows: Array<Array<string | nu
   writeFileSync(path, lines.join("\n"), "utf8");
 }
 
+/** Write raw `.bin` (repo) and Brotli `.bin.br` (npm / CDN, #74). */
+function writeBinAndBr(binPath: string, buffer: ArrayBuffer): void {
+  const bin = Buffer.from(buffer);
+  writeFileSync(binPath, bin);
+  writeFileSync(`${binPath}.br`, brotliCompressSync(bin));
+}
+
 function cleanGeneratedArtifacts(): void {
   mkdirSync(dataDir, { recursive: true });
   mkdirSync(prefecturesDir, { recursive: true });
+  mkdirSync(searchNgrams2Dir, { recursive: true });
+  mkdirSync(searchNgrams3Dir, { recursive: true });
 
   for (const name of readdirSync(prefecturesDir)) {
     if (
       name.endsWith(".json") ||
       name.endsWith(".csv") ||
-      name.endsWith(".bin")
+      name.endsWith(".bin") ||
+      name.endsWith(".bin.br")
     ) {
       rmSync(resolve(prefecturesDir, name));
+    }
+  }
+
+  for (const dir of [searchNgrams2Dir, searchNgrams3Dir]) {
+    for (const name of readdirSync(dir)) {
+      if (
+        name.endsWith(".csv") ||
+        name.endsWith(".bin") ||
+        name.endsWith(".bin.br")
+      ) {
+        rmSync(resolve(dir, name));
+      }
     }
   }
 
@@ -160,6 +203,10 @@ function cleanGeneratedArtifacts(): void {
     "prefectures.json",
     "prefectures.csv",
     "prefectures.bin",
+    "prefectures.bin.br",
+    "search-ngrams.csv",
+    "search-ngrams.bin",
+    "search-ngrams.bin.br",
   ]) {
     try {
       rmSync(resolve(dataDir, name));
@@ -168,6 +215,126 @@ function cleanGeneratedArtifacts(): void {
     }
   }
 }
+
+function appendNgrams(
+  out: Map<string, SearchNgramPostingRecord>,
+  field: "name" | "nameKana",
+  raw: string,
+  base: Omit<SearchNgramPostingRecord, "gram" | "gramType">,
+  n: 2 | 3,
+): void {
+  const gramType = field === "name" ? GRAM_TYPE_NAME : GRAM_TYPE_KANA;
+  const grams =
+    n === 2
+      ? codePointBigrams(normalizeSearchText(raw))
+      : codePointTrigrams(normalizeSearchText(raw));
+  for (const gram of grams) {
+    const key = `${gram}\0${gramType}\0${base.muniCode}`;
+    if (out.has(key)) continue;
+    out.set(key, { ...base, gram, gramType });
+  }
+}
+
+type PartitionedPostings = {
+  twoGram: Map<TwoGramRegion, SearchNgramPostingRecord[]>;
+  threeGram: Map<string, SearchNgramPostingRecord[]>;
+};
+
+function buildHybridSearchNgramPostings(
+  byPrefecture: Map<string, LocalGov[]>,
+): PartitionedPostings {
+  const twoGramMaps = new Map<TwoGramRegion, Map<string, SearchNgramPostingRecord>>();
+  for (const region of TWO_GRAM_REGIONS) {
+    twoGramMaps.set(region, new Map());
+  }
+  const threeGramMaps = new Map<string, Map<string, SearchNgramPostingRecord>>();
+  for (let i = 0; i < THREE_GRAM_SHARD_COUNT; i++) {
+    threeGramMaps.set(String(i), new Map());
+  }
+
+  for (const [prefCode, list] of byPrefecture) {
+    const flags = wardFlagsForPrefecture(list);
+    for (const m of list) {
+      const f = flags.get(m.code) ?? { hasWard: 0 as const, isWard: 0 as const };
+      const hotInput = {
+        code: m.code,
+        name: m.name,
+        prefectureCode: prefCode,
+        hasWard: f.hasWard,
+        isWard: f.isWard,
+      };
+      const base = {
+        kind: KIND_MUNI as const,
+        muniCode: Number(m.code),
+        prefCode: Number(prefCode),
+        hasWard: f.hasWard,
+        isWard: f.isWard,
+      };
+
+      const region = assignTwoGramRegion(hotInput);
+      if (region) {
+        const map = twoGramMaps.get(region)!;
+        appendNgrams(map, "name", m.name, base, 2);
+        appendNgrams(map, "nameKana", m.nameKana, base, 2);
+      } else {
+        // Cold: bucket each gram into its shard (postings may span shards)
+        for (const field of ["name", "nameKana"] as const) {
+          const gramType = field === "name" ? GRAM_TYPE_NAME : GRAM_TYPE_KANA;
+          for (const gram of codePointTrigrams(normalizeSearchText(m[field]))) {
+            const shard = gramShardId(gram, THREE_GRAM_SHARD_COUNT);
+            const map = threeGramMaps.get(shard)!;
+            const key = `${gram}\0${gramType}\0${base.muniCode}`;
+            if (map.has(key)) continue;
+            map.set(key, { ...base, gram, gramType });
+          }
+        }
+      }
+    }
+  }
+
+  const twoGram = new Map<TwoGramRegion, SearchNgramPostingRecord[]>();
+  for (const [region, map] of twoGramMaps) {
+    twoGram.set(region, [...map.values()]);
+  }
+  const threeGram = new Map<string, SearchNgramPostingRecord[]>();
+  for (const [shard, map] of threeGramMaps) {
+    threeGram.set(shard, [...map.values()]);
+  }
+  return { twoGram, threeGram };
+}
+
+function sortPostings(
+  records: SearchNgramPostingRecord[],
+): SearchNgramPostingRecord[] {
+  return [...records].sort((a, b) =>
+    a.gram !== b.gram
+      ? a.gram < b.gram
+        ? -1
+        : 1
+      : a.gramType !== b.gramType
+        ? a.gramType - b.gramType
+        : a.muniCode - b.muniCode,
+  );
+}
+
+function postingCsvRow(
+  r: SearchNgramPostingRecord,
+  indexKind: "2gram" | "3gram",
+  partition: string,
+): (string | number)[] {
+  return [
+    r.gram,
+    r.gramType === GRAM_TYPE_NAME ? "name" : "kana",
+    "muni",
+    r.muniCode,
+    r.prefCode,
+    r.hasWard,
+    r.isWard,
+    indexKind,
+    partition,
+  ];
+}
+
 
 function wardFlagsForPrefecture(list: LocalGov[]): Map<string, { hasWard: 0 | 1; isWard: 0 | 1 }> {
   const bodyNames = new Set<string>();
@@ -197,11 +364,18 @@ function emitDecodeJs(): void {
 }
 
 function writeDatasetJs(prefectureCodes: string[]): void {
+  const regionKeys = TWO_GRAM_REGIONS.map((r) => JSON.stringify(r)).join(", ");
+  const shardKeys = Array.from(
+    { length: THREE_GRAM_SHARD_COUNT },
+    (_, i) => JSON.stringify(String(i)),
+  ).join(", ");
+
   const lines = [
     "/** Auto-generated by scripts/generate.ts — do not edit. */",
     'import { readFileSync } from "node:fs";',
     'import { dirname, join } from "node:path";',
     'import { fileURLToPath } from "node:url";',
+    'import { brotliDecompressSync } from "node:zlib";',
     'import index from "./index.json" with { type: "json" };',
     "import {",
     "  decodeMunicipalitiesFile,",
@@ -210,18 +384,19 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     "",
     "const __dirname = dirname(fileURLToPath(import.meta.url));",
     "",
-    "function readBin(relativePath) {",
-    "  const bytes = readFileSync(join(__dirname, relativePath));",
+    "function readBinBr(relativePath) {",
+    "  const compressed = readFileSync(join(__dirname, relativePath));",
+    "  const bytes = brotliDecompressSync(compressed);",
     "  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);",
     "}",
     "",
-    'const prefectures = decodePrefecturesFile(readBin("prefectures.bin"));',
+    'const prefectures = decodePrefecturesFile(readBinBr("prefectures.bin.br"));',
     "",
     "const municipalitiesByCode = {",
     ...prefectureCodes.map((code) => {
       const pref = `prefectures.prefectures.find((p) => p.code === "${code}")`;
       return [
-        `  "${code}": decodeMunicipalitiesFile(readBin("prefectures/${code}.bin"), {`,
+        `  "${code}": decodeMunicipalitiesFile(readBinBr("prefectures/${code}.bin.br"), {`,
         `    prefectureCode: "${code}",`,
         `    prefectureName: (${pref})?.name ?? "",`,
         `    prefectureNameKana: (${pref})?.nameKana ?? "",`,
@@ -230,7 +405,15 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     }),
     "};",
     "",
-    "export { index, prefectures, municipalitiesByCode };",
+    "const searchNgramShards = {};",
+    `for (const region of [${regionKeys}]) {`,
+    '  searchNgramShards[region] = new Uint8Array(readBinBr(`search-ngrams/2gram/${region}.bin.br`));',
+    "}",
+    `for (const shard of [${shardKeys}]) {`,
+    '  searchNgramShards[shard] = new Uint8Array(readBinBr(`search-ngrams/3gram/${shard}.bin.br`));',
+    "}",
+    "",
+    "export { index, prefectures, municipalitiesByCode, searchNgramShards };",
     "",
     "export function loadMunicipalities(code) {",
     '  const padded = String(code).padStart(2, "0");',
@@ -241,7 +424,7 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     "  return Promise.resolve(file);",
     "}",
     "",
-    "const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities };",
+    "const dataset = { index, prefectures, municipalitiesByCode, loadMunicipalities, searchNgramShards };",
     "export default dataset;",
     "",
   ];
@@ -325,8 +508,18 @@ async function main(): Promise<void> {
       designatedCityWardsAdded: addedWards,
     },
     paths: {
-      prefectures: "prefectures.bin",
-      municipalitiesByPrefecture: "prefectures/{code}.bin",
+      prefectures: "prefectures.bin.br",
+      municipalitiesByPrefecture: "prefectures/{code}.bin.br",
+      searchNgrams: {
+        twoGram: {
+          regions: [...TWO_GRAM_REGIONS],
+          pattern: "search-ngrams/2gram/{region}.bin.br",
+        },
+        threeGram: {
+          shardCount: THREE_GRAM_SHARD_COUNT,
+          pattern: "search-ngrams/3gram/{shard}.bin.br",
+        },
+      },
     },
     prefectureCodes,
   });
@@ -364,9 +557,9 @@ async function main(): Promise<void> {
       muniCountWard: p.municipalityCounts.ward,
     }),
   );
-  writeFileSync(
+  writeBinAndBr(
     resolve(dataDir, "prefectures.bin"),
-    Buffer.from(encodePrefectures(prefBinRecords, { asOf })),
+    encodePrefectures(prefBinRecords, { asOf }),
   );
 
   for (const code of prefectureCodes) {
@@ -392,21 +585,68 @@ async function main(): Promise<void> {
         isWard: f.isWard,
       };
     });
-    writeFileSync(
+    writeBinAndBr(
       resolve(prefecturesDir, `${code}.bin`),
-      Buffer.from(encodeMunicipalities(muniBinRecords, { asOf })),
+      encodeMunicipalities(muniBinRecords, { asOf }),
     );
   }
 
+  const partitioned = buildHybridSearchNgramPostings(byPrefecture);
+
+  const csvRows: (string | number)[][] = [];
+  let twoGramTotal = 0;
+  let threeGramTotal = 0;
+
+  for (const region of TWO_GRAM_REGIONS) {
+    const sorted = sortPostings(partitioned.twoGram.get(region) ?? []);
+    twoGramTotal += sorted.length;
+    writeBinAndBr(
+      resolve(searchNgrams2Dir, `${region}.bin`),
+      encodeSearchNgrams(sorted, { asOf }),
+    );
+    for (const r of sorted) {
+      csvRows.push(postingCsvRow(r, "2gram", region));
+    }
+  }
+
+  for (let i = 0; i < THREE_GRAM_SHARD_COUNT; i++) {
+    const shard = String(i);
+    const sorted = sortPostings(partitioned.threeGram.get(shard) ?? []);
+    threeGramTotal += sorted.length;
+    writeBinAndBr(
+      resolve(searchNgrams3Dir, `${shard}.bin`),
+      encodeSearchNgrams(sorted, { asOf }),
+    );
+    for (const r of sorted) {
+      csvRows.push(postingCsvRow(r, "3gram", shard));
+    }
+  }
+
+  writeCsv(
+    resolve(dataDir, "search-ngrams.csv"),
+    [
+      "gram",
+      "gramType",
+      "kind",
+      "muniCode",
+      "prefCode",
+      "hasWard",
+      "isWard",
+      "indexKind",
+      "partition",
+    ],
+    csvRows,
+  );
+
   writeDatasetJs(prefectureCodes);
 
-  // Sanity: dataset decode path works
-  const prefBytes = readFileSync(resolve(dataDir, "prefectures.bin"));
-  void prefBytes;
+  // Sanity: Brotli round-trip for prefectures payload
+  const prefBr = readFileSync(resolve(dataDir, "prefectures.bin.br"));
+  void brotliDecompressSync(prefBr);
 
-  console.log(`Wrote CSV + bin data under ${dataDir}`);
+  console.log(`Wrote CSV + bin + bin.br data under ${dataDir}`);
   console.log(
-    `prefectures=${prefectures.length}, municipalities=${municipalities.length}, wardsAdded=${addedWards}`,
+    `prefectures=${prefectures.length}, municipalities=${municipalities.length}, wardsAdded=${addedWards}, searchNgrams2=${twoGramTotal}, searchNgrams3=${threeGramTotal}`,
   );
 }
 

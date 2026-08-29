@@ -10,12 +10,20 @@ import {
   LocalGovBinaryError,
 } from "./binary";
 import {
+  isBinaryPayloadUrl,
+  maybeDecompressPayload,
+} from "./brotli";
+import {
   LocalGovSchemaError,
   normalizeDatasetInput,
   validateIndexFile,
   validateMunicipalitiesFile,
   validatePrefecturesFile,
 } from "./schema";
+import {
+  createDatasetSearchIndexLoader,
+  createHybridSearchIndexLoader,
+} from "./searchIndexLoader";
 import { createStore } from "./store";
 import type {
   CreateLocalGovCacheOptions,
@@ -71,15 +79,6 @@ function municipalitiesPath(
   return index.paths.municipalitiesByPrefecture.replaceAll("{code}", code);
 }
 
-function isBinaryUrl(url: string): boolean {
-  try {
-    const pathname = new URL(url).pathname;
-    return pathname.endsWith(".bin");
-  } catch {
-    return url.includes(".bin");
-  }
-}
-
 async function fetchResponse(url: string): Promise<Response> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -112,6 +111,11 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   }
 }
 
+async function fetchBinaryPayload(url: string): Promise<ArrayBuffer> {
+  const compressedOrRaw = await fetchArrayBuffer(url);
+  return maybeDecompressPayload(url, compressedOrRaw);
+}
+
 function prefectureLookup(
   prefectures: LocalGov[],
   code: string,
@@ -133,14 +137,12 @@ function prefectureLookup(
   };
 }
 
-async function loadPrefecturesPayload(
-  url: string,
-): Promise<unknown> {
-  if (!isBinaryUrl(url)) {
+async function loadPrefecturesPayload(url: string): Promise<unknown> {
+  if (!isBinaryPayloadUrl(url)) {
     return fetchJson(url);
   }
   try {
-    return decodePrefecturesFile(await fetchArrayBuffer(url));
+    return decodePrefecturesFile(await fetchBinaryPayload(url));
   } catch (error) {
     if (error instanceof LocalGovBinaryError) {
       throw new LocalGovSchemaError(error.message);
@@ -154,12 +156,12 @@ async function loadMunicipalitiesPayload(
   prefectures: LocalGov[],
   code: string,
 ): Promise<unknown> {
-  if (!isBinaryUrl(url)) {
+  if (!isBinaryPayloadUrl(url)) {
     return fetchJson(url);
   }
   try {
     return decodeMunicipalitiesFile(
-      await fetchArrayBuffer(url),
+      await fetchBinaryPayload(url),
       prefectureLookup(prefectures, code),
     );
   } catch (error) {
@@ -179,7 +181,6 @@ async function fetchAndCache<T>(
 ): Promise<T> {
   const cached = getCachedData(url, { enabled: cache.enabled });
   if (cached !== null) {
-    // Re-validate cached payloads so schema changes surface clearly
     return validate(cached);
   }
 
@@ -216,6 +217,16 @@ async function createFromUrl(
     cache,
   );
 
+  const ensureSearchIndexes = createHybridSearchIndexLoader({
+    spec: index.paths.searchNgrams,
+    prefecturesAsOf: prefecturesFile.asOf,
+    loadPartitionBytes: async (relativePath) => {
+      const url = resolveSiblingUrl(indexUrl, relativePath);
+      // JLIX: memory only — do not use localStorage (Issue #63)
+      return fetchBinaryPayload(url);
+    },
+  });
+
   const store = createStore(
     index,
     prefecturesFile.prefectures,
@@ -236,6 +247,8 @@ async function createFromUrl(
       );
       return file.municipalities;
     },
+    ensureSearchIndexes,
+    { prefecturesAsOf: prefecturesFile.asOf },
   );
 
   return buildLocalGovClient(store);
@@ -245,6 +258,18 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
   const input = normalizeDatasetInput(data);
   const index = validateIndexFile(input.index);
   const prefecturesFile = validatePrefecturesFile(input.prefectures);
+
+  const ensureSearchIndexes = input.searchNgramShards
+    ? createDatasetSearchIndexLoader({
+        spec: index.paths.searchNgrams,
+        prefecturesAsOf: prefecturesFile.asOf,
+        shards: input.searchNgramShards,
+      })
+    : async () => {
+        throw new LocalGovSchemaError(
+          "Dataset is missing searchNgramShards (JLIX partition bytes) required for nationwide string search",
+        );
+      };
 
   const store = createStore(
     index,
@@ -267,6 +292,8 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
         `No municipalities data for prefecture ${code}: provide municipalitiesByCode or loadMunicipalities`,
       );
     },
+    ensureSearchIndexes,
+    { prefecturesAsOf: prefecturesFile.asOf },
   );
 
   return buildLocalGovClient(store);
@@ -274,13 +301,16 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
 
 /**
  * Load index + prefectures, validate schemas, then return a client.
- * Municipality payloads are loaded lazily (concurrency 6 for nationwide search).
+ * Municipality payloads are loaded lazily (concurrency 6).
+ * Nationwide city search uses hybrid JLIX (hot 2-gram regions + cold 3-gram
+ * shards) then loads only candidate prefecture `.bin.br` files (memory-only
+ * for those loads and for JLIX).
  * Pass either `{ data }` (dataset) or `{ url }` (versioned index.json URL).
  *
  * For `url` mode, localStorage caching is on by default (`cache: true`,
  * `cacheTtlSeconds` defaults to 1 year). Cached values are decoded objects
- * stored via `JSON.stringify` (minified). Nationwide string search still skips
- * writing municipality payloads to localStorage.
+ * stored via `JSON.stringify` (minified). JLIX and nationwide municipality
+ * loads skip localStorage.
  */
 export async function createLocalGovClient(
   options: CreateLocalGovOptions,
@@ -311,7 +341,6 @@ export async function createLocalGovClient(
     return createFromUrl(options.url, cache);
   }
 
-  // Validate cache options even for data mode so bad values fail fast
   resolveCacheConfig(options);
   return createFromData(options.data);
 }

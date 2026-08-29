@@ -1,11 +1,18 @@
 export {
   BINARY_FORMAT_VERSION,
   DECODED_SCHEMA_VERSION,
+  GRAM_TYPE_KANA,
+  GRAM_TYPE_NAME,
+  KIND_MUNI,
+  KIND_PREF,
   MAGIC_JLDT,
   MAGIC_JLDT_BYTES,
+  MAGIC_JLIX,
+  MAGIC_JLIX_BYTES,
   MAGIC_JLPR,
   MAGIC_JLPR_BYTES,
   MUNICIPALITY_RECORD_SIZE,
+  NGRAM_POSTING_RECORD_SIZE,
   PREFECTURE_RECORD_SIZE,
 } from "./constants";
 export { LocalGovBinaryError } from "./errors";
@@ -31,3 +38,13 @@ export {
   type EncodePrefecturesMeta,
   type PrefectureBinRecord,
 } from "./prefectures";
+export {
+  decodeSearchNgrams,
+  encodeSearchNgrams,
+  sortSearchNgramPostings,
+  type DecodedSearchNgramsBin,
+  type EncodeSearchNgramsMeta,
+  type EntityKind,
+  type GramType,
+  type SearchNgramPostingRecord,
+} from "./searchNgrams";

@@ -71,19 +71,20 @@ const client = await createLocalGovClient({
 
 ### データ構成
 
-全市区町村をまとめた単一ファイルは配布しません。データパッケージはバイナリ（`.bin`）データと、通常の JSON である `index.json` から構成されます。
+全市区町村をまとめた単一ファイルは配布しません。データパッケージは **Brotli 圧縮バイナリ（`.bin.br`）** と、通常の JSON である `index.json` から構成されます。
 
 | ファイル | 内容 |
 |----------|------|
 | `index.json` | パス・`schemaVersion`・`asOf` などの索引 — 通常の JSON |
-| `prefectures.bin` | 都道府県のみ — バイナリ |
-| `prefectures/{code}.bin` | 当該県の市区町村（例: `13.bin`） — バイナリ |
+| `prefectures.bin.br` | 都道府県のみ — Brotli バイナリ |
+| `prefectures/{code}.bin.br` | 当該県の市区町村 — Brotli バイナリ |
+| `search-ngrams.bin.br` | 全国 2-gram 検索インデックス（JLIX）— Brotli バイナリ |
 
-`schemaVersion`（現行 `1`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。`.bin` 生成用の中間 CSV はリポジトリに置いていますが、npm には配布しません。
+`schemaVersion`（現行 `1`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。中間 CSV / 非圧縮 `.bin` はリポジトリに置いていますが、npm には配布しません（npm は Brotli のみ）。
 
 ### 自前データ配信について
 
-自前で配信する場合も、公式と同様に**バージョン付き URL**と同等の `index.json` + `.bin` 構成で提供してください。可用性・CORS・内容の正しさ・URL 運用などについて、当パッケージ開発者は一切の責任を負いません。CORS は配信側で許可してください。
+自前で配信する場合も、公式と同様に**バージョン付き URL**と同等の `index.json` + `.bin.br` 構成で提供してください。可用性・CORS・内容の正しさ・URL 運用などについて、当パッケージ開発者は一切の責任を負いません。CORS は配信側で許可してください。
 
 ## コード形式
 

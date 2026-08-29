@@ -2,6 +2,7 @@ import {
   MUNICIPALITY_FETCH_CONCURRENCY,
   mapWithConcurrency,
 } from "./pool";
+import type { SearchIndex } from "./searchIndex";
 import type { LocalGov, LocalGovIndexFile } from "./types";
 
 export type LoadMunicipalitiesOptions = {
@@ -14,11 +15,27 @@ export type LoadMunicipalitiesFn = (
   options?: LoadMunicipalitiesOptions,
 ) => Promise<readonly LocalGov[]>;
 
+export type EnsureSearchIndexesNeed = {
+  twoGram: boolean;
+  threeGram: boolean;
+};
+
+export type SearchIndexes = {
+  twoGram: SearchIndex | null;
+  threeGram: SearchIndex | null;
+};
+
+export type EnsureSearchIndexesFn = (
+  need: EnsureSearchIndexesNeed,
+) => Promise<SearchIndexes>;
+
 export type LocalGovStore = {
   index: LocalGovIndexFile;
   prefectures: readonly LocalGov[];
   prefectureByCode: ReadonlyMap<string, LocalGov>;
   prefectureByName: ReadonlyMap<string, LocalGov>;
+  /** Prefetchures file asOf (for JLIX mismatch warn). */
+  prefecturesAsOf?: string;
   ensureMunicipalities: (
     codes: readonly string[],
     options?: LoadMunicipalitiesOptions,
@@ -26,12 +43,16 @@ export type LocalGovStore = {
   getMunicipalities: (code: string) => readonly LocalGov[] | undefined;
   getMunicipalityByCode: (code: string) => LocalGov | undefined;
   allPrefectureCodes: readonly string[];
+  /** Load / return hybrid JLIX indexes covering the requested layers. */
+  ensureSearchIndexes: EnsureSearchIndexesFn;
 };
 
 export function createStore(
   index: LocalGovIndexFile,
   prefectures: readonly LocalGov[],
   loadMunicipalities: LoadMunicipalitiesFn,
+  ensureSearchIndexes: EnsureSearchIndexesFn,
+  options?: { prefecturesAsOf?: string },
 ): LocalGovStore {
   const prefectureByCode = new Map(
     prefectures.map((p) => [p.code, p] as const),
@@ -96,9 +117,11 @@ export function createStore(
     prefectures,
     prefectureByCode,
     prefectureByName,
+    prefecturesAsOf: options?.prefecturesAsOf,
     ensureMunicipalities,
     getMunicipalities: (code) => municipalitiesByPrefectureCode.get(code),
     getMunicipalityByCode: (code) => municipalityByCode.get(code),
     allPrefectureCodes,
+    ensureSearchIndexes,
   };
 }
