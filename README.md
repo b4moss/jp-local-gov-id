@@ -101,6 +101,15 @@ npm test
 npm run build
 ```
 
+Before opening or updating a PR to `develop` / `dev-*`, run local CI:
+
+```bash
+npm run ci:local            # preferred (nektos/act + Docker)
+npm run ci:local:fallback   # only if Docker is unavailable
+```
+
+See [docs/ci-cd.md](./docs/ci-cd.md) for triggers, skip rules, and publish.
+
 ## Versioning
 
 Follows [Semantic Versioning](https://semver.org/).

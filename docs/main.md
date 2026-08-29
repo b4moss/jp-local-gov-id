@@ -372,6 +372,7 @@ jp-local-gov-id/
 - リポジトリは npm workspaces のモノレポとする
 - API パッケージ（`packages/jp-local-gov-id`）の開発は Vite + TypeScript（ライブラリモード）
 - パーススクリプト（`scripts/`）は独自の `package.json` を持ち、Node.js で実行する
+- CI/CD（PR 前の `act` 必須・発火条件・publish）は [ci-cd.ja.md](./ci-cd.ja.md) / [ci-cd.md](./ci-cd.md) を参照
 
 ### パッケージサイズ・取得
 

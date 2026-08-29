@@ -27,6 +27,17 @@ npm test
 npm run build
 ```
 
+### PR 前の必須ゲート
+
+`develop` / `dev-*` 向けの PR を出す前に、ローカルで CI 相当を通してください（失敗したまま PR しない）。
+
+```bash
+npm run ci:local            # 推奨（nektos/act + Docker）
+npm run ci:local:fallback   # Docker が無い環境のみ
+```
+
+発火条件・CD・エージェント向け手順はリポジトリの [docs/ci-cd.ja.md](https://github.com/b4moss/jp-local-gov-id/blob/main/docs/ci-cd.ja.md) を参照してください。
+
 データの再生成（総務省の Excel → CSV（リポジトリのみ）→ `.bin`（npm 公開））:
 
 ```bash

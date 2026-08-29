@@ -27,6 +27,17 @@ npm test
 npm run build
 ```
 
+### Required gate before PR
+
+Before opening or updating a PR targeting `develop` / `dev-*`, run local CI (do not open a PR while it fails):
+
+```bash
+npm run ci:local            # preferred (nektos/act + Docker)
+npm run ci:local:fallback   # only if Docker is unavailable
+```
+
+See [docs/ci-cd.md](https://github.com/b4moss/jp-local-gov-id/blob/main/docs/ci-cd.md) for triggers, CD, and agent instructions.
+
 Regenerate data (Ministry of Internal Affairs Excel → CSV in the repo → `.bin` for npm):
 
 ```bash

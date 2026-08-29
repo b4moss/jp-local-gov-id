@@ -1,171 +1,177 @@
-name: Publish
+# Publish packages to npm when a GitHub Release is published for data-v* / app-v*.
+# Tags should be created from the `release` branch. If the tag SHA already has a
+# successful CI run, Test/Build are skipped; pack + provenance publish always run.
+name: Publish packages
 
-# Release published routing (only the matching package):
-#   data-v* → @b4moss/jp-local-gov-id-data
-#   app-v*  → @b4moss/jp-local-gov-id
-#
-# Tag push alone does not publish; create and publish a GitHub Release.
-# Manual workflow_dispatch is also available.
-# repository.url is injected before pack so older tags still work with provenance.
-# Prerelease versions (e.g. 1.0.0-rc.1) are published with --tag rc (npm requires a non-latest tag).
 on:
   release:
     types: [published]
   workflow_dispatch:
     inputs:
-      package:
-        description: Which package to publish (manual only)
+      tag:
+        description: "Tag to publish (e.g. data-v1.0.0 or app-v1.0.0)"
         required: true
-        type: choice
-        options:
-          - data
-          - api
-        default: data
+        type: string
+      force_test:
+        description: "Force Test+Build even if CI history exists for the tag SHA"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+  actions: read
+  checks: read
 
 concurrency:
-  group: publish-${{ github.workflow }}-${{ github.ref }}
+  group: publish-${{ github.event.release.tag_name || inputs.tag }}
   cancel-in-progress: false
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Publish
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      id-token: write
     if: >
-      github.event_name == 'workflow_dispatch' ||
-      startsWith(github.event.release.tag_name, 'data-v') ||
-      startsWith(github.event.release.tag_name, 'app-v')
-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'release' && (
+        startsWith(github.event.release.tag_name, 'data-v') ||
+        startsWith(github.event.release.tag_name, 'app-v')
+      ))
     steps:
+      - name: Resolve tag and package
+        id: meta
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="$RELEASE_TAG"
+          fi
+          case "$TAG" in
+            data-v*)
+              PKG_DIR="packages/jp-local-gov-id-data"
+              ;;
+            app-v*)
+              PKG_DIR="packages/jp-local-gov-id"
+              ;;
+            *)
+              echo "Unsupported tag: $TAG (expected data-v* or app-v*)"
+              exit 1
+              ;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "package_dir=$PKG_DIR" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: refs/tags/${{ steps.meta.outputs.tag }}
+          fetch-depth: 0
 
-      - name: Resolve publish target
-        id: target
+      - name: Require tag commit on release ancestry
+        id: ancestry
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            package='${{ inputs.package }}'
-          else
-            tag='${{ github.event.release.tag_name }}'
-            case "$tag" in
-              data-v*) package=data ;;
-              app-v*) package=api ;;
-              *)
-                echo "::error::Unsupported tag '${tag}'. Use data-v* or app-v*."
-                exit 1
-                ;;
-            esac
+          git fetch origin release:refs/remotes/origin/release
+          TAG_SHA="$(git rev-parse HEAD)"
+          if ! git merge-base --is-ancestor "$TAG_SHA" origin/release; then
+            echo "Tag commit $TAG_SHA is not an ancestor of origin/release."
+            echo "Create data-v* / app-v* tags from the release branch."
+            exit 1
           fi
-          echo "package=${package}" >> "$GITHUB_OUTPUT"
-          echo "Resolved publish target: ${package}"
+          echo "Tag commit is on release ancestry: $TAG_SHA"
+          echo "sha=$TAG_SHA" >> "$GITHUB_OUTPUT"
 
-      - name: Banner
-        run: |
-          echo "=============================================="
-          echo "PUBLISH_WORKFLOW_ID=tag-prefix-route-v5"
-          echo "event=${{ github.event_name }}"
-          echo "ref=${GITHUB_REF}"
-          echo "sha=${GITHUB_SHA}"
-          echo "target=${{ steps.target.outputs.package }}"
-          git log -1 --oneline
-          echo "=============================================="
+      - name: Check CI success history for tag SHA
+        id: ci_history
+        uses: actions/github-script@v7
+        env:
+          FORCE_TEST: ${{ inputs.force_test || 'false' }}
+          TAG_SHA: ${{ steps.ancestry.outputs.sha }}
+        with:
+          script: |
+            if (process.env.FORCE_TEST === 'true') {
+              core.setOutput('skip_verify', 'false');
+              core.info('force_test=true — will run Test+Build');
+              return;
+            }
+            const sha = process.env.TAG_SHA;
+            const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head_sha: sha,
+              status: 'completed',
+              per_page: 30,
+            });
+            const ok = (runs.workflow_runs || []).some(
+              (r) => r.name === 'CI' && r.conclusion === 'success'
+            );
+            core.setOutput('skip_verify', ok ? 'true' : 'false');
+            core.info(ok
+              ? `CI success found for ${sha} — skipping Test/Build`
+              : `No CI success for ${sha} — will run Test+Build`);
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-
-      - name: Upgrade npm for Trusted Publishing
-        run: npm install -g npm@latest
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Test
+        if: steps.ci_history.outputs.skip_verify != 'true'
         run: npm test
 
       - name: Build
+        if: steps.ci_history.outputs.skip_verify != 'true'
         run: npm run build
 
-      - name: Publish @b4moss/jp-local-gov-id-data
-        if: ${{ steps.target.outputs.package == 'data' }}
+      - name: Pack
+        id: pack
+        working-directory: ${{ steps.meta.outputs.package_dir }}
         run: |
           set -euo pipefail
-          expected='https://github.com/b4moss/jp-local-gov-id'
-          pkg_dir='packages/jp-local-gov-id-data'
+          TARBALL="$(npm pack --json | jq -r '.[0].filename')"
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          echo "Packed: $TARBALL"
 
-          node <<'EOF'
-          const fs = require('fs');
-          const path = 'packages/jp-local-gov-id-data/package.json';
-          const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
-          pkg.repository = {
-            type: 'git',
-            url: 'https://github.com/b4moss/jp-local-gov-id',
-            directory: 'packages/jp-local-gov-id-data',
-          };
-          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
-          console.log('injected', pkg.repository);
-          EOF
-
-          cd "$pkg_dir"
-          tgz=$(npm pack --pack-destination . | tail -n1 | tr -d '\r')
-          echo "packed=${tgz}"
-          tar -xOf "$tgz" package/package.json > /tmp/packed-package.json
-          url=$(node -p "require('/tmp/packed-package.json').repository?.url ?? ''")
-          echo "packed repository.url=${url}"
-          if [ "$url" != "$expected" ]; then
-            echo "::error::Packed repository.url must be ${expected} (got '${url}')"
-            exit 1
-          fi
-          version=$(node -p "require('/tmp/packed-package.json').version")
-          publish_args=(--access public --provenance)
-          if [[ "$version" == *-* ]]; then
-            publish_args+=(--tag rc)
-            echo "prerelease detected (${version}); using --tag rc"
-          fi
-          npm publish "$tgz" "${publish_args[@]}"
-
-      - name: Publish @b4moss/jp-local-gov-id
-        if: ${{ steps.target.outputs.package == 'api' }}
+      - name: Inject repository.url into packed tarball
+        working-directory: ${{ steps.meta.outputs.package_dir }}
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          REPO_URL: https://github.com/${{ github.repository }}
         run: |
           set -euo pipefail
-          expected='https://github.com/b4moss/jp-local-gov-id'
-          pkg_dir='packages/jp-local-gov-id'
+          TMPDIR="$(mktemp -d)"
+          tar -xzf "$TARBALL" -C "$TMPDIR"
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const pkgPath = path.join(process.argv[1], "package", "package.json");
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+            const url = process.argv[2];
+            if (typeof pkg.repository === "string") {
+              pkg.repository = { type: "git", url };
+            } else {
+              pkg.repository = { ...(pkg.repository || {}), type: "git", url };
+            }
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+          ' "$TMPDIR" "$REPO_URL"
+          tar -czf "$TARBALL" -C "$TMPDIR" package
+          rm -rf "$TMPDIR"
+          echo "Injected repository.url=$REPO_URL into $TARBALL"
 
-          node <<'EOF'
-          const fs = require('fs');
-          const path = 'packages/jp-local-gov-id/package.json';
-          const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
-          pkg.repository = {
-            type: 'git',
-            url: 'https://github.com/b4moss/jp-local-gov-id',
-            directory: 'packages/jp-local-gov-id',
-          };
-          fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
-          console.log('injected', pkg.repository);
-          EOF
-
-          cd "$pkg_dir"
-          tgz=$(npm pack --pack-destination . | tail -n1 | tr -d '\r')
-          echo "packed=${tgz}"
-          tar -xOf "$tgz" package/package.json > /tmp/packed-package.json
-          url=$(node -p "require('/tmp/packed-package.json').repository?.url ?? ''")
-          echo "packed repository.url=${url}"
-          if [ "$url" != "$expected" ]; then
-            echo "::error::Packed repository.url must be ${expected} (got '${url}')"
-            exit 1
-          fi
-          version=$(node -p "require('/tmp/packed-package.json').version")
-          publish_args=(--access public --provenance)
-          if [[ "$version" == *-* ]]; then
-            publish_args+=(--tag rc)
-            echo "prerelease detected (${version}); using --tag rc"
-          fi
-          npm publish "$tgz" "${publish_args[@]}"
+      - name: Publish to npm (provenance)
+        working-directory: ${{ steps.meta.outputs.package_dir }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: npm publish --access public --provenance "$TARBALL"
