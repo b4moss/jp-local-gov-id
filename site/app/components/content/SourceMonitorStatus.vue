@@ -11,14 +11,29 @@ type SourceMonitorResult = {
   error?: string;
 };
 
-const STATUS_URL =
+const STATUS_URL_RAW =
   "https://raw.githubusercontent.com/b4moss/jp-local-gov-id/main/site/public/source-monitor.json";
+const STATUS_URL_LOCAL = "/source-monitor.json";
 
 const { locale } = useI18n();
 
 const loading = ref(true);
 const loadError = ref(false);
 const result = ref<SourceMonitorResult | null>(null);
+
+async function loadStatus(): Promise<SourceMonitorResult> {
+  // Prefer raw main for freshness between site-v deploys; fall back to same-origin copy.
+  for (const url of [STATUS_URL_RAW, STATUS_URL_LOCAL]) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) continue;
+      return (await res.json()) as SourceMonitorResult;
+    } catch {
+      // try next
+    }
+  }
+  throw new Error("status fetch failed");
+}
 
 const messages = computed(() => {
   const ja = locale.value === "ja";
@@ -62,12 +77,7 @@ function formatCheckedAt(iso: string): string {
 
 onMounted(async () => {
   try {
-    const res = await fetch(STATUS_URL, { cache: "no-store" });
-    if (!res.ok) {
-      loadError.value = true;
-      return;
-    }
-    result.value = (await res.json()) as SourceMonitorResult;
+    result.value = await loadStatus();
   } catch {
     loadError.value = true;
   } finally {
