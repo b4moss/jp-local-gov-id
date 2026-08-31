@@ -1,6 +1,7 @@
 ---
 title: Municipality validation
 description: Sample that validates an exact municipality name
+schemaRole: HowTo
 ---
 
 # Municipality validation

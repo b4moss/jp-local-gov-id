@@ -1,6 +1,7 @@
 ---
 title: 使い方
 description: クライアントの初期化と基本操作
+schemaRole: HowTo
 ---
 
 # 使い方

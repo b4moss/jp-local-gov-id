@@ -1,6 +1,7 @@
 ---
 title: サンプル
 description: 住所入力・バリデーション・全国市区町村一覧の利用例
+schemaRole: TechArticle
 ---
 
 # サンプル

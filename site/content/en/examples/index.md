@@ -1,6 +1,7 @@
 ---
 title: Examples
 description: Address input, validation, and nationwide municipality filter samples
+schemaRole: TechArticle
 ---
 
 # Examples

@@ -1,6 +1,7 @@
 ---
 title: API
 description: Public LocalGovClient methods
+schemaRole: TechArticle
 ---
 
 # API

@@ -1,6 +1,7 @@
 ---
 title: Usage
 description: Initialize the client and call basic APIs
+schemaRole: HowTo
 ---
 
 # Usage

@@ -1,6 +1,7 @@
 ---
 title: インストール
 description: パッケージのインストール方法
+schemaRole: HowTo
 ---
 
 # インストール

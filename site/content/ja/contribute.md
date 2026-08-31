@@ -1,6 +1,7 @@
 ---
 title: 開発に参加する
 description: コントリビューションの概要
+schemaRole: TechArticle
 ---
 
 # 開発に参加する

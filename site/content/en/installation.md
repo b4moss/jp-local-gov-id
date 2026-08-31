@@ -1,6 +1,7 @@
 ---
 title: Installation
 description: How to install the packages
+schemaRole: HowTo
 ---
 
 # Installation

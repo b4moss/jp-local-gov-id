@@ -1,6 +1,7 @@
 ---
 title: 市区町村バリデーション
 description: 市区町村名の実在チェックサンプル
+schemaRole: HowTo
 ---
 
 # 市区町村バリデーション
