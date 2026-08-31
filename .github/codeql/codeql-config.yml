@@ -1,0 +1,8 @@
+name: jp-local-gov-id-codeql
+
+paths-ignore:
+  - "**/dist/**"
+  - "**/coverage/**"
+  - "**/.output/**"
+  - "**/.nuxt/**"
+  - "site/public/**"
