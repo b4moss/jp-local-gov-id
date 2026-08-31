@@ -1,6 +1,7 @@
 ---
 title: ホーム
 description: 日本の全国地方公共団体コードを扱う npm パッケージ
+schemaRole: TechArticle
 ---
 
 # 全国地方公共団体コードヘルパ

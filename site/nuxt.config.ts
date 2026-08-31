@@ -1,9 +1,32 @@
-import { copyFileSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gt, valid } from "semver";
+import { parse as parseYaml } from "yaml";
+import { normalizeSiteMeta, type SiteMeta } from "./app/utils/siteMeta";
 
-const rootDir = join(dirname(fileURLToPath(import.meta.url)), "..");
+const siteRootDir = dirname(fileURLToPath(import.meta.url));
+const rootDir = join(siteRootDir, "..");
+
+function loadSiteMeta(): SiteMeta {
+  const candidates = [
+    join(siteRootDir, "site.meta.yaml"),
+    join(siteRootDir, "site.meta.yaml.example"),
+  ];
+  for (const path of candidates) {
+    if (!existsSync(path)) continue;
+    try {
+      const raw = parseYaml(readFileSync(path, "utf8")) as Record<
+        string,
+        unknown
+      > | null;
+      return normalizeSiteMeta(raw || undefined);
+    } catch (error) {
+      console.warn(`[doc-site] Failed to parse ${path}:`, error);
+    }
+  }
+  return normalizeSiteMeta(undefined);
+}
 
 function readPackageVersion(relativePath: string) {
   const pkg = JSON.parse(
@@ -41,6 +64,8 @@ async function resolveNpmLatestIncludingRc(
   }
 }
 
+const siteMeta = loadSiteMeta();
+
 const packageAppVersion = readPackageVersion(
   "packages/jp-local-gov-id/package.json",
 );
@@ -72,6 +97,15 @@ export default defineNuxtConfig({
     public: {
       appVersion,
       dataVersion,
+      siteName: siteMeta.siteName,
+      siteUrl: siteMeta.siteUrl,
+      siteVersion: siteMeta.siteVersion,
+      description: siteMeta.description,
+      githubUrl: siteMeta.githubUrl,
+      footerText: siteMeta.footerText,
+      software: siteMeta.software,
+      organization: siteMeta.organization,
+      jsonLdExtra: siteMeta.jsonLdExtra,
     },
   },
   // GTM: set NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID=GTM-XXXXXXX (build-time for SSG).
@@ -94,11 +128,10 @@ export default defineNuxtConfig({
     experimental: { sqliteConnector: "native" },
     build: {
       markdown: {
+        // Always-dark code blocks (incl. light UI). High-contrast tokens so no
+        // near-black github-light colors remain on the dark pre background.
         highlight: {
-          theme: {
-            default: "github-light",
-            dark: "github-dark",
-          },
+          theme: "github-dark-high-contrast",
         },
       },
     },
@@ -114,6 +147,8 @@ export default defineNuxtConfig({
     },
   },
   i18n: {
+    // Absolute URLs for canonical / hreflang come from site.meta.yaml.
+    baseUrl: siteMeta.siteUrl,
     locales: [
       { code: "ja", name: "日本語", language: "ja-JP", file: "ja.json" },
       { code: "en", name: "English", language: "en-US", file: "en.json" },
@@ -165,7 +200,9 @@ export default defineNuxtConfig({
         "/en/examples/nationwide-municipalities",
         "/ja/contribute",
         "/en/contribute",
+        "/sitemap.xml",
+        "/robots.txt",
       ],
     },
   },
-})
+});

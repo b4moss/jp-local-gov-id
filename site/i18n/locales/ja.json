@@ -117,5 +117,9 @@
     "label": "ソースコード言語",
     "html": "HTML",
     "ts": "TypeScript"
+  },
+  "faq": {
+    "expandAll": "全部開く",
+    "collapseAll": "全部閉じる"
   }
 }
