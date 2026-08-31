@@ -1,0 +1,20 @@
+# Copy this file to site.meta.yaml and edit for your deployment.
+# site.meta.yaml is gitignored; this example is used as fallback when absent.
+#
+# Site-wide settings feed runtimeConfig and JSON-LD SoftwareSourceCode on every page.
+# Page roles (TechArticle / FAQPage / HowTo) belong in Markdown frontmatter (schemaRole).
+# FAQ Q/A use ::faq-item in the body.
+
+siteName: jp-local-gov-id
+siteUrl: https://jplocalgov.oss.b4m.jp
+siteVersion: "1.0.0"
+description: Documentation for the jp-local-gov-id library — Japanese local government codes in the browser
+githubUrl: https://github.com/b4moss/jp-local-gov-id
+footerText: "MIT License · 2026 Bicycle for Mind LLC."
+
+software:
+  name: jp-local-gov-id
+  codeRepository: https://github.com/b4moss/jp-local-gov-id
+  license: MIT
+  programmingLanguage:
+    - TypeScript
