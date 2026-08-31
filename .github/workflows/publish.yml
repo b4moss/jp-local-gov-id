@@ -68,7 +68,7 @@ jobs:
           echo "package_dir=$PKG_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: refs/tags/${{ steps.meta.outputs.tag }}
           fetch-depth: 0
@@ -89,7 +89,7 @@ jobs:
 
       - name: Check CI success history for tag SHA
         id: ci_history
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           FORCE_TEST: ${{ inputs.force_test || 'false' }}
           TAG_SHA: ${{ steps.ancestry.outputs.sha }}
@@ -117,7 +117,7 @@ jobs:
               : `No CI success for ${sha} — will run Test+Build`);
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
