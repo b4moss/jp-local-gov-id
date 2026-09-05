@@ -15,14 +15,19 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Scorecard Token-Permissions: keep top-level read-only; elevate only on the
+# deploy job. peaceiris/actions-gh-pages is a recognized pages deployer, so
+# job-level contents: write is expected and not scored as dangerous.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   deploy:
     name: Build and deploy docs site
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout

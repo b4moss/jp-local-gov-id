@@ -109,7 +109,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.12/index.json",
 });
 ```
 
