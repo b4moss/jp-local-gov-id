@@ -1,8 +1,8 @@
 # CI / CD
 
-This document describes when GitHub Actions runs, the mandatory local pre-PR gate, and how npm publish reuses CI history.
+This document describes when GitHub Actions runs, the mandatory local pre-PR gate, how npm publish reuses CI history, and how the documentation site is published.
 
-## Local gate (required before PR)
+## Local gate (required before app PR)
 
 Before opening or updating a pull request targeting `develop` or `dev-*`, **`act` must succeed** (developers and Cloud Agents).
 
@@ -24,24 +24,50 @@ npm run ci:local:fallback   # npm ci && npm test && npm run build
 
 Do not open or update a PR while this gate is failing.
 
-### Agents
+### Agents (app / library)
 
 1. Run `npm run ci:local` (or `ci:local:fallback` only when Docker is absent).
 2. If non-zero, fix and re-run; do not call the PR creation tool yet.
 3. Only then open/update the PR.
 
-## CI (`.github/workflows/ci.yml`)
+## App CI (`.github/workflows/ci.yml`)
 
 | Item | Rule |
 |------|------|
 | Trigger | `pull_request` whose **base** is `develop` or `dev-*` |
-| Not triggered | Push to arbitrary branches; PRs into `main` / `release` / other bases |
+| Not triggered | Push to arbitrary branches; PRs into `main` / `release` / `doc-site` / other bases |
 | Skip heavy jobs | Same head SHA already has a successful `CI` workflow run |
 | Docs-only | Changes limited to `docs/**`, `site/content/**`, `*.md` (and similar) → skip Test/Build on GitHub; local act still runs full jobs by default |
 | Parallelism | `Test` and `Build` jobs run in parallel after `Gate` |
 | Required check name | Aggregate job **`Test & Build`** (stable for branch protection) |
 
-Out of scope (unchanged): `deploy-docs.yml` (`site-v*`), `scorecard.yml`.
+## Docs CI (`.github/workflows/ci-docs.yml`)
+
+| Item | Rule |
+|------|------|
+| Trigger | `pull_request` whose **base** is `doc-site` |
+| Job | **`Docs Build`**: `npm ci` + `npm run build:site` |
+| Out of scope | App `npm test`, app package-only verification, and app CI success/failure — **ignored** for merging into `doc-site` |
+
+### PR targets
+
+| Change type | Open PR against |
+|-------------|-----------------|
+| Documentation / site (`site/**`, public docs content) | **`doc-site`** |
+| Library / data / app scripts | `develop` or `dev-*` (unchanged) |
+
+When the playground needs a newer published library build that already landed on `main` / `release`, merge that branch into `doc-site`. App CI status does not gate that merge.
+
+## Docs deploy (`.github/workflows/deploy-docs.yml`)
+
+| Item | Rule |
+|------|------|
+| Trigger | `push` to **`doc-site`** (typically after merge) |
+| Build | `npm run build:site` → `site/.output/public` |
+| Publish | Force-orphan commit to the **`gh-pages`** branch |
+| Independent of | App CI, `data-v*` / `app-v*` npm releases, and legacy `site-v*` tags (removed) |
+
+**Manual repo setting:** GitHub Pages → Source = **Deploy from a branch** → `gh-pages` / `(root)`. Custom domain `jplocalgov.oss.b4m.jp` is kept via `site/public/CNAME`.
 
 ## Source Excel monitor (`.github/workflows/monitor-source-hash.yml`)
 
@@ -62,13 +88,19 @@ Out of scope (unchanged): `deploy-docs.yml` (`site-v*`), `scorecard.yml`.
 | No CI history | Run Test + Build, then publish |
 | Dispatch | Optional `force_test` to always run Test+Build |
 
-Create `data-v*` / `app-v*` tags from the **`release`** branch. `release-on-tag.yml` auto-creates the GitHub Release for those tag patterns only (`site-v*` stays on the docs workflow).
+Create `data-v*` / `app-v*` tags from the **`release`** branch. `release-on-tag.yml` auto-creates the GitHub Release for those tag patterns only.
 
 ## Quick reference
 
 ```text
+# App / library
 local change → npm run ci:local (must pass)
             → open PR to develop / dev-*
             → CI Gate → Test ‖ Build → "Test & Build"
 tag on release → Release → Publish (reuse CI or re-verify) → npm
+
+# Documentation site
+site change → open PR to doc-site
+           → Docs CI ("Docs Build")
+           → merge to doc-site → Deploy Docs → gh-pages → GitHub Pages
 ```

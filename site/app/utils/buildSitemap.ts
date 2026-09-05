@@ -1,4 +1,4 @@
-import { docsNavItems } from "~/composables/useDocsNav";
+import { docsNavItems } from "~/config/docsNav";
 
 export const sitemapLocales = ["ja", "en"] as const;
 
