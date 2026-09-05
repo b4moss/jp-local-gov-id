@@ -1,7 +1,7 @@
 {
   "sourceUrl": "https://www.soumu.go.jp/main_content/000925835.xlsx",
   "localPath": "resources/000925835.xlsx",
-  "checkedAt": "2026-08-29T13:03:01.205Z",
+  "checkedAt": "2026-08-31T07:12:32.555Z",
   "expectedSha256": "7d04c8a7f6a6e76a7823a0414a8422bf2b26bb6070766971df76eab58ea6ff78",
   "remoteSha256": "7d04c8a7f6a6e76a7823a0414a8422bf2b26bb6070766971df76eab58ea6ff78",
   "status": "ok"

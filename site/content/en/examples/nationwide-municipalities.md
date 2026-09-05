@@ -1,6 +1,7 @@
 ---
 title: Nationwide municipalities
 description: Checkbox filter listing every municipality by prefecture
+schemaRole: HowTo
 ---
 
 # Nationwide municipalities

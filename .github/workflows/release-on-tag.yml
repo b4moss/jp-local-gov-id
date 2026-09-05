@@ -1,7 +1,9 @@
 # Create a GitHub Release when a data-v* or app-v* tag is pushed.
 # Operational rule: create these tags from the `release` branch so Publish
 # (publish.yml) can verify ancestry and reuse CI success for the tag SHA.
-# site-v* tags are handled by deploy-docs.yml, not this workflow.
+# Documentation site deploys from the `doc-site` branch (deploy-docs.yml), not tags.
+#
+# Tag naming: use semver prerelease dots, e.g. app-v1.0.0-rc.12 (not app-v1.0.0-rc-12).
 name: Release on tag
 
 on:
@@ -11,15 +13,17 @@ on:
       - "app-v*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -29,9 +33,13 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release for tag $TAG already exists; skipping create."
+            exit 0
+          fi
           TITLE="$TAG"
           NOTES="Automated release for tag \`$TAG\`.
 
           npm publish tags (\`data-v*\` / \`app-v*\`) should be created from the \`release\` branch.
-          Documentation site tags (\`site-v*\`) use the Deploy docs workflow instead."
+          The documentation site deploys from the \`doc-site\` branch (not from tags)."
           gh release create "$TAG" --title "$TITLE" --notes "$NOTES"

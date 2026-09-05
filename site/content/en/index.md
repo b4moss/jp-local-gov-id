@@ -1,6 +1,7 @@
 ---
 title: Home
 description: npm packages for Japan’s nationwide local government codes
+schemaRole: TechArticle
 ---
 
 # jp-local-gov-id

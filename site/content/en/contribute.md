@@ -1,6 +1,7 @@
 ---
 title: Contributing
 description: How to contribute
+schemaRole: TechArticle
 ---
 
 # Contributing

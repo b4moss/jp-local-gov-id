@@ -1,51 +1,43 @@
-name: Deploy Docs
+# Docs site → gh-pages branch
+# Push / merge to `doc-site` builds the site and deploys static output to `gh-pages`.
+# Independent of app CI (ci.yml) and npm releases (data-v* / app-v*).
+#
+# Ops: set GitHub Pages source to "Deploy from a branch" → gh-pages / (root).
 
-# Docs site → GitHub Pages
-# Tag: site-vX.Y.Z-doc.N (example: site-v0.6.0-doc.1)
-# Tag push alone deploys; independent of data-v* / app-v* npm releases.
+name: Deploy Docs
 
 on:
   push:
-    tags:
-      - "site-v*-doc.*"
+    branches:
+      - doc-site
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
+# Scorecard Token-Permissions: keep top-level read-only; elevate only on the
+# deploy job. peaceiris/actions-gh-pages is a recognized pages deployer, so
+# job-level contents: write is expected and not scored as dangerous.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  build:
-    name: Build docs site
+  deploy:
+    name: Build and deploy docs site
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
-      - name: Validate tag
-        run: |
-          set -euo pipefail
-          tag="${GITHUB_REF_NAME}"
-          if [[ ! "$tag" =~ ^site-v[0-9]+\.[0-9]+\.[0-9]+-doc\.[0-9]+$ ]]; then
-            echo "::error::Unsupported tag '${tag}'. Use site-vX.Y.Z-doc.N (e.g. site-v0.6.0-doc.1)."
-            exit 1
-          fi
-          echo "Validated docs tag: ${tag}"
-
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
 
       - name: Install dependencies
         run: npm ci
@@ -55,21 +47,13 @@ jobs:
           NITRO_PRESET: static
           NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID: ${{ vars.NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID }}
         run: npm run build:site
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
-          path: site/.output/public
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site/.output/public
+          publish_branch: gh-pages
+          force_orphan: true
+          # CNAME is already under site/public/ and copied into the generate output
+          enable_jekyll: false

@@ -16,6 +16,7 @@
     "prefs": "Display settings",
     "menu": "Menu",
     "github": "GitHub",
+    "npm": "npm",
     "prev": "Previous",
     "next": "Next",
     "pager": "Page navigation",
@@ -117,5 +118,9 @@
     "label": "Source language",
     "html": "HTML",
     "ts": "TypeScript"
+  },
+  "faq": {
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all"
   }
 }

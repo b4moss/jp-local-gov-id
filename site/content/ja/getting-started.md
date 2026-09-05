@@ -1,6 +1,7 @@
 ---
 title: はじめに
 description: 全国地方公共団体コードヘルパの概要と次のステップ
+schemaRole: TechArticle
 ---
 
 # はじめに

@@ -1,6 +1,7 @@
 ---
 title: Installation
 description: How to install the packages
+schemaRole: HowTo
 ---
 
 # Installation
@@ -43,12 +44,12 @@ For plain HTML, the minified IIFE build is simplest. APIs are exposed on the glo
 <!DOCTYPE html>
 <html lang="en">
   <body>
-    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.11/dist/jp-local-gov-id.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.12/dist/jp-local-gov-id.iife.min.js"></script>
     <script>
       const { createLocalGovClient } = JpLocalGovId;
 
       createLocalGovClient({
-        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.11/index.json",
+        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.12/index.json",
       }).then(async (client) => {
         console.log(await client.getByCode("131016"));
       });
@@ -68,10 +69,10 @@ The non-minified IIFE is `dist/jp-local-gov-id.iife.js`.
 <html lang="en">
   <body>
     <script type="module">
-      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.11/dist/jp-local-gov-id.js";
+      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.12/dist/jp-local-gov-id.js";
 
       const client = await createLocalGovClient({
-        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.11/index.json",
+        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.12/index.json",
       });
 
       console.log(await client.getByCode("131016"));

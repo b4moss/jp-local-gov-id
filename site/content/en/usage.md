@@ -1,6 +1,7 @@
 ---
 title: Usage
 description: Initialize the client and call basic APIs
+schemaRole: HowTo
 ---
 
 # Usage
@@ -77,7 +78,7 @@ const client = await createLocalGovClient({
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.11/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.12/index.json",
 });
 ```
 

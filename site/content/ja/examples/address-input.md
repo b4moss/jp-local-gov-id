@@ -1,6 +1,7 @@
 ---
 title: 住所入力
 description: 都道府県・市区町村のセレクトによる住所入力サンプル
+schemaRole: HowTo
 ---
 
 # 住所入力

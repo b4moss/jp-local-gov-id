@@ -1,6 +1,7 @@
 ---
 title: 全国市区町村一覧
 description: 都道府県別に全市区町村をチェックボックスで絞り込むサンプル
+schemaRole: HowTo
 ---
 
 # 全国市区町村一覧
