@@ -117,5 +117,9 @@
     "label": "Source language",
     "html": "HTML",
     "ts": "TypeScript"
+  },
+  "faq": {
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all"
   }
 }

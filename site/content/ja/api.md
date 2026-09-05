@@ -1,6 +1,7 @@
 ---
 title: API
 description: LocalGovClient の公開メソッド
+schemaRole: TechArticle
 ---
 
 # API

@@ -1,6 +1,7 @@
 ---
 title: Getting started
 description: Overview and next steps
+schemaRole: TechArticle
 ---
 
 # Getting started

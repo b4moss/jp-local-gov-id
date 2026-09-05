@@ -1,6 +1,7 @@
 ---
 title: インストール
 description: パッケージのインストール方法
+schemaRole: HowTo
 ---
 
 # インストール
@@ -43,12 +44,12 @@ CDN では **JS（API）とデータ（版付き `index.json`）を同じ版で�
 <!DOCTYPE html>
 <html lang="ja">
   <body>
-    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.10/dist/jp-local-gov-id.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.11/dist/jp-local-gov-id.iife.min.js"></script>
     <script>
       const { createLocalGovClient } = JpLocalGovId;
 
       createLocalGovClient({
-        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
+        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.11/index.json",
       }).then(async (client) => {
         console.log(await client.getByCode("131016"));
       });
@@ -68,10 +69,10 @@ CDN では **JS（API）とデータ（版付き `index.json`）を同じ版で�
 <html lang="ja">
   <body>
     <script type="module">
-      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.10/dist/jp-local-gov-id.js";
+      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0-rc.11/dist/jp-local-gov-id.js";
 
       const client = await createLocalGovClient({
-        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.10/index.json",
+        url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.11/index.json",
       });
 
       console.log(await client.getByCode("131016"));

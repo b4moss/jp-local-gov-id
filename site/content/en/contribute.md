@@ -1,6 +1,7 @@
 ---
 title: Contributing
 description: How to contribute
+schemaRole: TechArticle
 ---
 
 # Contributing
@@ -36,6 +37,19 @@ Regenerate data (Excel → CSV / `.bin` for review → `.bin.br` + hybrid JLIX f
 
 ```bash
 npm run generate
+```
+
+## Source Excel monitoring
+
+Once a week we fetch the Ministry’s nationwide local-government-code Excel and compare its SHA-256 to `resources/000925835.xlsx` in this repo. A mismatch or fetch failure does **not** auto-update the Excel — it flags that an investigation is needed.
+
+::source-monitor-status
+::
+
+Run the same check locally:
+
+```bash
+npm run check:source-hash
 ```
 
 Docs site locally:

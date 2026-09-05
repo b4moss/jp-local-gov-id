@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id/rc)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
 [![Release](https://img.shields.io/github/v/release/b4moss/jp-local-gov-id?include_prereleases&filter=app-v*)](https://github.com/b4moss/jp-local-gov-id/releases)
 [![License](https://img.shields.io/github/license/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/blob/main/LICENSE)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/b4moss/jp-local-gov-id/badge)](https://securityscorecards.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
+[![OpenSSF Scorecard](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.scorecard.dev%2Fprojects%2Fgithub.com%2Fb4moss%2Fjp-local-gov-id&label=OpenSSF%20Scorecard&query=$.score)](https://scorecard.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
 
 [English](./README.md)
 
@@ -15,8 +15,8 @@
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.10 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0-rc.10 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.11 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0-rc.11 |
 
 ## インストール（利用側）
 
@@ -57,7 +57,7 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
 });
 ```
 

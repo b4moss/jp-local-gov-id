@@ -109,7 +109,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
 });
 ```
 
@@ -304,6 +304,17 @@ await client.getLocalGovCodeByName("札幌市", { designatedCity: "city" })
 | シート2 | `R6.1.1政令指定都市` — 政令市本体20 + 行政区171 |
 | 団体コード | いずれもチェックデジット込みの **6桁** |
 
+### ソース監視
+
+| 項目 | 内容 |
+|------|------|
+| 公開 URL（決め打ち） | `https://www.soumu.go.jp/main_content/000925835.xlsx` |
+| 比較基準 | `resources/000925835.xlsx` の SHA-256 |
+| 実行 | GitHub Actions `monitor-source-hash.yml`（週 1・月曜 UTC + 手動） |
+| 公開ステータス | `site/public/source-monitor.json`（サイト contribute ページで表示） |
+
+表示状態: 取得成功かつハッシュ一致 → 問題なし（最終確認日を更新）／取得失敗 → 「取得失敗・詳細調査中」／ハッシュ差分 → 「ハッシュ差分検知・詳細調査中」。差分時も Excel の自動差し替えはしない。契約の詳細は [test-spec-66-source-hash.md](./test-spec-66-source-hash.md)。
+
 ### ディレクトリ構成（モノレポ）
 
 本リポジトリは **npm workspaces** によるモノレポとする。ルートの `package.json` は `private` とし、公開しない。
@@ -399,8 +410,7 @@ jp-local-gov-id/
 ## 将来検討
 
 - 文字の正規化の拡充（「ヶ/ケ」・旧字体など）。検索時のひらがな／カナ正規化は実装済み
-- データソースの取得元 URL・更新頻度のドキュメント化（当面は未記載のまま進める）
-- 公式の版付き配信 URL の具体
+- 公式の版付き配信 URL の具体（現状は決め打ち URL + 週次ハッシュ監視で追跡）
 
 -----
 

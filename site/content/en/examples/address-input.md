@@ -1,6 +1,7 @@
 ---
 title: Address input
 description: Address form sample with prefecture and municipality selects
+schemaRole: HowTo
 ---
 
 # Address input

@@ -46,7 +46,7 @@ Fetch from a versioned index URL:
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.10/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
 });
 ```
 

@@ -1,0 +1,105 @@
+# Weekly monitor: 総務省 Excel SHA-256 vs resources/000925835.xlsx (#66)
+name: Monitor source Excel hash
+
+on:
+  schedule:
+    # Monday 01:30 UTC (same window as scorecard.yml)
+    - cron: "30 1 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-source-hash
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  check:
+    name: Check source hash
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check source hash
+        id: check
+        run: |
+          set +e
+          npm run check:source-hash -- --out site/public/source-monitor.json
+          code=$?
+          set -e
+          status=$(node -e "const j=require('./site/public/source-monitor.json'); process.stdout.write(j.status)")
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          echo "exit_code=${code}" >> "$GITHUB_OUTPUT"
+          # Always leave JSON on disk for commit / issue steps; fail the job at the end.
+          exit 0
+
+      - name: Commit status JSON if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- site/public/source-monitor.json; then
+            echo "No status JSON changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/public/source-monitor.json
+          git commit -m "chore(monitor): update source-monitor.json [skip ci]"
+          git push origin HEAD:main
+
+      - name: Open or comment Issue on anomaly
+        if: steps.check.outputs.status != 'ok'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ steps.check.outputs.status }}
+        run: |
+          set -euo pipefail
+          title="[source-monitor] 総務省 Excel ソース異常 (${STATUS})"
+          body_file=$(mktemp)
+          {
+            echo "## ソース Excel 監視アラート"
+            echo
+            echo "- status: \`${STATUS}\`"
+            echo "- workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo
+            echo '```json'
+            cat site/public/source-monitor.json
+            echo
+            echo '```'
+            echo
+            echo "自動更新は行いません。詳細を調査してください（Issue #66）。"
+          } > "$body_file"
+
+          gh label create source-monitor --description "総務省 Excel ソース監視アラート" --color B60205 2>/dev/null || true
+
+          existing=$(gh issue list --label source-monitor --state open --json number,title --jq '.[] | select(.title | startswith("[source-monitor]")) | .number' | head -n1 || true)
+          if [ -n "${existing}" ]; then
+            gh issue comment "$existing" --body-file "$body_file"
+            echo "Commented on issue #${existing}"
+          else
+            gh issue create --title "$title" --label "source-monitor" --body-file "$body_file"
+          fi
+
+      - name: Fail job when status is not ok
+        if: steps.check.outputs.status != 'ok'
+        run: |
+          echo "::error::Source monitor status is ${{ steps.check.outputs.status }}"
+          exit 1
