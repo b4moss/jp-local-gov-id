@@ -1,8 +1,9 @@
-# Docs site → gh-pages branch
-# Push / merge to `doc-site` builds the site and deploys static output to `gh-pages`.
-# Independent of app CI (ci.yml) and npm releases (data-v* / app-v*).
+# Docs site → GitHub Pages (Actions)
+# Push / merge to `doc-site` builds the static site and deploys via
+# actions/deploy-pages. No `gh-pages` branch.
 #
-# Ops: set GitHub Pages source to "Deploy from a branch" → gh-pages / (root).
+# Ops: GitHub Pages → Source = GitHub Actions.
+# Custom domain `jplocalgov.oss.b4m.jp` is kept via `site/public/CNAME`.
 
 name: Deploy Docs
 
@@ -16,11 +17,13 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  deploy:
-    name: Build and deploy docs site
+  build:
+    name: Build docs site
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -34,6 +37,9 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Setup Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
       - name: Install dependencies
         run: npm ci
 
@@ -43,12 +49,21 @@ jobs:
           NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID: ${{ vars.NUXT_PUBLIC_SCRIPTS_GOOGLE_TAG_MANAGER_ID }}
         run: npm run build:site
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: site/.output/public
-          publish_branch: gh-pages
-          force_orphan: true
-          # CNAME is already under site/public/ and copied into the generate output
-          enable_jekyll: false
+          path: site/.output/public
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
