@@ -102,6 +102,7 @@ export default defineNuxtConfig({
       siteVersion: siteMeta.siteVersion,
       description: siteMeta.description,
       githubUrl: siteMeta.githubUrl,
+      npmUrl: siteMeta.npmUrl,
       footerText: siteMeta.footerText,
       software: siteMeta.software,
       organization: siteMeta.organization,
@@ -181,6 +182,9 @@ export default defineNuxtConfig({
     preset: "static",
     prerender: {
       crawlLinks: true,
+      // Relative Markdown links (./installation.md) are sometimes crawled as
+      // unprefixed /installation and /usage; real pages live under /ja|/en.
+      ignore: ["/installation", "/usage"],
       routes: [
         "/ja",
         "/en",

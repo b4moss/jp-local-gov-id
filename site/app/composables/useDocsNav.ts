@@ -1,35 +1,7 @@
-export type DocsNavItem = {
-  key: string;
-  path: string;
-  /** When set, item is a child of this nav key (shown indented in sidebar). */
-  parent?: string;
-};
+import { docsNavItems } from "~/config/docsNav";
 
-export const docsNavItems: DocsNavItem[] = [
-  { key: "home", path: "/" },
-  { key: "gettingStarted", path: "/getting-started" },
-  { key: "installation", path: "/installation" },
-  { key: "usage", path: "/usage" },
-  { key: "api", path: "/api" },
-  { key: "examples", path: "/examples" },
-  {
-    key: "examplesAddressInput",
-    path: "/examples/address-input",
-    parent: "examples",
-  },
-  {
-    key: "examplesMunicipalityValidation",
-    path: "/examples/municipality-validation",
-    parent: "examples",
-  },
-  {
-    key: "examplesNationwideMunicipalities",
-    path: "/examples/nationwide-municipalities",
-    parent: "examples",
-  },
-  { key: "playground", path: "/playground" },
-  { key: "contribute", path: "/contribute" },
-];
+export type { DocsNavItem } from "~/config/docsNav";
+export { docsNavItems } from "~/config/docsNav";
 
 function normalizePath(path: string) {
   if (!path || path === "/") return "/";

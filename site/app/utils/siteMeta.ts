@@ -11,6 +11,8 @@ export type SiteMeta = {
   siteVersion: string;
   description: string;
   githubUrl: string;
+  /** Optional npm package page URL; empty hides the header npm icon. */
+  npmUrl: string;
   footerText: string;
   software: SiteSoftwareMeta;
   /** Authored Organization properties; null disables the entity entirely. */
@@ -25,6 +27,7 @@ export const defaultSiteMeta: SiteMeta = {
   siteVersion: "",
   description: "Documentation for the jp-local-gov-id library",
   githubUrl: "https://github.com/b4moss/jp-local-gov-id",
+  npmUrl: "https://www.npmjs.com/package/@b4moss/jp-local-gov-id",
   footerText: "MIT License · 2026 Bicycle for Mind LLC.",
   software: {
     name: "jp-local-gov-id",
@@ -48,6 +51,7 @@ export function normalizeSiteMeta(raw: RawSiteMeta | null | undefined): SiteMeta
   const base = { ...defaultSiteMeta, ...(raw || {}) };
   const siteName = String(base.siteName || defaultSiteMeta.siteName);
   const githubUrl = String(base.githubUrl || defaultSiteMeta.githubUrl);
+  const npmUrl = String(raw?.npmUrl ?? base.npmUrl ?? "");
   const softwareRaw = raw?.software || {};
 
   return {
@@ -56,6 +60,7 @@ export function normalizeSiteMeta(raw: RawSiteMeta | null | undefined): SiteMeta
     siteVersion: String(base.siteVersion ?? ""),
     description: String(base.description ?? ""),
     githubUrl,
+    npmUrl,
     footerText: String(base.footerText || defaultSiteMeta.footerText),
     software: {
       name: String(softwareRaw.name || siteName),
