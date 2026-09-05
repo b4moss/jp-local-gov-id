@@ -1,6 +1,6 @@
 {
   "name": "@b4moss/jp-local-gov-id-data",
-  "version": "1.0.0-rc.11",
+  "version": "1.0.0-rc.12",
   "description": "全国地方公共団体コードヘルパ — 日本の全国地方公共団体コードのデータ（Brotli 圧縮バイナリ）",
   "type": "module",
   "main": "./dataset.js",

@@ -133,7 +133,7 @@ module.exports = {
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.11/index.json",
+  url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0-rc.12/index.json",
 });
 ```
 

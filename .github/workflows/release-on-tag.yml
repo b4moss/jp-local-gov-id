@@ -2,6 +2,8 @@
 # Operational rule: create these tags from the `release` branch so Publish
 # (publish.yml) can verify ancestry and reuse CI success for the tag SHA.
 # Documentation site deploys from the `doc-site` branch (deploy-docs.yml), not tags.
+#
+# Tag naming: use semver prerelease dots, e.g. app-v1.0.0-rc.12 (not app-v1.0.0-rc-12).
 name: Release on tag
 
 on:
@@ -31,6 +33,10 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release for tag $TAG already exists; skipping create."
+            exit 0
+          fi
           TITLE="$TAG"
           NOTES="Automated release for tag \`$TAG\`.
 
