@@ -67,4 +67,71 @@ describe("brotli helpers (#74)", () => {
       if (hadBuffer) globalThis.Buffer = originalBuffer;
     }
   });
+
+  it("falls back to brotli-wasm when DecompressionStream and Node zlib are unavailable", async () => {
+    const raw = new TextEncoder().encode("wasm-fallback");
+    const compressed = brotliCompressSync(raw);
+
+    Reflect.deleteProperty(globalThis, "DecompressionStream");
+    const originalVersions = process.versions;
+    Object.defineProperty(process, "versions", {
+      configurable: true,
+      value: { ...originalVersions, node: undefined },
+    });
+
+    vi.resetModules();
+    vi.doMock("brotli-wasm", () => ({
+      decompress: (input: Uint8Array) => brotliDecompressSync(input),
+    }));
+
+    try {
+      const { decompressBrotli: decompress } = await import("./brotli");
+      const out = new Uint8Array(await decompress(compressed));
+      expect(out).toEqual(raw);
+    } finally {
+      Object.defineProperty(process, "versions", {
+        configurable: true,
+        value: originalVersions,
+      });
+      vi.doUnmock("brotli-wasm");
+      vi.resetModules();
+    }
+  });
+
+  it("throws when no brotli backend is available", async () => {
+    const raw = new TextEncoder().encode("no-backend");
+    const compressed = brotliCompressSync(raw);
+
+    Reflect.deleteProperty(globalThis, "DecompressionStream");
+    const originalVersions = process.versions;
+    Object.defineProperty(process, "versions", {
+      configurable: true,
+      value: { ...originalVersions, node: undefined },
+    });
+
+    vi.resetModules();
+    vi.doMock("brotli-wasm", () => {
+      throw new Error("wasm unavailable");
+    });
+
+    try {
+      const { decompressBrotli: decompress } = await import("./brotli");
+      await expect(decompress(compressed)).rejects.toThrow(
+        /Brotli decompression requires DecompressionStream\("brotli"\)/,
+      );
+    } finally {
+      Object.defineProperty(process, "versions", {
+        configurable: true,
+        value: originalVersions,
+      });
+      vi.doUnmock("brotli-wasm");
+      vi.resetModules();
+    }
+  });
+
+  it("treats non-URL strings containing .br / .bin as payload hints", () => {
+    expect(isBrotliPayloadUrl("/data/prefectures.bin.br")).toBe(true);
+    expect(isBinaryPayloadUrl("/data/prefectures.bin")).toBe(true);
+    expect(isBrotliPayloadUrl("not a url")).toBe(false);
+  });
 });
