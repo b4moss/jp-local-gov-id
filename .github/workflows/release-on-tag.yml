@@ -3,7 +3,7 @@
 # (publish.yml) can verify ancestry and reuse CI success for the tag SHA.
 # Documentation site deploys from the `doc-site` branch (deploy-docs.yml), not tags.
 #
-# Tag naming: use semver prerelease dots, e.g. app-v1.0.0-rc.12 (not app-v1.0.0-rc-12).
+# Tag naming: semver tags like app-v1.0.0 / data-v1.0.0 (prereleases use dots: app-v1.0.0-rc.12).
 name: Release on tag
 
 on:

@@ -5,9 +5,17 @@ coverage:
   status:
     project:
       default:
-        informational: true
+        target: 90%
+        # Enforced gate for #121 (v1.0.0). Local Vitest lines already >90%;
+        # Codecov treats partials as uncovered, so project status is the release signal.
+        informational: false
     patch:
       default:
         informational: true
+
+ignore:
+  - "packages/jp-local-gov-id-data/**"
+  - "site/**"
+  - "scripts/**"
 
 comment: false
