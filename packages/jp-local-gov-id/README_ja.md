@@ -56,6 +56,7 @@ const client = await createLocalGovClient({
 - 例外: **全国対象**の文字列検索で取得した県別データと JLIX はメモリのみ
 - 正規化後長が 2 未満 → 空 / 2 → ホット 2-gram のみ / 3 以上 → 2-gram と 3-gram をマージ
 - スキーマ不一致・不正データ → `LocalGovSchemaError`。見つからない・衝突 → `null` / `[]`
+- **1.2.0** 以降、検索実装と `@b4moss/cachian` は動的 import。初期クライアントグラフは minify ≤25KB（実測 ≈ 24339 bytes。`docs/client-bundle-93.md`）
 
 ## コード形式
 

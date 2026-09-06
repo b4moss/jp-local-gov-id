@@ -111,6 +111,10 @@ Official release is gated on Codecov **project coverage ≥ 90%** (`target: 90%`
 4. Tag `app-v1.0.0` / `data-v1.0.0` from `release` → Release → Publish
 5. Close Issue #121
 
+## After v1.0.0
+
+Subsequent app tags (`app-v1.1.0`, `app-v1.2.0`, …) follow the same **tag from `release` → Release → Publish** flow. Data may remain on `data-v1.0.0` when only the API package changes (as with app `1.2.0`).
+
 ## Quick reference
 
 ```text
