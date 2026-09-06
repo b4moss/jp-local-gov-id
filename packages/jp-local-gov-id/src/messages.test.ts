@@ -1,11 +1,38 @@
 import { describe, expect, it } from "vitest";
+import {
+  ENCODE_MESSAGES,
+  fmt as encodeFmt,
+  msg as encodeMsg,
+  type EncodeMessageKey,
+} from "./messages.encode";
 import { fmt, msg, MESSAGES, type MessageKey } from "./messages";
+import {
+  SEARCH_MESSAGES,
+  fmt as searchFmt,
+  msg as searchMsg,
+  type SearchMessageKey,
+} from "./messages.search";
 
 describe("messages catalog helpers", () => {
-  it("msg returns static catalog strings", () => {
-    expect(msg("binary.asOfExceedsU1")).toBe("asOf exceeds u1 length");
+  it("msg returns static runtime catalog strings", () => {
+    expect(msg("binary.jlpr.shortRecords")).toBe(
+      "JLPR: buffer too short for records",
+    );
     expect(msg("schema.indexPathsObject")).toBe(
       MESSAGES["schema.indexPathsObject"],
+    );
+  });
+
+  it("encode msg returns encode catalog strings", () => {
+    expect(encodeMsg("binary.asOfExceedsU1")).toBe("asOf exceeds u1 length");
+    expect(encodeMsg("data.unknownPrefectureCode")).toBe(
+      ENCODE_MESSAGES["data.unknownPrefectureCode"],
+    );
+  });
+
+  it("search msg returns search catalog strings", () => {
+    expect(searchMsg("search.nPositiveInteger")).toBe(
+      SEARCH_MESSAGES["search.nPositiveInteger"],
     );
   });
 
@@ -16,10 +43,19 @@ describe("messages catalog helpers", () => {
     expect(fmt("schema.searchNgramShardsEntry", { key: "a" })).toBe(
       MESSAGES["schema.searchNgramShardsEntry"].replace("{key}", "a"),
     );
+    expect(encodeFmt("binary.versionOutOfU1", { version: 300 })).toBe(
+      "version out of u1 range: 300",
+    );
   });
 
   it("msg throws on unknown keys", () => {
     expect(() => msg("no.such.key" as MessageKey)).toThrow(/Unknown message key/);
+    expect(() => encodeMsg("no.such.key" as EncodeMessageKey)).toThrow(
+      /Unknown message key/,
+    );
+    expect(() => searchMsg("no.such.key" as SearchMessageKey)).toThrow(
+      /Unknown message key/,
+    );
   });
 
   it("fmt throws when a required placeholder is missing", () => {
@@ -36,13 +72,25 @@ describe("messages catalog helpers", () => {
     ).toThrow(/must not be null or undefined/);
   });
 
-  it("catalog covers expected namespaces", () => {
-    const keys = Object.keys(MESSAGES) as MessageKey[];
-    expect(keys.some((k) => k.startsWith("schema."))).toBe(true);
-    expect(keys.some((k) => k.startsWith("create."))).toBe(true);
-    expect(keys.some((k) => k.startsWith("binary."))).toBe(true);
-    expect(keys.some((k) => k.startsWith("data."))).toBe(true);
-    expect(keys).toContain("data.unknownPrefectureCode");
+  it("runtime / encode / search catalogs are disjoint and cover namespaces", () => {
+    const runtimeKeys = Object.keys(MESSAGES) as MessageKey[];
+    const encodeKeys = Object.keys(ENCODE_MESSAGES) as EncodeMessageKey[];
+    const searchKeys = Object.keys(SEARCH_MESSAGES) as SearchMessageKey[];
+    expect(runtimeKeys.some((k) => k.startsWith("schema."))).toBe(true);
+    expect(runtimeKeys.some((k) => k.startsWith("create."))).toBe(true);
+    expect(runtimeKeys.some((k) => k.startsWith("binary."))).toBe(true);
+    expect(runtimeKeys.some((k) => k.startsWith("search."))).toBe(false);
+    expect(runtimeKeys.some((k) => k.startsWith("data."))).toBe(false);
+    expect(encodeKeys).toContain("data.unknownPrefectureCode");
+    expect(encodeKeys).toContain("binary.jlpr.encodeSizeMismatch");
+    expect(searchKeys.some((k) => k.startsWith("search."))).toBe(true);
+    for (const key of encodeKeys) {
+      expect(runtimeKeys).not.toContain(key);
+      expect(searchKeys).not.toContain(key);
+    }
+    for (const key of searchKeys) {
+      expect(runtimeKeys).not.toContain(key);
+    }
   });
 
   it("src throw/warn sites do not hardcode user-facing English literals", async () => {
@@ -83,6 +131,10 @@ describe("messages catalog helpers", () => {
         if (
           after.startsWith("msg(") ||
           after.startsWith("fmt(") ||
+          after.startsWith("encodeMsg(") ||
+          after.startsWith("encodeFmt(") ||
+          after.startsWith("searchMsg(") ||
+          after.startsWith("searchFmt(") ||
           after.startsWith("error.message") ||
           after.startsWith("err.message")
         ) {

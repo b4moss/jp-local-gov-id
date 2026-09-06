@@ -16,6 +16,13 @@ import {
   readCString,
 } from "./stringTable";
 import { fmt, msg } from "../messages";
+import {
+  assertPayloadEndsAt,
+  requireFlag,
+  requireU8,
+  requireU32,
+  stringEndExclusive,
+} from "./assert";
 
 export type GramType = typeof GRAM_TYPE_NAME | typeof GRAM_TYPE_KANA;
 export type EntityKind = typeof KIND_PREF | typeof KIND_MUNI;
@@ -42,26 +49,8 @@ export type DecodedSearchNgramsBin = {
   records: SearchNgramPostingRecord[];
 };
 
-function requireU8(n: number, field: string): number {
-  if (!Number.isInteger(n) || n < 0 || n > 0xff) {
-    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU1", { field, n }));
-  }
-  return n;
-}
 
-function requireU32(n: number, field: string): number {
-  if (!Number.isInteger(n) || n < 0 || n > 0xffff_ffff) {
-    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
-  }
-  return n;
-}
 
-function requireFlag(n: number, field: string): 0 | 1 {
-  if (n !== 0 && n !== 1) {
-    throw new LocalGovBinaryError(fmt("binary.fieldMustBe0Or1", { field, n }));
-  }
-  return n;
-}
 
 function requireGramType(n: number): GramType {
   if (n !== GRAM_TYPE_NAME && n !== GRAM_TYPE_KANA) {
@@ -93,92 +82,7 @@ export function sortSearchNgramPostings(
   return [...records].sort(comparePostings);
 }
 
-function stringEndExclusive(
-  bytes: Uint8Array,
-  stringTableOffset: number,
-  relativeOffset: number,
-  endExclusive: number,
-): number {
-  readCString(bytes, stringTableOffset, relativeOffset, endExclusive);
-  let p = stringTableOffset + relativeOffset;
-  while (bytes[p] !== 0) p++;
-  return p + 1;
-}
 
-function assertPayloadEndsAt(
-  label: string,
-  expectedEnd: number,
-  actualEnd: number,
-): void {
-  if (expectedEnd !== actualEnd) {
-    throw new LocalGovBinaryError(
-      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd }),
-    );
-  }
-}
-
-export function encodeSearchNgrams(
-  records: SearchNgramPostingRecord[],
-  meta: EncodeSearchNgramsMeta,
-): ArrayBuffer {
-  const version = meta.version ?? BINARY_FORMAT_VERSION;
-  requireU8(version, "version");
-  const asOfBytes = encodeUtf8(meta.asOf);
-  if (asOfBytes.length > 0xff) {
-    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
-  }
-
-  const sorted = sortSearchNgramPostings(records);
-  if (sorted.length > 0xffff) {
-    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
-  }
-
-  const strings = createStringTableBuilder();
-  const encoded = sorted.map((record) => ({
-    gramOffset: strings.add(record.gram),
-    gramType: requireGramType(record.gramType),
-    kind: requireKind(record.kind),
-    muniCode: requireU32(record.muniCode, "muniCode"),
-    prefCode: requireU8(record.prefCode, "prefCode"),
-    hasWard: requireFlag(record.hasWard, "hasWard"),
-    isWard: requireFlag(record.isWard, "isWard"),
-  }));
-
-  const headerSize = 4 + 1 + 1 + asOfBytes.length + 2;
-  const total =
-    headerSize + NGRAM_POSTING_RECORD_SIZE * encoded.length + strings.byteLength;
-  const buffer = new ArrayBuffer(total);
-  const view = new DataView(buffer);
-  const bytes = new Uint8Array(buffer);
-
-  let pos = 0;
-  bytes.set(MAGIC_JLIX_BYTES, pos);
-  pos += 4;
-  view.setUint8(pos++, version);
-  view.setUint8(pos++, asOfBytes.length);
-  bytes.set(asOfBytes, pos);
-  pos += asOfBytes.length;
-  view.setUint16(pos, encoded.length, true);
-  pos += 2;
-
-  for (const record of encoded) {
-    view.setUint32(pos, record.gramOffset, true);
-    pos += 4;
-    view.setUint8(pos++, record.gramType);
-    view.setUint8(pos++, record.kind);
-    view.setUint32(pos, record.muniCode, true);
-    pos += 4;
-    view.setUint8(pos++, record.prefCode);
-    view.setUint8(pos++, record.hasWard);
-    view.setUint8(pos++, record.isWard);
-  }
-
-  const end = strings.writeTo(bytes, pos);
-  if (end !== total) {
-    throw new LocalGovBinaryError(msg("binary.jlix.encodeSizeMismatch"));
-  }
-  return buffer;
-}
 
 export function decodeSearchNgrams(buffer: ArrayBuffer): DecodedSearchNgramsBin {
   const bytes = new Uint8Array(buffer);

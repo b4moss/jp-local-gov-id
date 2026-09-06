@@ -352,7 +352,7 @@ describe("createLocalGovClient edge paths", () => {
       cache: false,
     });
     await expect(c.listMunicipalitiesByPrefecture("01")).rejects.toThrow(
-      /No municipalities data/,
+      /No municipalities for prefecture/,
     );
   });
 
