@@ -65,11 +65,11 @@ When the playground needs a newer published library build that already landed on
 | Item | Rule |
 |------|------|
 | Trigger | `push` to **`doc-site`** (typically after merge) |
-| Build | scoped `npm ci` (site + library/data) + `npm run build:site` → `site/.output/public` |
-| Publish | Force-orphan commit to the **`gh-pages`** branch |
+| Build | `npm run build:site` → `site/.output/public` |
+| Publish | GitHub Actions Pages (`upload-pages-artifact` → `deploy-pages`). **No `gh-pages` branch** |
 | Independent of | App CI, `data-v*` / `app-v*` npm releases, and legacy `site-v*` tags (removed) |
 
-**Manual repo setting:** GitHub Pages → Source = **Deploy from a branch** → `gh-pages` / `(root)`. Custom domain `jplocalgov.oss.b4m.jp` is kept via `site/public/CNAME`.
+**Manual repo setting:** GitHub Pages → Source = **GitHub Actions**. Custom domain `jplocalgov.oss.b4m.jp` is kept via `site/public/CNAME`.
 
 ## Source Excel monitor (`.github/workflows/monitor-source-hash.yml`)
 
@@ -124,5 +124,6 @@ tag on release → Release → Publish (reuse CI Test or re-verify; always Build
 # Documentation site
 site change → open PR to doc-site
            → Docs CI ("Docs Build")
-           → merge to doc-site → Deploy Docs → gh-pages → GitHub Pages
+           → merge to doc-site → Deploy Docs → GitHub Pages (Actions)
 ```
+

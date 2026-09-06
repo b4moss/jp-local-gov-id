@@ -65,11 +65,11 @@ Playground が参照するライブラリを、すでに `main` / `release` に�
 | 項目 | ルール |
 |------|--------|
 | トリガ | **`doc-site`** への `push`（通常はマージ後） |
-| ビルド | スコープ付き `npm ci`（site + library/data）+ `npm run build:site` → `site/.output/public` |
-| 公開 | **`gh-pages`** ブランチへ orphan force push |
+| ビルド | `npm run build:site` → `site/.output/public` |
+| 公開 | GitHub Actions Pages（`upload-pages-artifact` → `deploy-pages`）。**`gh-pages` ブランチは使わない** |
 | 独立 | アプリ CI、`data-v*` / `app-v*` の npm リリース、旧 `site-v*` タグ（廃止）とは無関係 |
 
-**人手のリポジトリ設定:** GitHub Pages → Source = **Deploy from a branch** → `gh-pages` / `(root)`。カスタムドメイン `jplocalgov.oss.b4m.jp` は `site/public/CNAME` で維持する。
+**人手のリポジトリ設定:** GitHub Pages → Source = **GitHub Actions**。カスタムドメイン `jplocalgov.oss.b4m.jp` は `site/public/CNAME` で維持する。
 
 ## ソース Excel 監視（`.github/workflows/monitor-source-hash.yml`）
 
@@ -124,5 +124,6 @@ release 上のタグ → Release → Publish（Test 再利用 or 再検証、Bui
 # ドキュメントサイト
 サイト変更 → doc-site へ PR
           → Docs CI（"Docs Build"）
-          → doc-site へマージ → Deploy Docs → gh-pages → GitHub Pages
+          → doc-site へマージ → Deploy Docs → GitHub Pages（Actions）
 ```
+
