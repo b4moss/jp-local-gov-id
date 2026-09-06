@@ -93,3 +93,15 @@ describe("querySearchIndex", () => {
     spy.mockRestore();
   });
 });
+
+
+describe("mergeSearchIndexes / designatedCity ward", () => {
+  it("returns empty index for empty merge", async () => {
+    const { mergeSearchIndexes } = await import("./searchIndex");
+    expect(mergeSearchIndexes([])).toEqual({
+      version: 0,
+      asOf: "",
+      byGram: new Map(),
+    });
+  });
+});

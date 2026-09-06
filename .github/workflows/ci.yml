@@ -1,4 +1,6 @@
-# CI — PRs targeting develop or dev-* only.
+# CI — PRs targeting develop or dev-* (app / library), plus push to main/develop
+# for Codecov default-branch freshness (#121).
+# Docs PRs targeting doc-site use ci-docs.yml instead; this workflow does not run there.
 # Local pre-PR gate: npm run ci:local (nektos/act). See docs/ci-cd.md.
 name: CI
 
@@ -7,6 +9,11 @@ on:
     branches:
       - develop
       - "dev-*"
+  # Keep Codecov default-branch / develop totals fresh for the #121 ≥90% gate.
+  push:
+    branches:
+      - main
+      - develop
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -105,7 +112,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -136,7 +143,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

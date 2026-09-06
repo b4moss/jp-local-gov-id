@@ -10,6 +10,8 @@ siteUrl: https://jplocalgov.oss.b4m.jp
 siteVersion: "1.0.0"
 description: Documentation for the jp-local-gov-id library — Japanese local government codes in the browser
 githubUrl: https://github.com/b4moss/jp-local-gov-id
+# Header npm icon. Empty / unset hides it.
+npmUrl: https://www.npmjs.com/package/@b4moss/jp-local-gov-id
 footerText: "MIT License · 2026 Bicycle for Mind LLC."
 
 software:
