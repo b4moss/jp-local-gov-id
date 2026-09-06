@@ -158,7 +158,7 @@
 - 追加:
   - 「search を呼ばない create」で search 実装モジュールが初期チャンクに含まれないこと（metafile アサーション、または測定スクリプトの回帰チェック）
   - lazy 後も `searchByText` のヒット順・件数互換
-- `docs/test-spec-93-client-bundle.md` に Phase ゲートと「初期チャンク vs search チャンク」の定義を追記
+- [x] `docs/test-spec-93-client-bundle.md` に Phase ゲートと「初期チャンク vs search/cache チャンク」の定義を追記（§12〜）
 
 ## 完了条件
 
