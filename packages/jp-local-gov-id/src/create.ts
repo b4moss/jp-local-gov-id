@@ -1,7 +1,7 @@
 import {
   DEFAULT_CACHE_TTL_SECONDS,
-  getCachedData,
-  setCachedData,
+  createLocalGovCache,
+  type LocalGovCache,
 } from "./cache";
 import { buildLocalGovClient } from "./api";
 import {
@@ -33,6 +33,7 @@ import type {
   Prefecture,
 } from "./types";
 import { prefectureOrgCode } from "./types";
+import { fmt, msg } from "./messages";
 
 type ResolvedCacheConfig = {
   enabled: boolean;
@@ -49,9 +50,7 @@ function resolveCacheConfig(
       : options.cacheTtlSeconds;
 
   if (!Number.isFinite(ttlSeconds) || ttlSeconds < 0) {
-    throw new TypeError(
-      "cacheTtlSeconds must be a finite number greater than or equal to 0",
-    );
+    throw new TypeError(msg("create.cacheTtlSeconds"));
   }
 
   return { enabled, ttlSeconds };
@@ -83,9 +82,7 @@ function toAbsoluteUrl(url: string): string {
     if (locationHref) {
       return new URL(url, locationHref).href;
     }
-    throw new TypeError(
-      `"${url}" cannot be parsed as a URL (pass an absolute URL, or use in a browser)`,
-    );
+    throw new TypeError(fmt("create.urlParse", { url }));
   }
 }
 
@@ -104,7 +101,10 @@ async function fetchResponse(url: string): Promise<Response> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch local gov data: ${response.status} ${response.statusText}`,
+      fmt("create.fetchFailed", {
+        status: response.status,
+        statusText: response.statusText,
+      }),
     );
   }
   return response;
@@ -115,9 +115,7 @@ async function fetchJson(url: string): Promise<unknown> {
   try {
     return await response.json();
   } catch {
-    throw new LocalGovSchemaError(
-      "Failed to parse local gov data as JSON from URL",
-    );
+    throw new LocalGovSchemaError(msg("create.parseJsonFailed"));
   }
 }
 
@@ -126,9 +124,7 @@ async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   try {
     return await response.arrayBuffer();
   } catch {
-    throw new LocalGovSchemaError(
-      "Failed to read local gov binary data from URL",
-    );
+    throw new LocalGovSchemaError(msg("create.readBinaryFailed"));
   }
 }
 
@@ -148,7 +144,7 @@ function prefectureLookup(
   const pref = prefectures.find((p) => prefectureOrgCode(p) === code);
   if (!pref) {
     throw new LocalGovSchemaError(
-      `Unknown prefecture code while decoding municipalities: ${code}`,
+      fmt("create.unknownPrefectureDecode", { code }),
     );
   }
   return {
@@ -197,10 +193,10 @@ async function fetchAndCache<T>(
   url: string,
   load: () => Promise<unknown>,
   validate: (data: unknown) => T,
-  cache: ResolvedCacheConfig,
+  cache: LocalGovCache,
   options?: { persist?: boolean },
 ): Promise<T> {
-  const cached = getCachedData(url, { enabled: cache.enabled });
+  const cached = await cache.get(url);
   if (cached !== null) {
     return validate(cached);
   }
@@ -208,18 +204,19 @@ async function fetchAndCache<T>(
   const parsed = await load();
   const validated = validate(parsed);
   if (options?.persist !== false) {
-    setCachedData(url, validated, {
-      enabled: cache.enabled,
-      ttlSeconds: cache.ttlSeconds,
-    });
+    await cache.set(url, validated);
   }
   return validated;
 }
 
 async function createFromUrl(
   indexUrl: string,
-  cache: ResolvedCacheConfig,
+  cacheConfig: ResolvedCacheConfig,
 ): Promise<LocalGovClient> {
+  const cache = createLocalGovCache({
+    enabled: cacheConfig.enabled,
+    ttlSeconds: cacheConfig.ttlSeconds,
+  });
   // Normalize path-only bases (e.g. "/data/index.json") so sibling resolution works.
   const absoluteIndexUrl = toAbsoluteUrl(indexUrl);
 
@@ -275,7 +272,7 @@ async function createFromUrl(
     { prefecturesAsOf: prefecturesFile.asOf },
   );
 
-  return buildLocalGovClient(store);
+  return buildLocalGovClient(store, { cache });
 }
 
 async function createFromData(data: unknown): Promise<LocalGovClient> {
@@ -290,9 +287,7 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
         shards: input.searchNgramShards,
       })
     : async () => {
-        throw new LocalGovSchemaError(
-          "Dataset is missing searchNgramShards (JLIX partition bytes) required for nationwide string search",
-        );
+        throw new LocalGovSchemaError(msg("create.missingSearchNgramShards"));
       };
 
   const store = createStore(
@@ -313,7 +308,7 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
       }
 
       throw new LocalGovSchemaError(
-        `No municipalities data for prefecture ${code}: provide municipalitiesByCode or loadMunicipalities`,
+        fmt("create.noMunicipalitiesData", { code }),
       );
     },
     ensureSearchIndexes,
@@ -332,37 +327,32 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
  * Pass either `{ data }` (dataset) or `{ url }` (versioned index.json URL).
  *
  * For `url` mode, localStorage caching is on by default (`cache: true`,
- * `cacheTtlSeconds` defaults to 1 year). Cached values are decoded objects
- * stored via `JSON.stringify` (minified). JLIX and nationwide municipality
- * loads skip localStorage.
+ * `cacheTtlSeconds` defaults to 1 year) via `@b4moss/cachian` (localStorage
+ * driver + get/set/purge). Keys are prefixed with `jp-local-gov-id:`.
+ * Call `client.purgeCache(...)` to clear. Cached values are decoded objects
+ * (minified JSON). JLIX and nationwide municipality loads skip localStorage.
  */
 export async function createLocalGovClient(
   options: CreateLocalGovOptions,
 ): Promise<LocalGovClient> {
   if (!options || typeof options !== "object") {
-    throw new TypeError(
-      "createLocalGovClient requires options with either `data` or `url`",
-    );
+    throw new TypeError(msg("create.optionsRequired"));
   }
 
   const dataProvided = hasData(options);
   const urlProvided = hasUrl(options);
 
   if (dataProvided && urlProvided) {
-    throw new TypeError(
-      "createLocalGovClient accepts either `data` or `url`, not both",
-    );
+    throw new TypeError(msg("create.optionsExclusive"));
   }
 
   if (!dataProvided && !urlProvided) {
-    throw new TypeError(
-      "createLocalGovClient requires either `data` or `url`",
-    );
+    throw new TypeError(msg("create.dataOrUrlRequired"));
   }
 
   if (urlProvided) {
-    const cache = resolveCacheConfig(options);
-    return createFromUrl(options.url, cache);
+    const cacheConfig = resolveCacheConfig(options);
+    return createFromUrl(options.url, cacheConfig);
   }
 
   resolveCacheConfig(options);

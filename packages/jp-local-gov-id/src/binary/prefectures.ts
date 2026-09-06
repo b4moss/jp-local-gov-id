@@ -17,6 +17,7 @@ import {
   encodeUtf8,
   readCString,
 } from "./stringTable";
+import { fmt, msg } from "../messages";
 
 /** Wire-format prefecture record (pre-normalization). */
 export type PrefectureBinRecord = {
@@ -42,14 +43,14 @@ export type DecodedPrefecturesBin = {
 
 function requireU8(n: number, field: string): number {
   if (!Number.isInteger(n) || n < 0 || n > 0xff) {
-    throw new LocalGovBinaryError(`${field} out of u1 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU1", { field, n }));
   }
   return n;
 }
 
 function requireU32(n: number, field: string): number {
   if (!Number.isInteger(n) || n < 0 || n > 0xffff_ffff) {
-    throw new LocalGovBinaryError(`${field} out of u4 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
   }
   return n;
 }
@@ -73,7 +74,7 @@ function assertPayloadEndsAt(
 ): void {
   if (expectedEnd !== actualEnd) {
     throw new LocalGovBinaryError(
-      `${label}: trailing or unused bytes (expected end ${expectedEnd}, got ${actualEnd})`,
+      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd }),
     );
   }
 }
@@ -86,10 +87,10 @@ export function encodePrefectures(
   requireU8(version, "version");
   const asOfBytes = encodeUtf8(meta.asOf);
   if (asOfBytes.length > 0xff) {
-    throw new LocalGovBinaryError("asOf exceeds u1 length");
+    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
   }
   if (records.length > 0xffff) {
-    throw new LocalGovBinaryError("record_count exceeds u2");
+    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
   }
 
   const strings = createStringTableBuilder();
@@ -136,7 +137,7 @@ export function encodePrefectures(
 
   const end = strings.writeTo(bytes, pos);
   if (end !== total) {
-    throw new LocalGovBinaryError("Internal encode size mismatch (JLPR)");
+    throw new LocalGovBinaryError(msg("binary.jlpr.encodeSizeMismatch"));
   }
   return buffer;
 }
@@ -150,15 +151,15 @@ export function decodePrefectures(buffer: ArrayBuffer): DecodedPrefecturesBin {
   let pos = 4;
 
   if (pos + 2 > end) {
-    throw new LocalGovBinaryError("JLPR: buffer too short for version/asOfLen");
+    throw new LocalGovBinaryError(msg("binary.jlpr.shortVersionAsOfLen"));
   }
   const version = view.getUint8(pos++);
   if (version !== BINARY_FORMAT_VERSION) {
-    throw new LocalGovBinaryError(`Unsupported version: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.unsupportedVersion", { version }));
   }
   const asOfLen = view.getUint8(pos++);
   if (pos + asOfLen + 2 > end) {
-    throw new LocalGovBinaryError("JLPR: buffer too short for asOf/record_count");
+    throw new LocalGovBinaryError(msg("binary.jlpr.shortAsOfRecordCount"));
   }
   const asOf = new TextDecoder().decode(bytes.subarray(pos, pos + asOfLen));
   pos += asOfLen;
@@ -167,7 +168,7 @@ export function decodePrefectures(buffer: ArrayBuffer): DecodedPrefecturesBin {
 
   const recordsByteLength = PREFECTURE_RECORD_SIZE * recordCount;
   if (pos + recordsByteLength > end) {
-    throw new LocalGovBinaryError("JLPR: buffer too short for records");
+    throw new LocalGovBinaryError(msg("binary.jlpr.shortRecords"));
   }
   const stringTableOffset = pos + recordsByteLength;
 

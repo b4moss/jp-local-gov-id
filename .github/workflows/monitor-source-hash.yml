@@ -36,8 +36,12 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      # Hash check only needs the scripts workspace (tsx / exceljs).
+      - name: Install dependencies (scripts workspace)
+        run: >
+          npm ci
+          -w jp-local-gov-id-scripts
+          --include-workspace-root
 
       - name: Check source hash
         id: check

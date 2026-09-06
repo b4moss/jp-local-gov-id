@@ -61,8 +61,9 @@ const client = await createLocalGovClient({
 });
 ```
 
-- When `url` is set, fetched files are decompressed/decoded and cached in localStorage by default (key = file URL). The cached value is a minified `JSON.stringify` of the decoded object — **separate from on-wire `.bin.br` (Brotli)**; raw bytes are never stored in localStorage
+- When `url` is set, fetched files are decompressed/decoded and cached in localStorage by default via `@b4moss/cachian` (keys prefixed with `jp-local-gov-id:`). The cached value is a minified `JSON.stringify` of the decoded object — **separate from on-wire `.bin.br` (Brotli)**; raw bytes are never stored in localStorage
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
+- Clear with `await client.purgeCache({ all: true })` (or `{ keys: [...] }`, etc.)
 - Exception: municipality data and JLIX (`search-ngrams/**`) loaded by **nationwide** string search stay in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`). After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
