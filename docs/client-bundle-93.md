@@ -1,6 +1,6 @@
 # クライアントバンドル計測（#93）
 
-関連: [Issue #93](https://github.com/b4moss/jp-local-gov-id/issues/93) / [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md)
+関連: [Issue #93](https://github.com/b4moss/jp-local-gov-id/issues/93) / [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md) / [≤25KB follow-up 計画](./plan-93-followup-25kb.md)
 
 ## 測定コマンド
 
