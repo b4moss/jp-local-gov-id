@@ -111,6 +111,10 @@ Codecov の **project coverage ≥ 90%**（`codecov.yml` の `target: 90%`）を
 4. `release` ブランチから `app-v1.0.0` / `data-v1.0.0` をタグ → Release → Publish
 5. Issue #121 を Close
 
+## v1.0.0 以降
+
+以降の app タグ（`app-v1.1.0`、`app-v1.2.0` など）も同じ **`release` からタグ → Release → Publish** の流れ。API のみの変更では data を `data-v1.0.0` のままにする場合がある（app `1.2.0` など）。
+
 ## 流れ
 
 ```text
