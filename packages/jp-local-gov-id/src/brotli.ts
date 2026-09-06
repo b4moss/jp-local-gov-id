@@ -1,3 +1,4 @@
+import { msg } from "./messages";
 /**
  * Brotli helpers for data payloads (#74 / #63).
  * 1) Web DecompressionStream("brotli") when supported
@@ -112,9 +113,7 @@ export async function decompressBrotli(
     // Optional / unavailable in some graphs.
   }
 
-  throw new TypeError(
-    'Brotli decompression requires DecompressionStream("brotli"), brotli-wasm, or a Node.js runtime',
-  );
+  throw new TypeError(msg("brotli.unavailable"));
 }
 
 /** If `url` is `.br`, decompress; otherwise return the buffer as-is. */

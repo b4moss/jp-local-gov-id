@@ -23,6 +23,111 @@ var LocalGovBinaryError = class extends Error {
   }
 };
 
+// ../packages/jp-local-gov-id/src/messages.generated.ts
+var MESSAGES = {
+  "binary.asOfExceedsU1": "asOf exceeds u1 length",
+  "binary.bufferTooShortForMagic": "{label}: buffer too short for magic",
+  "binary.fieldMustBe0Or1": "{field} must be 0 or 1: {n}",
+  "binary.fieldOutOfU1": "{field} out of u1 range: {n}",
+  "binary.fieldOutOfU4": "{field} out of u4 range: {n}",
+  "binary.gramTypeMustBe0Or1": "gramType must be 0|1: {n}",
+  "binary.invalidMagic": "{label}: invalid magic (expected {expected}, got {magic})",
+  "binary.invalidStringOffset": "Invalid string offset: {relativeOffset}",
+  "binary.jldt.encodeSizeMismatch": "Internal encode size mismatch (JLDT)",
+  "binary.jldt.shortAsOfRecordCount": "JLDT: buffer too short for asOf/record_count",
+  "binary.jldt.shortRecords": "JLDT: buffer too short for records",
+  "binary.jldt.shortVersionAsOfLen": "JLDT: buffer too short for version/asOfLen",
+  "binary.jlix.encodeSizeMismatch": "Internal encode size mismatch (JLIX)",
+  "binary.jlix.shortAsOfRecordCount": "JLIX: buffer too short for asOf/record_count",
+  "binary.jlix.shortRecords": "JLIX: buffer too short for records",
+  "binary.jlix.shortVersionAsOfLen": "JLIX: buffer too short for version/asOfLen",
+  "binary.jlpr.encodeSizeMismatch": "Internal encode size mismatch (JLPR)",
+  "binary.jlpr.shortAsOfRecordCount": "JLPR: buffer too short for asOf/record_count",
+  "binary.jlpr.shortRecords": "JLPR: buffer too short for records",
+  "binary.jlpr.shortVersionAsOfLen": "JLPR: buffer too short for version/asOfLen",
+  "binary.kindMustBe0Or1": "kind must be 0|1: {n}",
+  "binary.recordCountExceedsU2": "record_count exceeds u2",
+  "binary.stringOffsetOutOfRange": "String offset out of range: {relativeOffset}",
+  "binary.trailingOrUnusedBytes": "{label}: trailing or unused bytes (expected end {expectedEnd}, got {actualEnd})",
+  "binary.unsupportedVersion": "Unsupported version: {version}",
+  "binary.unterminatedString": "Unterminated string at offset {relativeOffset}",
+  "binary.versionOutOfU1": "version out of u1 range: {version}",
+  "brotli.unavailable": 'Brotli decompression requires DecompressionStream("brotli"), brotli-wasm, or a Node.js runtime',
+  "cache.ttlSeconds": "cacheTtlSeconds must be a finite number greater than or equal to 0",
+  "create.cacheTtlSeconds": "cacheTtlSeconds must be a finite number greater than or equal to 0",
+  "create.dataOrUrlRequired": "createLocalGovClient requires either `data` or `url`",
+  "create.fetchFailed": "Failed to fetch local gov data: {status} {statusText}",
+  "create.missingSearchNgramShards": "Dataset is missing searchNgramShards (JLIX partition bytes) required for nationwide string search",
+  "create.noMunicipalitiesData": "No municipalities data for prefecture {code}: provide municipalitiesByCode or loadMunicipalities",
+  "create.optionsExclusive": "createLocalGovClient accepts either `data` or `url`, not both",
+  "create.optionsRequired": "createLocalGovClient requires options with either `data` or `url`",
+  "create.parseJsonFailed": "Failed to parse local gov data as JSON from URL",
+  "create.readBinaryFailed": "Failed to read local gov binary data from URL",
+  "create.unknownPrefectureDecode": "Unknown prefecture code while decoding municipalities: {code}",
+  "create.urlParse": '"{url}" cannot be parsed as a URL (pass an absolute URL, or use in a browser)',
+  "data.unknownPrefectureCode": "Unknown prefecture code: {code}",
+  "schema.datasetIndexPrefectures": "Dataset must include index and prefectures (and optionally municipalitiesByCode / loadMunicipalities)",
+  "schema.datasetObject": "Dataset must be a non-null object with index and prefectures",
+  "schema.indexPathsObject": "Index must include a paths object",
+  "schema.indexPathsPrefectures": "Index paths must include string prefectures and municipalitiesByPrefecture",
+  "schema.indexPrefectureCodes": "Index must include prefectureCodes as a string array",
+  "schema.municipalitiesArray": "Municipalities file must include a municipalities array of Municipality objects",
+  "schema.municipalitiesPrefectureCode": "Municipalities file must include string prefectureCode",
+  "schema.mustBeObject": "{label} must be a non-null object",
+  "schema.prefecturesArray": "Prefectures file must include a prefectures array of Prefecture objects",
+  "schema.searchNgramShardsEntry": "Dataset searchNgramShards[{key}] must be ArrayBuffer or Uint8Array",
+  "schema.searchNgramShardsRecord": "Dataset searchNgramShards must be a Record of ArrayBuffer or Uint8Array",
+  "schema.searchNgramsObject": "Index paths.searchNgrams must be an object with twoGram and threeGram",
+  "schema.threeGramMustBeObject": "Index paths.searchNgrams.threeGram must be an object",
+  "schema.threeGramPatternShard": "Index paths.searchNgrams.threeGram.pattern must contain {shard}",
+  "schema.threeGramShardCount": "Index paths.searchNgrams.threeGram.shardCount must be a positive integer",
+  "schema.twoGramMustBeObject": "Index paths.searchNgrams.twoGram must be an object",
+  "schema.twoGramPatternRegion": "Index paths.searchNgrams.twoGram.pattern must contain {region}",
+  "schema.twoGramRegions": "Index paths.searchNgrams.twoGram.regions must be a non-empty string array",
+  "schema.unsupportedVersion": "Unsupported schemaVersion: expected {expected}, got {got}",
+  "schema.versionMustBeNumber": "{label}: schemaVersion must be a number",
+  "search.jlixAsOfMismatch": "[jp-local-gov-id] JLIX asOf ({searchAsOf}) differs from prefectures asOf ({prefecturesAsOf})",
+  "search.missingThreeGramShard": 'Dataset searchNgramShards missing 3-gram shard "{key}"',
+  "search.missingTwoGramRegion": 'Dataset searchNgramShards missing 2-gram region "{key}"',
+  "search.nPositiveInteger": "n must be a positive integer",
+  "search.shardCountPositiveInteger": "shardCount must be a positive integer",
+  "search.unrecognizedPath": "Unrecognized search index path for dataset: {relativePath}"
+};
+
+// ../packages/jp-local-gov-id/src/messages.ts
+var PLACEHOLDER_RE = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
+function msg(key) {
+  const value = MESSAGES[key];
+  if (value === void 0) {
+    throw new Error(`Unknown message key: ${String(key)}`);
+  }
+  return value;
+}
+function fmt(key, params) {
+  const template = msg(key);
+  const required = /* @__PURE__ */ new Set();
+  for (const match of template.matchAll(PLACEHOLDER_RE)) {
+    required.add(match[1]);
+  }
+  for (const name of required) {
+    if (!(name in params)) {
+      throw new Error(
+        `Missing message placeholder "${name}" for key ${String(key)}`
+      );
+    }
+    const value = params[name];
+    if (value === null || value === void 0) {
+      throw new Error(
+        `Message placeholder "${name}" for key ${String(key)} must not be null or undefined`
+      );
+    }
+  }
+  return template.replace(
+    PLACEHOLDER_RE,
+    (_m, name) => String(params[name])
+  );
+}
+
 // ../packages/jp-local-gov-id/src/binary/stringTable.ts
 var textEncoder = new TextEncoder();
 var textDecoder = new TextDecoder();
@@ -57,19 +162,21 @@ function createStringTableBuilder() {
 }
 function readCString(bytes, stringTableOffset, relativeOffset, endExclusive) {
   if (relativeOffset < 0) {
-    throw new LocalGovBinaryError(`Invalid string offset: ${relativeOffset}`);
+    throw new LocalGovBinaryError(
+      fmt("binary.invalidStringOffset", { relativeOffset })
+    );
   }
   const start = stringTableOffset + relativeOffset;
   if (start >= endExclusive) {
     throw new LocalGovBinaryError(
-      `String offset out of range: ${relativeOffset}`
+      fmt("binary.stringOffsetOutOfRange", { relativeOffset })
     );
   }
   let end = start;
   while (end < endExclusive && bytes[end] !== 0) end++;
   if (end >= endExclusive) {
     throw new LocalGovBinaryError(
-      `Unterminated string at offset ${relativeOffset}`
+      fmt("binary.unterminatedString", { relativeOffset })
     );
   }
   return textDecoder.decode(bytes.subarray(start, end));
@@ -82,12 +189,18 @@ function decodeUtf8(bytes) {
 }
 function assertMagic(bytes, expected, label) {
   if (bytes.length < 4) {
-    throw new LocalGovBinaryError(`${label}: buffer too short for magic`);
+    throw new LocalGovBinaryError(
+      fmt("binary.bufferTooShortForMagic", { label })
+    );
   }
   const magic = decodeUtf8(bytes.subarray(0, 4));
   if (magic !== expected) {
     throw new LocalGovBinaryError(
-      `${label}: invalid magic (expected ${expected}, got ${JSON.stringify(magic)})`
+      fmt("binary.invalidMagic", {
+        label,
+        expected,
+        magic: JSON.stringify(magic)
+      })
     );
   }
 }
@@ -95,13 +208,13 @@ function assertMagic(bytes, expected, label) {
 // ../packages/jp-local-gov-id/src/binary/municipalities.ts
 function requireU8Flag(n, field) {
   if (n !== 0 && n !== 1) {
-    throw new LocalGovBinaryError(`${field} must be 0 or 1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldMustBe0Or1", { field, n }));
   }
   return n;
 }
 function requireU32(n, field) {
   if (!Number.isInteger(n) || n < 0 || n > 4294967295) {
-    throw new LocalGovBinaryError(`${field} out of u4 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
   }
   return n;
 }
@@ -114,21 +227,21 @@ function stringEndExclusive(bytes, stringTableOffset, relativeOffset, endExclusi
 function assertPayloadEndsAt(label, expectedEnd, actualEnd) {
   if (expectedEnd !== actualEnd) {
     throw new LocalGovBinaryError(
-      `${label}: trailing or unused bytes (expected end ${expectedEnd}, got ${actualEnd})`
+      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd })
     );
   }
 }
 function encodeMunicipalities(records, meta) {
   const version = meta.version ?? BINARY_FORMAT_VERSION;
   if (!Number.isInteger(version) || version < 0 || version > 255) {
-    throw new LocalGovBinaryError(`version out of u1 range: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.versionOutOfU1", { version }));
   }
   const asOfBytes = encodeUtf8(meta.asOf);
   if (asOfBytes.length > 255) {
-    throw new LocalGovBinaryError("asOf exceeds u1 length");
+    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
   }
   if (records.length > 65535) {
-    throw new LocalGovBinaryError("record_count exceeds u2");
+    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
   }
   const strings = createStringTableBuilder();
   const encoded = records.map((record) => ({
@@ -164,7 +277,7 @@ function encodeMunicipalities(records, meta) {
   }
   const end = strings.writeTo(bytes, pos);
   if (end !== total) {
-    throw new LocalGovBinaryError("Internal encode size mismatch (JLDT)");
+    throw new LocalGovBinaryError(msg("binary.jldt.encodeSizeMismatch"));
   }
   return buffer;
 }
@@ -175,15 +288,15 @@ function decodeMunicipalities(buffer) {
   assertMagic(bytes, MAGIC_JLDT, "JLDT");
   let pos = 4;
   if (pos + 2 > end) {
-    throw new LocalGovBinaryError("JLDT: buffer too short for version/asOfLen");
+    throw new LocalGovBinaryError(msg("binary.jldt.shortVersionAsOfLen"));
   }
   const version = view.getUint8(pos++);
   if (version !== BINARY_FORMAT_VERSION) {
-    throw new LocalGovBinaryError(`Unsupported version: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.unsupportedVersion", { version }));
   }
   const asOfLen = view.getUint8(pos++);
   if (pos + asOfLen + 2 > end) {
-    throw new LocalGovBinaryError("JLDT: buffer too short for asOf/record_count");
+    throw new LocalGovBinaryError(msg("binary.jldt.shortAsOfRecordCount"));
   }
   const asOf = new TextDecoder().decode(bytes.subarray(pos, pos + asOfLen));
   pos += asOfLen;
@@ -191,7 +304,7 @@ function decodeMunicipalities(buffer) {
   pos += 2;
   const recordsByteLength = MUNICIPALITY_RECORD_SIZE * recordCount;
   if (pos + recordsByteLength > end) {
-    throw new LocalGovBinaryError("JLDT: buffer too short for records");
+    throw new LocalGovBinaryError(msg("binary.jldt.shortRecords"));
   }
   const stringTableOffset = pos + recordsByteLength;
   const records = [];
@@ -253,13 +366,13 @@ function prefectureCodeFromMunicipalityCode(code) {
 // ../packages/jp-local-gov-id/src/binary/prefectures.ts
 function requireU8(n, field) {
   if (!Number.isInteger(n) || n < 0 || n > 255) {
-    throw new LocalGovBinaryError(`${field} out of u1 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU1", { field, n }));
   }
   return n;
 }
 function requireU322(n, field) {
   if (!Number.isInteger(n) || n < 0 || n > 4294967295) {
-    throw new LocalGovBinaryError(`${field} out of u4 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
   }
   return n;
 }
@@ -272,7 +385,7 @@ function stringEndExclusive2(bytes, stringTableOffset, relativeOffset, endExclus
 function assertPayloadEndsAt2(label, expectedEnd, actualEnd) {
   if (expectedEnd !== actualEnd) {
     throw new LocalGovBinaryError(
-      `${label}: trailing or unused bytes (expected end ${expectedEnd}, got ${actualEnd})`
+      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd })
     );
   }
 }
@@ -281,10 +394,10 @@ function encodePrefectures(records, meta) {
   requireU8(version, "version");
   const asOfBytes = encodeUtf8(meta.asOf);
   if (asOfBytes.length > 255) {
-    throw new LocalGovBinaryError("asOf exceeds u1 length");
+    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
   }
   if (records.length > 65535) {
-    throw new LocalGovBinaryError("record_count exceeds u2");
+    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
   }
   const strings = createStringTableBuilder();
   const encoded = records.map((record) => ({
@@ -325,7 +438,7 @@ function encodePrefectures(records, meta) {
   }
   const end = strings.writeTo(bytes, pos);
   if (end !== total) {
-    throw new LocalGovBinaryError("Internal encode size mismatch (JLPR)");
+    throw new LocalGovBinaryError(msg("binary.jlpr.encodeSizeMismatch"));
   }
   return buffer;
 }
@@ -336,15 +449,15 @@ function decodePrefectures(buffer) {
   assertMagic(bytes, MAGIC_JLPR, "JLPR");
   let pos = 4;
   if (pos + 2 > end) {
-    throw new LocalGovBinaryError("JLPR: buffer too short for version/asOfLen");
+    throw new LocalGovBinaryError(msg("binary.jlpr.shortVersionAsOfLen"));
   }
   const version = view.getUint8(pos++);
   if (version !== BINARY_FORMAT_VERSION) {
-    throw new LocalGovBinaryError(`Unsupported version: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.unsupportedVersion", { version }));
   }
   const asOfLen = view.getUint8(pos++);
   if (pos + asOfLen + 2 > end) {
-    throw new LocalGovBinaryError("JLPR: buffer too short for asOf/record_count");
+    throw new LocalGovBinaryError(msg("binary.jlpr.shortAsOfRecordCount"));
   }
   const asOf = new TextDecoder().decode(bytes.subarray(pos, pos + asOfLen));
   pos += asOfLen;
@@ -352,7 +465,7 @@ function decodePrefectures(buffer) {
   pos += 2;
   const recordsByteLength = PREFECTURE_RECORD_SIZE * recordCount;
   if (pos + recordsByteLength > end) {
-    throw new LocalGovBinaryError("JLPR: buffer too short for records");
+    throw new LocalGovBinaryError(msg("binary.jlpr.shortRecords"));
   }
   const stringTableOffset = pos + recordsByteLength;
   const records = [];
@@ -420,31 +533,31 @@ function decodePrefecturesFile(buffer) {
 // ../packages/jp-local-gov-id/src/binary/searchNgrams.ts
 function requireU82(n, field) {
   if (!Number.isInteger(n) || n < 0 || n > 255) {
-    throw new LocalGovBinaryError(`${field} out of u1 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU1", { field, n }));
   }
   return n;
 }
 function requireU323(n, field) {
   if (!Number.isInteger(n) || n < 0 || n > 4294967295) {
-    throw new LocalGovBinaryError(`${field} out of u4 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
   }
   return n;
 }
 function requireFlag(n, field) {
   if (n !== 0 && n !== 1) {
-    throw new LocalGovBinaryError(`${field} must be 0 or 1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldMustBe0Or1", { field, n }));
   }
   return n;
 }
 function requireGramType(n) {
   if (n !== GRAM_TYPE_NAME && n !== GRAM_TYPE_KANA) {
-    throw new LocalGovBinaryError(`gramType must be 0|1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.gramTypeMustBe0Or1", { n }));
   }
   return n;
 }
 function requireKind(n) {
   if (n !== KIND_PREF && n !== KIND_MUNI) {
-    throw new LocalGovBinaryError(`kind must be 0|1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.kindMustBe0Or1", { n }));
   }
   return n;
 }
@@ -465,7 +578,7 @@ function stringEndExclusive3(bytes, stringTableOffset, relativeOffset, endExclus
 function assertPayloadEndsAt3(label, expectedEnd, actualEnd) {
   if (expectedEnd !== actualEnd) {
     throw new LocalGovBinaryError(
-      `${label}: trailing or unused bytes (expected end ${expectedEnd}, got ${actualEnd})`
+      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd })
     );
   }
 }
@@ -474,11 +587,11 @@ function encodeSearchNgrams(records, meta) {
   requireU82(version, "version");
   const asOfBytes = encodeUtf8(meta.asOf);
   if (asOfBytes.length > 255) {
-    throw new LocalGovBinaryError("asOf exceeds u1 length");
+    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
   }
   const sorted = sortSearchNgramPostings(records);
   if (sorted.length > 65535) {
-    throw new LocalGovBinaryError("record_count exceeds u2");
+    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
   }
   const strings = createStringTableBuilder();
   const encoded = sorted.map((record) => ({
@@ -517,7 +630,7 @@ function encodeSearchNgrams(records, meta) {
   }
   const end = strings.writeTo(bytes, pos);
   if (end !== total) {
-    throw new LocalGovBinaryError("Internal encode size mismatch (JLIX)");
+    throw new LocalGovBinaryError(msg("binary.jlix.encodeSizeMismatch"));
   }
   return buffer;
 }
@@ -528,15 +641,15 @@ function decodeSearchNgrams(buffer) {
   assertMagic(bytes, MAGIC_JLIX, "JLIX");
   let pos = 4;
   if (pos + 2 > end) {
-    throw new LocalGovBinaryError("JLIX: buffer too short for version/asOfLen");
+    throw new LocalGovBinaryError(msg("binary.jlix.shortVersionAsOfLen"));
   }
   const version = view.getUint8(pos++);
   if (version !== BINARY_FORMAT_VERSION) {
-    throw new LocalGovBinaryError(`Unsupported version: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.unsupportedVersion", { version }));
   }
   const asOfLen = view.getUint8(pos++);
   if (pos + asOfLen + 2 > end) {
-    throw new LocalGovBinaryError("JLIX: buffer too short for asOf/record_count");
+    throw new LocalGovBinaryError(msg("binary.jlix.shortAsOfRecordCount"));
   }
   const asOf = new TextDecoder().decode(bytes.subarray(pos, pos + asOfLen));
   pos += asOfLen;
@@ -544,7 +657,7 @@ function decodeSearchNgrams(buffer) {
   pos += 2;
   const recordsByteLength = NGRAM_POSTING_RECORD_SIZE * recordCount;
   if (pos + recordsByteLength > end) {
-    throw new LocalGovBinaryError("JLIX: buffer too short for records");
+    throw new LocalGovBinaryError(msg("binary.jlix.shortRecords"));
   }
   const stringTableOffset = pos + recordsByteLength;
   const records = [];
