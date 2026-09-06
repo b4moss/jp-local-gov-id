@@ -14,7 +14,7 @@ Overview of the client returned by `createLocalGovClient`.
 |--------|-------------|
 | `data` | npm dataset (includes `searchNgramShards`) |
 | `url` | Versioned `index.json` URL (resolves sibling `.bin.br` paths) |
-| `cache` | localStorage cache for `url` mode (default `true`) |
+| `cache` | localStorage cache for `url` mode via `@b4moss/cachian` (default `true`). Keys use prefix `jp-local-gov-id:` |
 | `cacheTtlSeconds` | Cache TTL in seconds (default `31536000`) |
 
 Exactly one of `data` or `url` is required.
@@ -52,6 +52,7 @@ Exactly one of `data` or `url` is required.
 | `getByCode(code)` | `Promise<LocalGov \| null>` | 2- or 6-digit (6-digit prefers prefecture entity) |
 | `searchByText(text, options?)` | `Promise<LocalGov[]>` | Partial match |
 | `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | Exact name → **6-digit** local-gov code |
+| `purgeCache(options)` | `Promise<void>` | Clear URL-mode localStorage cache (`{ all: true }` / `{ keys }` / etc. — cachian `CachePurgeOptions`) |
 
 ### `designatedCity`
 

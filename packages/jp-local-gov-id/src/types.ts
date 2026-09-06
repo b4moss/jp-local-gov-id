@@ -1,3 +1,5 @@
+import type { CachePurgeOptions } from "./cache";
+
 export type MunicipalityCounts = {
   both: number;
   city: number;
@@ -176,6 +178,12 @@ export type LocalGovClient = {
     name: string,
     options?: SearchOptions,
   ): Promise<string | null>;
+  /**
+   * Purge URL-mode localStorage cache entries for this client.
+   * No-op in `data` mode or when `cache: false` / storage is unavailable.
+   * Options match `@b4moss/cachian` `CachePurgeOptions` (`all` / `keys` / time filters).
+   */
+  purgeCache(options: CachePurgeOptions): Promise<void>;
 };
 
 /** @deprecated Use LocalGovIndexFile / split file types. Kept for export compatibility. */
