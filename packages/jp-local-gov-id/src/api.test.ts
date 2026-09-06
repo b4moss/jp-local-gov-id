@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import dataset from "@b4moss/jp-local-gov-id-data";
 import { createLocalGovClient } from "./create";
-import { CACHE_TTL_MS } from "./cache";
+import { CACHE_KEY_PREFIX, CACHE_TTL_MS } from "./cache";
 import { MUNICIPALITY_FETCH_CONCURRENCY } from "./pool";
 import { LocalGovSchemaError } from "./schema";
 import type { LocalGovClient, LocalGovIndexFile } from "./types";
@@ -515,16 +515,31 @@ describe("createLocalGovClient url + cache + lazy load", () => {
   });
 
   function stubLocalStorage() {
-    const localStorage = {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => {
-        store.set(key, value);
+    const localStorage: Storage = {
+      get length() {
+        return store.size;
       },
-      removeItem: (key: string) => {
+      clear() {
+        store.clear();
+      },
+      getItem(key: string) {
+        return store.get(key) ?? null;
+      },
+      key(index: number) {
+        return [...store.keys()][index] ?? null;
+      },
+      removeItem(key: string) {
         store.delete(key);
+      },
+      setItem(key: string, value: string) {
+        store.set(key, value);
       },
     };
     vi.stubGlobal("localStorage", localStorage);
+  }
+
+  function physicalKey(url: string): string {
+    return `${CACHE_KEY_PREFIX}${url}`;
   }
 
   function stubFetch(files: Map<string, unknown>) {
@@ -578,9 +593,9 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     expect(c.listPrefectures()).toHaveLength(47);
     // index + prefectures only
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(store.has(indexUrl)).toBe(true);
+    expect(store.has(physicalKey(indexUrl))).toBe(true);
 
-    const cached = JSON.parse(store.get(indexUrl)!);
+    const cached = JSON.parse(store.get(physicalKey(indexUrl))!);
     expect(cached.expiresAt).toBeGreaterThan(Date.now());
     expect(cached.expiresAt).toBeLessThanOrEqual(
       Date.now() + CACHE_TTL_MS + 1000,
@@ -674,10 +689,12 @@ describe("createLocalGovClient url + cache + lazy load", () => {
       expect(key).not.toMatch(/\/prefectures\/\d{2}\.bin(\.br)?$/);
       expect(key).not.toMatch(/search-ngrams\//);
     }
-    expect(store.has(indexUrl)).toBe(true);
+    expect(store.has(physicalKey(indexUrl))).toBe(true);
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
+        physicalKey(
+          "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br",
+        ),
       ),
     ).toBe(true);
 
@@ -695,7 +712,9 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.getByCode("131016");
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.bin.br",
+        physicalKey(
+          "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/13.bin.br",
+        ),
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -709,7 +728,9 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await c.searchByText("中央", { prefecture: "01", target: "cities" });
     expect(
       store.has(
-        "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.bin.br",
+        physicalKey(
+          "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures/01.bin.br",
+        ),
       ),
     ).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -738,7 +759,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     );
 
     await expect(createLocalGovClient({ url: indexUrl })).rejects.toThrow(/404/);
-    expect(store.has(indexUrl)).toBe(false);
+    expect(store.has(physicalKey(indexUrl))).toBe(false);
   });
 
   it("treats invalid JSON as schema error", async () => {
@@ -802,7 +823,7 @@ describe("createLocalGovClient url + cache + lazy load", () => {
 
     await createLocalGovClient({ url: indexUrl, cacheTtlSeconds: 60 });
 
-    const cached = JSON.parse(store.get(indexUrl)!);
+    const cached = JSON.parse(store.get(physicalKey(indexUrl))!);
     expect(cached.expiresAt).toBeGreaterThanOrEqual(before + 60_000);
     expect(cached.expiresAt).toBeLessThanOrEqual(Date.now() + 60_000 + 1000);
   });
@@ -814,6 +835,52 @@ describe("createLocalGovClient url + cache + lazy load", () => {
     await expect(
       createLocalGovClient({ url: indexUrl, cacheTtlSeconds: -1 }),
     ).rejects.toThrow(/cacheTtlSeconds/);
+  });
+
+  it("purgeCache({ all: true }) clears prefixed entries only", async () => {
+    stubLocalStorage();
+    stubFetch(fileMap());
+    store.set("other:keep", "1");
+
+    const c = await createLocalGovClient({ url: indexUrl });
+    expect(store.has(physicalKey(indexUrl))).toBe(true);
+
+    await c.purgeCache({ all: true });
+    expect(store.has(physicalKey(indexUrl))).toBe(false);
+    expect(store.get("other:keep")).toBe("1");
+  });
+
+  it("purgeCache({ keys }) clears listed logical URLs", async () => {
+    stubLocalStorage();
+    stubFetch(fileMap());
+    const c = await createLocalGovClient({ url: indexUrl });
+    const prefsUrl =
+      "https://cdn.example.com/jp-local-gov-id-data/0.2.0/prefectures.bin.br";
+    expect(store.has(physicalKey(indexUrl))).toBe(true);
+    expect(store.has(physicalKey(prefsUrl))).toBe(true);
+
+    await c.purgeCache({ keys: [indexUrl] });
+    expect(store.has(physicalKey(indexUrl))).toBe(false);
+    expect(store.has(physicalKey(prefsUrl))).toBe(true);
+  });
+
+  it("purgeCache is a no-op when cache is false", async () => {
+    stubLocalStorage();
+    stubFetch(fileMap());
+    await createLocalGovClient({ url: indexUrl });
+    expect(store.has(physicalKey(indexUrl))).toBe(true);
+
+    const noCache = await createLocalGovClient({ url: indexUrl, cache: false });
+    await noCache.purgeCache({ all: true });
+    expect(store.has(physicalKey(indexUrl))).toBe(true);
+  });
+
+  it("purgeCache is a no-op for data mode clients", async () => {
+    stubLocalStorage();
+    const c = await createLocalGovClient({ data: dataset });
+    store.set(`${CACHE_KEY_PREFIX}https://x/index.json`, "x");
+    await expect(c.purgeCache({ all: true })).resolves.toBeUndefined();
+    expect(store.get(`${CACHE_KEY_PREFIX}https://x/index.json`)).toBe("x");
   });
 
   it("resolves path-only index URLs via location", async () => {
