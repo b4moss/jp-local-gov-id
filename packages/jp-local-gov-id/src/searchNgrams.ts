@@ -1,3 +1,4 @@
+import { msg } from "./messages";
 /**
  * Code-point n-grams for search indexing (#63).
  * Call after `normalizeSearchText` when building from raw names.
@@ -15,7 +16,7 @@ export function codePointTrigrams(text: string): string[] {
 
 export function codePointNgrams(text: string, n: number): string[] {
   if (!Number.isInteger(n) || n < 1) {
-    throw new RangeError("n must be a positive integer");
+    throw new RangeError(msg("search.nPositiveInteger"));
   }
   const chars = Array.from(text);
   if (chars.length < n) return [];
@@ -38,7 +39,7 @@ export function gramShardIndex(
   shardCount: number = THREE_GRAM_SHARD_COUNT,
 ): number {
   if (!Number.isInteger(shardCount) || shardCount < 1) {
-    throw new RangeError("shardCount must be a positive integer");
+    throw new RangeError(msg("search.shardCountPositiveInteger"));
   }
   const bytes = new TextEncoder().encode(gram);
   let hash = 2166136261 >>> 0;

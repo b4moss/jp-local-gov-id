@@ -9,6 +9,7 @@ import type {
   SearchNgramsThreeGramSpec,
   SearchNgramsTwoGramSpec,
 } from "./types";
+import { fmt, msg } from "./messages";
 
 /** Expected schemaVersion in data files. */
 export const LOCAL_GOV_SCHEMA_VERSION = 2;
@@ -56,12 +57,15 @@ export function isLocalGov(value: unknown): value is LocalGov {
 function assertSchemaVersion(value: unknown, label: string): number {
   if (typeof value !== "number") {
     throw new LocalGovSchemaError(
-      `${label}: schemaVersion must be a number`,
+      fmt("schema.versionMustBeNumber", { label }),
     );
   }
   if (value !== LOCAL_GOV_SCHEMA_VERSION) {
     throw new LocalGovSchemaError(
-      `Unsupported schemaVersion: expected ${LOCAL_GOV_SCHEMA_VERSION}, got ${String(value)}`,
+      fmt("schema.unsupportedVersion", {
+        expected: LOCAL_GOV_SCHEMA_VERSION,
+        got: String(value),
+      }),
     );
   }
   return value;
@@ -69,64 +73,50 @@ function assertSchemaVersion(value: unknown, label: string): number {
 
 function asObject(data: unknown, label: string): Record<string, unknown> {
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
-    throw new LocalGovSchemaError(`${label} must be a non-null object`);
+    throw new LocalGovSchemaError(fmt("schema.mustBeObject", { label }));
   }
   return data as Record<string, unknown>;
 }
 
 function validateTwoGramSpec(raw: unknown): SearchNgramsTwoGramSpec {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams.twoGram must be an object",
-    );
+    throw new LocalGovSchemaError(msg("schema.twoGramMustBeObject"));
   }
   const o = raw as Record<string, unknown>;
   if (typeof o.pattern !== "string" || !o.pattern.includes("{region}")) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams.twoGram.pattern must contain {region}",
-    );
+    throw new LocalGovSchemaError(msg("schema.twoGramPatternRegion"));
   }
   if (
     !Array.isArray(o.regions) ||
     o.regions.length === 0 ||
     !o.regions.every((r) => typeof r === "string" && r.length > 0)
   ) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams.twoGram.regions must be a non-empty string array",
-    );
+    throw new LocalGovSchemaError(msg("schema.twoGramRegions"));
   }
   return { pattern: o.pattern, regions: o.regions as string[] };
 }
 
 function validateThreeGramSpec(raw: unknown): SearchNgramsThreeGramSpec {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams.threeGram must be an object",
-    );
+    throw new LocalGovSchemaError(msg("schema.threeGramMustBeObject"));
   }
   const o = raw as Record<string, unknown>;
   if (typeof o.pattern !== "string" || !o.pattern.includes("{shard}")) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams.threeGram.pattern must contain {shard}",
-    );
+    throw new LocalGovSchemaError(msg("schema.threeGramPatternShard"));
   }
   if (
     typeof o.shardCount !== "number" ||
     !Number.isInteger(o.shardCount) ||
     o.shardCount < 1
   ) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams.threeGram.shardCount must be a positive integer",
-    );
+    throw new LocalGovSchemaError(msg("schema.threeGramShardCount"));
   }
   return { pattern: o.pattern, shardCount: o.shardCount };
 }
 
 function validateSearchNgramsPath(raw: unknown): SearchNgramsPathSpec {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new LocalGovSchemaError(
-      "Index paths.searchNgrams must be an object with twoGram and threeGram",
-    );
+    throw new LocalGovSchemaError(msg("schema.searchNgramsObject"));
   }
   const o = raw as Record<string, unknown>;
   return {
@@ -145,25 +135,21 @@ export function validateIndexFile(data: unknown): LocalGovIndexFile {
     typeof obj.paths !== "object" ||
     Array.isArray(obj.paths)
   ) {
-    throw new LocalGovSchemaError("Index must include a paths object");
+    throw new LocalGovSchemaError(msg("schema.indexPathsObject"));
   }
   const paths = obj.paths as Record<string, unknown>;
   if (
     typeof paths.prefectures !== "string" ||
     typeof paths.municipalitiesByPrefecture !== "string"
   ) {
-    throw new LocalGovSchemaError(
-      "Index paths must include string prefectures and municipalitiesByPrefecture",
-    );
+    throw new LocalGovSchemaError(msg("schema.indexPathsPrefectures"));
   }
   const searchNgrams = validateSearchNgramsPath(paths.searchNgrams);
   if (
     !Array.isArray(obj.prefectureCodes) ||
     !obj.prefectureCodes.every((c) => typeof c === "string")
   ) {
-    throw new LocalGovSchemaError(
-      "Index must include prefectureCodes as a string array",
-    );
+    throw new LocalGovSchemaError(msg("schema.indexPrefectureCodes"));
   }
 
   return {
@@ -199,9 +185,7 @@ export function validatePrefecturesFile(
     !Array.isArray(obj.prefectures) ||
     !obj.prefectures.every(isPrefectureRecord)
   ) {
-    throw new LocalGovSchemaError(
-      "Prefectures file must include a prefectures array of Prefecture objects",
-    );
+    throw new LocalGovSchemaError(msg("schema.prefecturesArray"));
   }
 
   return {
@@ -222,17 +206,13 @@ export function validateMunicipalitiesFile(
   );
 
   if (typeof obj.prefectureCode !== "string") {
-    throw new LocalGovSchemaError(
-      "Municipalities file must include string prefectureCode",
-    );
+    throw new LocalGovSchemaError(msg("schema.municipalitiesPrefectureCode"));
   }
   if (
     !Array.isArray(obj.municipalities) ||
     !obj.municipalities.every(isMunicipalityRecord)
   ) {
-    throw new LocalGovSchemaError(
-      "Municipalities file must include a municipalities array of Municipality objects",
-    );
+    throw new LocalGovSchemaError(msg("schema.municipalitiesArray"));
   }
 
   return {
@@ -254,9 +234,7 @@ export function normalizeDatasetInput(data: unknown): {
   searchNgramShards?: Record<string, ArrayBuffer | Uint8Array>;
 } {
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
-    throw new LocalGovSchemaError(
-      "Dataset must be a non-null object with index and prefectures",
-    );
+    throw new LocalGovSchemaError(msg("schema.datasetObject"));
   }
 
   const obj = data as Record<string, unknown>;
@@ -282,9 +260,7 @@ export function normalizeDatasetInput(data: unknown): {
     };
   }
 
-  throw new LocalGovSchemaError(
-    "Dataset must include index and prefectures (and optionally municipalitiesByCode / loadMunicipalities)",
-  );
+  throw new LocalGovSchemaError(msg("schema.datasetIndexPrefectures"));
 }
 
 function normalizeSearchNgramShards(
@@ -292,15 +268,13 @@ function normalizeSearchNgramShards(
 ): Record<string, ArrayBuffer | Uint8Array> | undefined {
   if (raw === undefined || raw === null) return undefined;
   if (typeof raw !== "object" || Array.isArray(raw)) {
-    throw new LocalGovSchemaError(
-      "Dataset searchNgramShards must be a Record of ArrayBuffer or Uint8Array",
-    );
+    throw new LocalGovSchemaError(msg("schema.searchNgramShardsRecord"));
   }
   const out: Record<string, ArrayBuffer | Uint8Array> = {};
   for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!(value instanceof ArrayBuffer || value instanceof Uint8Array)) {
       throw new LocalGovSchemaError(
-        `Dataset searchNgramShards[${key}] must be ArrayBuffer or Uint8Array`,
+        fmt("schema.searchNgramShardsEntry", { key }),
       );
     }
     out[key] = value;

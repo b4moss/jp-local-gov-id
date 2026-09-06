@@ -1,3 +1,4 @@
+import { msg } from "./messages";
 /** Default cache TTL for URL-fetched data: 1 year (in seconds). */
 export const DEFAULT_CACHE_TTL_SECONDS = 365 * 24 * 60 * 60;
 
@@ -35,9 +36,7 @@ function resolveTtlMs(ttlSeconds?: number): number {
   const seconds =
     ttlSeconds === undefined ? DEFAULT_CACHE_TTL_SECONDS : ttlSeconds;
   if (!Number.isFinite(seconds) || seconds < 0) {
-    throw new TypeError(
-      "cacheTtlSeconds must be a finite number greater than or equal to 0",
-    );
+    throw new TypeError(msg("cache.ttlSeconds"));
   }
   return seconds * 1000;
 }
