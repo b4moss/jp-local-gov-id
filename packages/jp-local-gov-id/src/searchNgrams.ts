@@ -1,4 +1,4 @@
-import { msg } from "./messages";
+import { msg } from "./messages.search";
 /**
  * Code-point n-grams for search indexing (#63).
  * Call after `normalizeSearchText` when building from raw names.

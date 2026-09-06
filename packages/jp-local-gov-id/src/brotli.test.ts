@@ -117,7 +117,7 @@ describe("brotli helpers (#74)", () => {
     try {
       const { decompressBrotli: decompress } = await import("./brotli");
       await expect(decompress(compressed)).rejects.toThrow(
-        /Brotli decompression requires DecompressionStream\("brotli"\)/,
+        /Brotli needs DecompressionStream\("brotli"\)/,
       );
     } finally {
       Object.defineProperty(process, "versions", {

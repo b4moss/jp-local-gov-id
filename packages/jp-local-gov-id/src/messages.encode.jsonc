@@ -1,0 +1,13 @@
+{
+  // Encode / generate catalog — #93
+  // binary.*
+  "binary.asOfExceedsU1": "asOf exceeds u1 length",
+  "binary.jldt.encodeSizeMismatch": "Internal encode size mismatch (JLDT)",
+  "binary.jlix.encodeSizeMismatch": "Internal encode size mismatch (JLIX)",
+  "binary.jlpr.encodeSizeMismatch": "Internal encode size mismatch (JLPR)",
+  "binary.recordCountExceedsU2": "record_count exceeds u2",
+  "binary.versionOutOfU1": "version out of u1 range: {version}",
+
+  // data.*
+  "data.unknownPrefectureCode": "Unknown prefecture code: {code}"
+}

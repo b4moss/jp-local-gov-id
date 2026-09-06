@@ -1,20 +1,7 @@
-export {
-  BINARY_FORMAT_VERSION,
-  DECODED_SCHEMA_VERSION,
-  GRAM_TYPE_KANA,
-  GRAM_TYPE_NAME,
-  KIND_MUNI,
-  KIND_PREF,
-  MAGIC_JLDT,
-  MAGIC_JLDT_BYTES,
-  MAGIC_JLIX,
-  MAGIC_JLIX_BYTES,
-  MAGIC_JLPR,
-  MAGIC_JLPR_BYTES,
-  MUNICIPALITY_RECORD_SIZE,
-  NGRAM_POSTING_RECORD_SIZE,
-  PREFECTURE_RECORD_SIZE,
-} from "./constants";
+/**
+ * Decode-only entry for jp-local-gov-id-data/decode.js (#93).
+ * Keeps encode* (and the encode message catalog) out of the data package bundle.
+ */
 export { LocalGovBinaryError } from "./errors";
 export {
   decodeMunicipalities,
@@ -23,28 +10,33 @@ export {
   prefectureCodeFromMunicipalityCode,
   toMunicipalitiesFile,
   type DecodedMunicipalitiesBin,
-  type EncodeMunicipalitiesMeta,
   type MunicipalityBinRecord,
   type PrefectureNameLookup,
 } from "./municipalities";
-export { encodeMunicipalities } from "./municipalities.encode";
 export {
   decodePrefectures,
   decodePrefecturesFile,
   prefectureRecordToLocalGov,
   toPrefecturesFile,
   type DecodedPrefecturesBin,
-  type EncodePrefecturesMeta,
   type PrefectureBinRecord,
 } from "./prefectures";
-export { encodePrefectures } from "./prefectures.encode";
 export {
   decodeSearchNgrams,
   sortSearchNgramPostings,
   type DecodedSearchNgramsBin,
-  type EncodeSearchNgramsMeta,
   type EntityKind,
   type GramType,
   type SearchNgramPostingRecord,
 } from "./searchNgrams";
-export { encodeSearchNgrams } from "./searchNgrams.encode";
+export {
+  BINARY_FORMAT_VERSION,
+  DECODED_SCHEMA_VERSION,
+  GRAM_TYPE_KANA,
+  GRAM_TYPE_NAME,
+  KIND_MUNI,
+  KIND_PREF,
+  MAGIC_JLDT,
+  MAGIC_JLIX,
+  MAGIC_JLPR,
+} from "./constants";

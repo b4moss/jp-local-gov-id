@@ -5,12 +5,6 @@ import {
   normalizePrefectureCode,
   normalizeSearchText,
 } from "./normalize";
-import { codePointBigrams, codePointTrigrams } from "./searchNgrams";
-import {
-  querySearchIndex,
-  unionSearchHits,
-  type SearchIndexHit,
-} from "./searchIndex";
 import type { LocalGovStore } from "./store";
 import type { LocalGovCache } from "./cache";
 import type {
@@ -93,92 +87,6 @@ async function collectPrefectureScoped(
 
 async function collectPrefecturesOnly(store: LocalGovStore): Promise<LocalGov[]> {
   return [...store.prefectures];
-}
-
-async function collectNationwideViaIndex(
-  store: LocalGovStore,
-  target: SearchTarget,
-  queryNormalized: string,
-  matchField: MatchField,
-  designatedCity: SearchOptions["designatedCity"],
-  mode: "includes" | "equals",
-): Promise<LocalGov[]> {
-  const prefs =
-    target === "cities"
-      ? []
-      : store.prefectures.filter((item) =>
-          matchesText(item, queryNormalized, matchField, mode),
-        );
-
-  if (target === "prefectures") {
-    return prefs;
-  }
-
-  const codePoints = Array.from(queryNormalized);
-  if (codePoints.length < 2) {
-    return sortSearchHits(prefs);
-  }
-
-  const needTwoGram = true;
-  const needThreeGram = codePoints.length >= 3;
-
-  const indexes = await store.ensureSearchIndexes({
-    twoGram: needTwoGram,
-    threeGram: needThreeGram,
-  });
-
-  const designated = designatedCity ?? "both";
-  const hitGroups: SearchIndexHit[][] = [];
-
-  if (indexes.twoGram) {
-    const bigrams = codePointBigrams(queryNormalized);
-    if (bigrams.length > 0) {
-      hitGroups.push(
-        querySearchIndex(indexes.twoGram, {
-          grams: bigrams,
-          matchField,
-          designatedCity: designated,
-        }),
-      );
-    }
-  }
-
-  if (indexes.threeGram) {
-    const trigrams = codePointTrigrams(queryNormalized);
-    if (trigrams.length > 0) {
-      hitGroups.push(
-        querySearchIndex(indexes.threeGram, {
-          grams: trigrams,
-          matchField,
-          designatedCity: designated,
-        }),
-      );
-    }
-  }
-
-  const hits = unionSearchHits(hitGroups);
-
-  if (hits.length === 0) {
-    return sortSearchHits(prefs);
-  }
-
-  const prefCodes = [...new Set(hits.map((h) => h.prefCode))];
-  await store.ensureMunicipalities(prefCodes, { persist: false });
-
-  const munis: Municipality[] = [];
-  for (const hit of hits) {
-    const item = store.getMunicipalityByCode(hit.muniCode);
-    if (!item) continue;
-    if (!matchesText(item, queryNormalized, matchField, mode)) continue;
-    munis.push(item);
-  }
-
-  const filteredMunis = filterByDesignatedCity(
-    munis,
-    designatedCity ?? "both",
-  );
-
-  return sortSearchHits([...prefs, ...filteredMunis]);
 }
 
 export type BuildLocalGovClientOptions = {
@@ -302,6 +210,7 @@ export function buildLocalGovClient(
         );
       }
 
+      const { collectNationwideViaIndex } = await import("./api.search");
       return collectNationwideViaIndex(
         store,
         target,
@@ -345,6 +254,7 @@ export function buildLocalGovClient(
           matchesText(item, queryNormalized, matchField, "equals"),
         );
       } else {
+        const { collectNationwideViaIndex } = await import("./api.search");
         matches = await collectNationwideViaIndex(
           store,
           target,

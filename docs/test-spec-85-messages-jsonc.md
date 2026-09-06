@@ -4,10 +4,11 @@
 関連: Issue #85 / 作業ブランチ `cursor/issue-85-error-messages-jsonc-7a0c` / 統合先 `dev-v1.1.0`  
 想定実装:
 
-- 正本: `packages/jp-local-gov-id/src/messages.jsonc`
-- 生成物: `packages/jp-local-gov-id/src/messages.generated.ts`
-- コンパイル: `packages/jp-local-gov-id/scripts/compile-messages.mjs`
-- 参照ヘルパ: `msg(key)` / `fmt(key, params)`（生成物同梱、または薄い `messages.ts`）
+- runtime 正本: `packages/jp-local-gov-id/src/messages.jsonc`
+- encode 正本: `packages/jp-local-gov-id/src/messages.encode.jsonc`（#93 で追加。詳細は [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md)）
+- 生成物: `messages.generated.ts`（runtime）/ `messages.encode.generated.ts`（encode）
+- コンパイル: `packages/jp-local-gov-id/scripts/compile-messages.mjs`（両カタログ）
+- 参照ヘルパ: runtime は `messages.ts` の `msg` / `fmt`、encode は `messages.encode.ts` の `msg` / `fmt`
 
 ## 1. 目的
 
@@ -23,8 +24,9 @@
 
 | 用語 | 意味 |
 |------|------|
-| カタログ正本 | `messages.jsonc`。コメント付き。人が編集する唯一の文言ソース |
-| 生成モジュール | `messages.generated.ts`。正本から機械生成。ランタイムが import する |
+| カタログ正本 | `messages.jsonc`（runtime）。コメント付き。人が編集する文言ソース |
+| encode 正本 | `messages.encode.jsonc`（#93）。`encode*` / generate 専用キー |
+| 生成モジュール | `messages.generated.ts` / `messages.encode.generated.ts`。正本から機械生成 |
 | メッセージキー | ドット区切り識別子（例: `schema.index.pathsObject`） |
 | テンプレート | `{name}` 形式のプレースホルダを含む文字列 |
 | `msg(key)` | 静的文言を返す。未知キーは失敗（例外） |
@@ -208,10 +210,11 @@
 - **操作**: binary メッセージをカタログ経由にしたうえで `emitDecodeJs`（既存 generate）を実行
 - **期待**: `packages/jp-local-gov-id-data/decode.js` に、直書き旧リテラルの二重管理が残らない（バンドル結果が lib binary と一致）
 
-### TC-D03: data パッケージに第 2 カタログを置かない
+### TC-D03: data パッケージに別正本を置かない
 
-- **期待**: `messages.jsonc` の正本は `jp-local-gov-id` 側のみ
+- **期待**: 文言正本は `jp-local-gov-id` 側の runtime / encode（#93）のみ
 - **期待**: `jp-local-gov-id-data` 配下に別の messages カタログを新設しない
+- **期待**: `decode.js` には runtime キーのみを埋め込む（encode 専用キーは載せない。詳細は #93）
 
 ## 8. 非対象（明示）
 
@@ -220,7 +223,7 @@
 - サイト（`site/`）の警告・i18n・Playground エラー表示
 - ドキュメントサイト文言、README の文言統一
 - メッセージの多言語化・ロケール切替 API
-- バンドルサイズ目標（Issue #93 / v1.2.0）
+- バンドルサイズ目標・カタログ分割の詳細（Issue #93 / v1.2.0 — [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md)）
 - 例外クラスの統合・エラーコード（数値 / symbol）化
 - 文言の日本語化やトーン変更（現行英語の意味維持が前提）
 
