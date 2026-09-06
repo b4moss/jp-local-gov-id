@@ -90,6 +90,16 @@ Playground が参照するライブラリを、すでに `main` / `release` に�
 
 `data-v*` / `app-v*` タグは **`release` ブランチから**打つ。`release-on-tag.yml` はこれらのタグのみ自動 Release 作成。
 
+## v1.0.0 正式リリース（Issue #121）
+
+Codecov の **project coverage ≥ 90%**（`codecov.yml` の `target: 90%`）を正式リリースのゲートとする。
+
+1. `develop` 向け PR で Test が緑、かつ Codecov project status が ≥ 90% であること
+2. `main` / `release` へ取り込み後、`main` push の coverage upload で default branch バッジが ≥ 90% になること
+3. app / data の version を `1.0.0` に揃える（rc 外し）
+4. `release` ブランチから `app-v1.0.0` / `data-v1.0.0` をタグ → Release → Publish
+5. Issue #121 を Close
+
 ## 流れ
 
 ```text

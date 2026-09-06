@@ -90,6 +90,16 @@ When the playground needs a newer published library build that already landed on
 
 Create `data-v*` / `app-v*` tags from the **`release`** branch. `release-on-tag.yml` auto-creates the GitHub Release for those tag patterns only.
 
+## v1.0.0 GA (Issue #121)
+
+Official release is gated on Codecov **project coverage ≥ 90%** (`target: 90%` in `codecov.yml`).
+
+1. PR into `develop` is green and Codecov project status is ≥ 90%
+2. After merge to `main` / `release`, a `main` push coverage upload refreshes the default-branch badge to ≥ 90%
+3. Bump app / data package versions to `1.0.0` (drop rc)
+4. Tag `app-v1.0.0` / `data-v1.0.0` from `release` → Release → Publish
+5. Close Issue #121
+
 ## Quick reference
 
 ```text
