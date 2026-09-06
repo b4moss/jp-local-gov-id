@@ -18,6 +18,12 @@ import {
   readCString,
 } from "./stringTable";
 import { fmt, msg } from "../messages";
+import {
+  assertPayloadEndsAt,
+  requireU8,
+  requireU32,
+  stringEndExclusive,
+} from "./assert";
 
 /** Wire-format prefecture record (pre-normalization). */
 export type PrefectureBinRecord = {
@@ -41,106 +47,9 @@ export type DecodedPrefecturesBin = {
   records: PrefectureBinRecord[];
 };
 
-function requireU8(n: number, field: string): number {
-  if (!Number.isInteger(n) || n < 0 || n > 0xff) {
-    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU1", { field, n }));
-  }
-  return n;
-}
 
-function requireU32(n: number, field: string): number {
-  if (!Number.isInteger(n) || n < 0 || n > 0xffff_ffff) {
-    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
-  }
-  return n;
-}
 
-function stringEndExclusive(
-  bytes: Uint8Array,
-  stringTableOffset: number,
-  relativeOffset: number,
-  endExclusive: number,
-): number {
-  readCString(bytes, stringTableOffset, relativeOffset, endExclusive);
-  let p = stringTableOffset + relativeOffset;
-  while (bytes[p] !== 0) p++;
-  return p + 1;
-}
 
-function assertPayloadEndsAt(
-  label: string,
-  expectedEnd: number,
-  actualEnd: number,
-): void {
-  if (expectedEnd !== actualEnd) {
-    throw new LocalGovBinaryError(
-      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd }),
-    );
-  }
-}
-
-export function encodePrefectures(
-  records: PrefectureBinRecord[],
-  meta: EncodePrefecturesMeta,
-): ArrayBuffer {
-  const version = meta.version ?? BINARY_FORMAT_VERSION;
-  requireU8(version, "version");
-  const asOfBytes = encodeUtf8(meta.asOf);
-  if (asOfBytes.length > 0xff) {
-    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
-  }
-  if (records.length > 0xffff) {
-    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
-  }
-
-  const strings = createStringTableBuilder();
-  const encoded = records.map((record) => ({
-    prefCode: requireU8(record.prefCode, "prefCode"),
-    nameOffset: strings.add(record.name),
-    nameKanaOffset: strings.add(record.nameKana),
-    muniCode: requireU32(record.muniCode, "muniCode"),
-    muniCountBoth: requireU8(record.muniCountBoth, "muniCountBoth"),
-    muniCountCity: requireU8(record.muniCountCity, "muniCountCity"),
-    muniCountWard: requireU8(record.muniCountWard, "muniCountWard"),
-  }));
-
-  const headerSize = 4 + 1 + 1 + asOfBytes.length + 2;
-  const total =
-    headerSize + PREFECTURE_RECORD_SIZE * encoded.length + strings.byteLength;
-  const buffer = new ArrayBuffer(total);
-  const view = new DataView(buffer);
-  const bytes = new Uint8Array(buffer);
-
-  let pos = 0;
-  bytes.set(MAGIC_JLPR_BYTES, pos);
-  pos += 4;
-  view.setUint8(pos++, version);
-  view.setUint8(pos++, asOfBytes.length);
-  bytes.set(asOfBytes, pos);
-  pos += asOfBytes.length;
-  view.setUint16(pos, encoded.length, true);
-  pos += 2;
-
-  for (const record of encoded) {
-    view.setUint8(pos, record.prefCode);
-    pos += 1;
-    view.setUint32(pos, record.nameOffset, true);
-    pos += 4;
-    view.setUint32(pos, record.nameKanaOffset, true);
-    pos += 4;
-    view.setUint32(pos, record.muniCode, true);
-    pos += 4;
-    view.setUint8(pos++, record.muniCountBoth);
-    view.setUint8(pos++, record.muniCountCity);
-    view.setUint8(pos++, record.muniCountWard);
-  }
-
-  const end = strings.writeTo(bytes, pos);
-  if (end !== total) {
-    throw new LocalGovBinaryError(msg("binary.jlpr.encodeSizeMismatch"));
-  }
-  return buffer;
-}
 
 export function decodePrefectures(buffer: ArrayBuffer): DecodedPrefecturesBin {
   const bytes = new Uint8Array(buffer);

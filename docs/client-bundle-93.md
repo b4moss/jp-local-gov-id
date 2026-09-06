@@ -19,10 +19,21 @@ npm run measure:client-bundle -w @b4moss/jp-local-gov-id
 | minify | `true` |
 | external | `brotli-wasm`, `node:zlib` |
 
-サイズ超過だけではスクリプトは失敗しない（レポート用途）。
+サイズ超過だけではスクリプトは失敗しない（レポート用途）。25KB は目安であり必達ゲートではない。
 
 ## 結果
 
-| 時点 | ブランチ / コミット | minify 生 | gzip | メモ |
-| --- | --- | ---: | ---: | --- |
-| 分割前ベースライン（#85 後） | `cursor/issue-93-client-bundle-41e9` | 31620 | 8920 | 単一 `MESSAGES` |
+| 時点 | ブランチ / メモ | minify 生 | gzip |
+| --- | --- | ---: | ---: |
+| 分割前ベースライン（#85 後） | 単一 `MESSAGES` | 31620 | 8920 |
+| 分割後 | runtime / encode カタログ分割 + encode ファイル分離 + assert 共通化 | 30767 | 8846 |
+
+差分: minify 生 **−853 B**（約 −2.7%）。encode 専用キーは create グラフおよび `decode.js` から除外済み。
+
+## 実施内容（要約）
+
+- `messages.jsonc`（runtime）と `messages.encode.jsonc`（encode / generate）へ分割
+- `encode*` を `*.encode.ts` へ分離し、decode 経路が encode カタログを引かないようにした
+- `decode.js` は `binary/decodeEntry.ts` から生成（runtime のみ）
+- `brotli-wasm` は維持
+- `binary/assert.ts` で共通 assert を整理
