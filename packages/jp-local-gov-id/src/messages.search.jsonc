@@ -1,0 +1,9 @@
+// Search-chunk message catalog (#93 follow-up). Loaded with api.search / searchIndexLoader.
+{
+  "search.jlixAsOfMismatch": "[jp-local-gov-id] JLIX asOf ({searchAsOf}) differs from prefectures asOf ({prefecturesAsOf})",
+  "search.missingTwoGramRegion": "Dataset searchNgramShards missing 2-gram region \"{key}\"",
+  "search.missingThreeGramShard": "Dataset searchNgramShards missing 3-gram shard \"{key}\"",
+  "search.unrecognizedPath": "Unrecognized search index path for dataset: {relativePath}",
+  "search.nPositiveInteger": "n must be a positive integer",
+  "search.shardCountPositiveInteger": "shardCount must be a positive integer"
+}

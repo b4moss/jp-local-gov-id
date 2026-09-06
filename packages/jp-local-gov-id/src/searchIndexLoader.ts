@@ -20,7 +20,7 @@ import type {
   SearchIndexes,
 } from "./store";
 import type { SearchNgramsPathSpec } from "./types";
-import { fmt } from "./messages";
+import { fmt } from "./messages.search";
 
 export function twoGramPartitionPath(
   spec: SearchNgramsPathSpec,
