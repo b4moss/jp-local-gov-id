@@ -36,20 +36,25 @@ Do not open or update a PR while this gate is failing.
 |------|------|
 | Trigger | `pull_request` whose **base** is `develop` or `dev-*`; `push` to **`main`** or **`release`** |
 | Not triggered | Push to `develop` / arbitrary branches; PRs into `main` / `release` / `doc-site` / other bases |
-| Skip heavy jobs | Same head SHA already has a successful `CI` workflow run; or docs-only change set |
-| Docs-only | Changes limited to `docs/**`, `site/content/**`, `*.md` (and similar) → skip Test/Build on GitHub; local act still runs full jobs by default |
+| Skip heavy jobs | Same head SHA already has a successful `CI` workflow run; or docs/site-only change set (**PR and push**) |
+| Docs/site-only | Changes limited to `docs/**`, `site/**`, `*.md`, docs deploy workflows, and similar → skip Test/Build on GitHub (including `main` / `release` pushes). Local act still runs full jobs by default |
 | Jobs | `Gate` then a single **`Test & Build`** job (`npm ci` once → test → build). Site workspace is not installed |
 | Required check name | **`Test & Build`** (stable for branch protection; job always reports, even when heavy work is skipped) |
-| Why `main` push | Codecov default-branch coverage upload (#121) |
+| Why `main` push | Codecov default-branch coverage upload (#121) — **one** app CI run per code push; docs/site-only pushes skip heavy work |
 | Why `release` push | Tag SHAs created from `release` get CI history so publish can skip Test |
+| Not this workflow | GitHub **CodeQL** default setup is separate (`dynamic/github-code-scanning/codeql`) and may also run on `main` pushes |
 
 ## Docs CI (`.github/workflows/ci-docs.yml`)
 
 | Item | Rule |
 |------|------|
 | Trigger | `pull_request` whose **base** is `doc-site` |
-| Job | **`Docs Build`**: scoped `npm ci` (site + library/data) + `npm run build:site` |
+| Skip heavy jobs | **Content-only** change set → skip site build (check still reports success) |
+| Content-only | `docs/**`, `site/content/**`, `site/public/**`, `*.md`, `site/site.meta.yaml.example`, and similar |
+| Full Docs Build | Any change under site logic/config (e.g. `site/app/**`, `site/server/**`, `nuxt.config.ts`, `package.json`, i18n, workflows that affect the site build) |
+| Job | **`Docs Build`**: scoped `npm ci` (site + library/data) + `npm run build:site` when not skipped |
 | Out of scope | App `npm test`, app package-only verification, and app CI success/failure — **ignored** for merging into `doc-site` |
+| Deploy still runs | Content-only merges to `doc-site` still trigger **Deploy Docs** so Pages stays up to date |
 
 ### PR targets
 
@@ -126,8 +131,8 @@ release push → CI (history for publish skip)
 tag on release → Release → Publish (reuse CI Test or re-verify; always Build) → npm
 
 # Documentation site
-site change → open PR to doc-site
-           → Docs CI ("Docs Build")
-           → merge to doc-site → Deploy Docs → GitHub Pages (Actions)
+site logic/config → open PR to doc-site → Docs CI ("Docs Build")
+content-only     → open PR to doc-site → Docs CI Gate skips build
+                 → merge to doc-site → Deploy Docs → GitHub Pages (Actions)
 ```
 
