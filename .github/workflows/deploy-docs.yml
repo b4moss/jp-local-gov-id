@@ -39,8 +39,14 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      # Docs deploy needs site + library/data workspaces (not scripts).
+      - name: Install dependencies (site workspaces)
+        run: >
+          npm ci
+          -w jp-local-gov-id-site
+          -w @b4moss/jp-local-gov-id
+          -w @b4moss/jp-local-gov-id-data
+          --include-workspace-root
 
       - name: Build site
         env:
