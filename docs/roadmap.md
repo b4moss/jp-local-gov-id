@@ -36,6 +36,26 @@
     - 町名・番地（テキストフィールドだけ追加。挙動は何もなし）
     - 建物名（テキストフィールドだけ追加。挙動は何もなし）
 
+## v1.0.0
+
+完了（GA / Issue #121）。data / app `1.0.0`。
+
+## v1.1.0
+
+完了
+
+- エラー／警告メッセージの JSONC 分離（#85）
+- キャッシュを `@b4moss/cachian` に外出し、`purgeCache` 公開（#94）
+
+## v1.2.0
+
+完了
+
+- `createLocalGovClient` 初期ロード ≤25KB（#93 / follow-up）
+  - 検索実装・cachian の動的 import
+  - メッセージカタログ分割、binary decode 直参照など
+- 計測: 初期 minify ≈ 24339（`docs/client-bundle-93.md`）
+
 ----
 
 以上

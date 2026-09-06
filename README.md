@@ -66,6 +66,7 @@ const client = await createLocalGovClient({
 - Clear with `await client.purgeCache({ all: true })` (or `{ keys: [...] }`, etc.)
 - Exception: municipality data and JLIX (`search-ngrams/**`) loaded by **nationwide** string search stay in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
+- As of **1.2.0**, the initial `createLocalGovClient` graph keeps search and `@b4moss/cachian` behind dynamic import (measured initial minify ≈ **24339** bytes; see `docs/client-bundle-93.md`)
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`). After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
 - Schema mismatches, invalid JSON, or invalid binary raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
 - Missing or ambiguous query results return `null` / `[]` (they do not throw)
@@ -82,7 +83,7 @@ A single file of all municipalities is not distributed. The data package ships *
 | `search-ngrams/2gram/{region}.bin.br` | Hot-set 2-gram search index (JLIX, regional splits) |
 | `search-ngrams/3gram/{shard}.bin.br` | Cold-set 3-gram search index (JLIX, 3 shards) |
 
-`schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. Intermediate CSV / uncompressed `.bin` live in the repository for review but are not published to npm.
+`schemaVersion` (currently `2`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. Intermediate CSV / uncompressed `.bin` live in the repository for review but are not published to npm.
 
 ### Hosting your own data
 

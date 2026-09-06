@@ -56,6 +56,7 @@ const client = await createLocalGovClient({
 - Exception: municipality data and JLIX loaded by **nationwide** string search stay in memory only
 - After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
 - Schema mismatches or invalid data raise `LocalGovSchemaError`; missing/ambiguous results return `null` / `[]`
+- As of **1.2.0**, search implementation and `@b4moss/cachian` load via dynamic import so the initial client graph stays ≤25KB minify (measured ≈ 24339 bytes; see `docs/client-bundle-93.md`)
 
 ## Code formats
 

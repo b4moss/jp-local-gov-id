@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml/badge.svg)](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/b4moss/jp-local-gov-id)](https://codecov.io/gh/b4moss/jp-local-gov-id)
-[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id/rc)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
+[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
 [![Release](https://img.shields.io/github/v/release/b4moss/jp-local-gov-id?include_prereleases&filter=app-v*)](https://github.com/b4moss/jp-local-gov-id/releases)
 [![License](https://img.shields.io/github/license/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/blob/main/LICENSE)
 [![OpenSSF Scorecard](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.scorecard.dev%2Fprojects%2Fgithub.com%2Fb4moss%2Fjp-local-gov-id&label=OpenSSF%20Scorecard&query=$.score)](https://scorecard.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
@@ -15,7 +15,7 @@
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.2.0 |
 | [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0 |
 
 ## インストール（利用側）
@@ -66,6 +66,7 @@ const client = await createLocalGovClient({
 - `await client.purgeCache({ all: true })` などで明示削除
 - 例外: **全国対象**の文字列検索で取得した県別データ、および JLIX（`search-ngrams/**`）は localStorage に書かず、メモリのみ保持します
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
+- **1.2.0** 以降、`createLocalGovClient` の初期グラフから検索実装と `@b4moss/cachian` を動的 import で切り離しています（初期 minify 実測 ≈ **24339** bytes。詳細は `docs/client-bundle-93.md`）
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）。正規化後長が 2 未満は空、2 はホット 2-gram のみ、3 以上は 2-gram と 3-gram をマージ
 - スキーマ不一致・不正な JSON・不正なバイナリは `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
 - クエリで見つからない・同名衝突の場合は `null` / `[]` を返します（throw しません）
@@ -82,7 +83,7 @@ const client = await createLocalGovClient({
 | `search-ngrams/2gram/{region}.bin.br` | ホット団体の 2-gram 検索索引（JLIX・地域分割） |
 | `search-ngrams/3gram/{shard}.bin.br` | コールド団体の 3-gram 検索索引（JLIX・3 シャード） |
 
-`schemaVersion`（現行 `1`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。中間 CSV / 非圧縮 `.bin` はリポジトリに置いていますが、npm には配布しません（npm は Brotli のみ）。
+`schemaVersion`（現行 `2`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。中間 CSV / 非圧縮 `.bin` はリポジトリに置いていますが、npm には配布しません（npm は Brotli のみ）。
 
 ### 自前データ配信について
 
