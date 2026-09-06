@@ -1,4 +1,5 @@
-# CI — PRs targeting develop or dev-* only (app / library).
+# CI — PRs targeting develop or dev-* (app / library), plus push to main/develop
+# for Codecov default-branch freshness (#121).
 # Docs PRs targeting doc-site use ci-docs.yml instead; this workflow does not run there.
 # Local pre-PR gate: npm run ci:local (nektos/act). See docs/ci-cd.md.
 name: CI
@@ -8,6 +9,11 @@ on:
     branches:
       - develop
       - "dev-*"
+  # Keep Codecov default-branch / develop totals fresh for the #121 ≥90% gate.
+  push:
+    branches:
+      - main
+      - develop
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
