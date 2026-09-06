@@ -6,8 +6,9 @@
 
 | 項目 | 値 |
 | --- | --- |
-| 現状（#128 後） | minify 生 **30767** / gzip 8846 |
-| 目標 | minify 生 **≤ 25600**（ギャップ **≈5767 B**） |
+| 現状（follow-up 起点） | minify 生 **35428** / gzip 10325（`@b4moss/cachian` 込み） |
+| #128 直後（参考） | minify 生 **30767** / gzip 8846 |
+| 目標 | minify 生 **≤ 25600**（ギャップ **≈9828 B**） |
 | 測定 | `npm run measure:client-bundle -w @b4moss/jp-local-gov-id` |
 | 条件 | esbuild browser + minify ESM、external: `brotli-wasm`, `node:zlib` |
 | ベース | PR #128（runtime/encode カタログ分割）を前提に追従 |
@@ -17,6 +18,7 @@
 | # | レバー | 判定 |
 | --- | --- | --- |
 | 1 | Search lazy-load（create グラフから search 実装を切り離す） | **採用**（主レバー） |
+| 1b | cachian / `cache.ts` の動的 import | **採用**（cachian 約 5KB） |
 | 2 | Schema densification（検証は維持、表現を圧縮） | **採用** |
 | 3 | Message 文言のさらなる短縮 | **採用** |
 | 4 | Normalize 圧縮 | **採用** |
@@ -170,11 +172,11 @@
 
 ## 実装順序（実行チェックリスト）
 
-- [ ] Phase 0: metafile 内訳出力
-- [ ] Phase A: search 実装の遅延ロード
-- [ ] Phase B: messages.search 分割
-- [ ] 中間測定（目標 ≤27000）→ PR1
-- [ ] Phase C: schema 表駆動化
-- [ ] Phase D: 文言短縮
-- [ ] Phase E: normalize 圧縮（+ search 正規化の移動）
-- [ ] 最終測定（目標 ≤25600）→ PR2 / ドキュメント締め
+- [x] Phase 0: metafile 内訳出力
+- [x] Phase A: search 実装の遅延ロード（+ cachian 遅延）
+- [x] Phase B: messages.search 分割
+- [x] 中間測定（A+B 後 ≈25402 ≤27000）
+- [x] Phase C–E: binary 直 import・文言短縮・normalize 整理（schema 大規模表駆動は見送り：目標達成済み）
+- [x] Phase D: 文言短縮
+- [x] Phase E: normalize 桁抽出共通化
+- [x] 最終測定 **24339** ≤25600 → ドキュメント更新

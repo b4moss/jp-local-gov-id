@@ -1,14 +1,8 @@
-import {
-  DEFAULT_CACHE_TTL_SECONDS,
-  createLocalGovCache,
-  type LocalGovCache,
-} from "./cache";
+import type { LocalGovCache } from "./cache";
 import { buildLocalGovClient } from "./api";
-import {
-  decodeMunicipalitiesFile,
-  decodePrefecturesFile,
-  LocalGovBinaryError,
-} from "./binary";
+import { decodeMunicipalitiesFile } from "./binary/municipalities";
+import { decodePrefecturesFile } from "./binary/prefectures";
+import { LocalGovBinaryError } from "./binary/errors";
 import {
   isBinaryPayloadUrl,
   maybeDecompressPayload,
@@ -20,10 +14,7 @@ import {
   validateMunicipalitiesFile,
   validatePrefecturesFile,
 } from "./schema";
-import {
-  createDatasetSearchIndexLoader,
-  createHybridSearchIndexLoader,
-} from "./searchIndexLoader";
+import type { EnsureSearchIndexesFn } from "./store";
 import { createStore } from "./store";
 import type {
   CreateLocalGovCacheOptions,
@@ -34,6 +25,9 @@ import type {
 } from "./types";
 import { prefectureOrgCode } from "./types";
 import { fmt, msg } from "./messages";
+
+/** Mirror of cache.DEFAULT_CACHE_TTL_SECONDS (1 year) — keep cache/cachian off the create graph. */
+const DEFAULT_CACHE_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 type ResolvedCacheConfig = {
   enabled: boolean;
@@ -213,6 +207,7 @@ async function createFromUrl(
   indexUrl: string,
   cacheConfig: ResolvedCacheConfig,
 ): Promise<LocalGovClient> {
+  const { createLocalGovCache } = await import("./cache");
   const cache = createLocalGovCache({
     enabled: cacheConfig.enabled,
     ttlSeconds: cacheConfig.ttlSeconds,
@@ -238,15 +233,25 @@ async function createFromUrl(
     cache,
   );
 
-  const ensureSearchIndexes = createHybridSearchIndexLoader({
+  const loaderOptions = {
     spec: index.paths.searchNgrams,
     prefecturesAsOf: prefecturesFile.asOf,
-    loadPartitionBytes: async (relativePath) => {
+    loadPartitionBytes: async (relativePath: string) => {
       const url = resolveSiblingUrl(absoluteIndexUrl, relativePath);
       // JLIX: memory only — do not use localStorage (Issue #63)
       return fetchBinaryPayload(url);
     },
-  });
+  };
+  let hybridLoaderPromise: Promise<EnsureSearchIndexesFn> | undefined;
+  const ensureSearchIndexes: EnsureSearchIndexesFn = async (need) => {
+    if (!hybridLoaderPromise) {
+      hybridLoaderPromise = import("./searchIndexLoader").then(({ createHybridSearchIndexLoader }) =>
+        createHybridSearchIndexLoader(loaderOptions),
+      );
+    }
+    const loader = await hybridLoaderPromise;
+    return loader(need);
+  };
 
   const store = createStore(
     index,
@@ -280,12 +285,23 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
   const index = validateIndexFile(input.index);
   const prefecturesFile = validatePrefecturesFile(input.prefectures);
 
-  const ensureSearchIndexes = input.searchNgramShards
-    ? createDatasetSearchIndexLoader({
-        spec: index.paths.searchNgrams,
-        prefecturesAsOf: prefecturesFile.asOf,
-        shards: input.searchNgramShards,
-      })
+  let datasetLoaderPromise: Promise<EnsureSearchIndexesFn> | undefined;
+  const ensureSearchIndexes: EnsureSearchIndexesFn = input.searchNgramShards
+    ? async (need) => {
+        if (!datasetLoaderPromise) {
+          const shards = input.searchNgramShards!;
+          datasetLoaderPromise = import("./searchIndexLoader").then(
+            ({ createDatasetSearchIndexLoader }) =>
+              createDatasetSearchIndexLoader({
+                spec: index.paths.searchNgrams,
+                prefecturesAsOf: prefecturesFile.asOf,
+                shards,
+              }),
+          );
+        }
+        const loader = await datasetLoaderPromise;
+        return loader(need);
+      }
     : async () => {
         throw new LocalGovSchemaError(msg("create.missingSearchNgramShards"));
       };

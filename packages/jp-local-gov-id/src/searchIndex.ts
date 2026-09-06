@@ -5,7 +5,7 @@ import {
   type SearchNgramPostingRecord,
 } from "./binary";
 import type { DesignatedCityMode, MatchField } from "./types";
-import { fmt } from "./messages";
+import { fmt } from "./messages.search";
 
 export type SearchIndex = {
   version: number;
