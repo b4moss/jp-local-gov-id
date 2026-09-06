@@ -13,6 +13,13 @@ import {
   encodeUtf8,
   readCString,
 } from "./stringTable";
+import { fmt, msg } from "../messages";
+import {
+  assertPayloadEndsAt,
+  requireFlag,
+  requireU32,
+  stringEndExclusive,
+} from "./assert";
 
 /** Wire-format municipality record (includes internal flags). */
 export type MunicipalityBinRecord = {
@@ -40,105 +47,9 @@ export type PrefectureNameLookup = {
   prefectureNameKana: string;
 };
 
-function requireU8Flag(n: number, field: string): 0 | 1 {
-  if (n !== 0 && n !== 1) {
-    throw new LocalGovBinaryError(`${field} must be 0 or 1: ${n}`);
-  }
-  return n;
-}
 
-function requireU32(n: number, field: string): number {
-  if (!Number.isInteger(n) || n < 0 || n > 0xffff_ffff) {
-    throw new LocalGovBinaryError(`${field} out of u4 range: ${n}`);
-  }
-  return n;
-}
 
-function stringEndExclusive(
-  bytes: Uint8Array,
-  stringTableOffset: number,
-  relativeOffset: number,
-  endExclusive: number,
-): number {
-  readCString(bytes, stringTableOffset, relativeOffset, endExclusive);
-  let p = stringTableOffset + relativeOffset;
-  while (bytes[p] !== 0) p++;
-  return p + 1;
-}
 
-function assertPayloadEndsAt(
-  label: string,
-  expectedEnd: number,
-  actualEnd: number,
-): void {
-  if (expectedEnd !== actualEnd) {
-    throw new LocalGovBinaryError(
-      `${label}: trailing or unused bytes (expected end ${expectedEnd}, got ${actualEnd})`,
-    );
-  }
-}
-
-export function encodeMunicipalities(
-  records: MunicipalityBinRecord[],
-  meta: EncodeMunicipalitiesMeta,
-): ArrayBuffer {
-  const version = meta.version ?? BINARY_FORMAT_VERSION;
-  if (!Number.isInteger(version) || version < 0 || version > 0xff) {
-    throw new LocalGovBinaryError(`version out of u1 range: ${version}`);
-  }
-  const asOfBytes = encodeUtf8(meta.asOf);
-  if (asOfBytes.length > 0xff) {
-    throw new LocalGovBinaryError("asOf exceeds u1 length");
-  }
-  if (records.length > 0xffff) {
-    throw new LocalGovBinaryError("record_count exceeds u2");
-  }
-
-  const strings = createStringTableBuilder();
-  const encoded = records.map((record) => ({
-    code: requireU32(record.code, "code"),
-    nameOffset: strings.add(record.name),
-    nameKanaOffset: strings.add(record.nameKana),
-    hasWard: requireU8Flag(record.hasWard, "hasWard"),
-    isWard: requireU8Flag(record.isWard, "isWard"),
-  }));
-
-  const headerSize = 4 + 1 + 1 + asOfBytes.length + 2;
-  const total =
-    headerSize +
-    MUNICIPALITY_RECORD_SIZE * encoded.length +
-    strings.byteLength;
-  const buffer = new ArrayBuffer(total);
-  const view = new DataView(buffer);
-  const bytes = new Uint8Array(buffer);
-
-  let pos = 0;
-  bytes.set(MAGIC_JLDT_BYTES, pos);
-  pos += 4;
-  view.setUint8(pos++, version);
-  view.setUint8(pos++, asOfBytes.length);
-  bytes.set(asOfBytes, pos);
-  pos += asOfBytes.length;
-  view.setUint16(pos, encoded.length, true);
-  pos += 2;
-
-  for (const record of encoded) {
-    view.setUint32(pos, record.code, true);
-    pos += 4;
-    view.setUint32(pos, record.nameOffset, true);
-    pos += 4;
-    view.setUint32(pos, record.nameKanaOffset, true);
-    pos += 4;
-    view.setUint8(pos++, record.hasWard);
-    view.setUint8(pos++, record.isWard);
-  }
-
-  const end = strings.writeTo(bytes, pos);
-  if (end !== total) {
-    throw new LocalGovBinaryError("Internal encode size mismatch (JLDT)");
-  }
-  return buffer;
-}
 
 export function decodeMunicipalities(
   buffer: ArrayBuffer,
@@ -151,15 +62,15 @@ export function decodeMunicipalities(
   let pos = 4;
 
   if (pos + 2 > end) {
-    throw new LocalGovBinaryError("JLDT: buffer too short for version/asOfLen");
+    throw new LocalGovBinaryError(msg("binary.jldt.shortVersionAsOfLen"));
   }
   const version = view.getUint8(pos++);
   if (version !== BINARY_FORMAT_VERSION) {
-    throw new LocalGovBinaryError(`Unsupported version: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.unsupportedVersion", { version }));
   }
   const asOfLen = view.getUint8(pos++);
   if (pos + asOfLen + 2 > end) {
-    throw new LocalGovBinaryError("JLDT: buffer too short for asOf/record_count");
+    throw new LocalGovBinaryError(msg("binary.jldt.shortAsOfRecordCount"));
   }
   const asOf = new TextDecoder().decode(bytes.subarray(pos, pos + asOfLen));
   pos += asOfLen;
@@ -168,7 +79,7 @@ export function decodeMunicipalities(
 
   const recordsByteLength = MUNICIPALITY_RECORD_SIZE * recordCount;
   if (pos + recordsByteLength > end) {
-    throw new LocalGovBinaryError("JLDT: buffer too short for records");
+    throw new LocalGovBinaryError(msg("binary.jldt.shortRecords"));
   }
   const stringTableOffset = pos + recordsByteLength;
 
@@ -181,8 +92,8 @@ export function decodeMunicipalities(
     pos += 4;
     const nameKanaOffset = view.getUint32(pos, true);
     pos += 4;
-    const hasWard = requireU8Flag(view.getUint8(pos++), "hasWard");
-    const isWard = requireU8Flag(view.getUint8(pos++), "isWard");
+    const hasWard = requireFlag(view.getUint8(pos++), "hasWard");
+    const isWard = requireFlag(view.getUint8(pos++), "isWard");
 
     const name = readCString(bytes, stringTableOffset, nameOffset, end);
     const nameKana = readCString(bytes, stringTableOffset, nameKanaOffset, end);

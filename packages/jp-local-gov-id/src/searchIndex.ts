@@ -5,6 +5,7 @@ import {
   type SearchNgramPostingRecord,
 } from "./binary";
 import type { DesignatedCityMode, MatchField } from "./types";
+import { fmt } from "./messages.search";
 
 export type SearchIndex = {
   version: number;
@@ -155,7 +156,7 @@ export function warnSearchIndexAsOfMismatch(
   if (!searchAsOf || !prefecturesAsOf) return;
   if (searchAsOf === prefecturesAsOf) return;
   console.warn(
-    `[jp-local-gov-id] JLIX asOf (${searchAsOf}) differs from prefectures asOf (${prefecturesAsOf})`,
+    fmt("search.jlixAsOfMismatch", { searchAsOf, prefecturesAsOf }),
   );
 }
 

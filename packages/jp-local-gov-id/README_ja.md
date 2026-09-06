@@ -46,12 +46,13 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0/index.json",
 });
 ```
 
-- `url` 指定時、取得したファイルを展開・デコードして localStorage にキャッシュします（既定 ON）。保存するのはデコード後オブジェクトの minify JSON。**転送の `.bin.br`（Brotli）とは別**で、localStorage に生バイトは置きません
+- `url` 指定時、取得したファイルを展開・デコードして localStorage にキャッシュします（既定 ON）。実装は [`@b4moss/cachian`](https://www.npmjs.com/package/@b4moss/cachian)（localStorage + get/set/purge）。キーは `jp-local-gov-id:` プレフィックス付き。保存するのはデコード後オブジェクトの minify JSON。**転送の `.bin.br`（Brotli）とは別**で、localStorage に生バイトは置きません
 - `cache: false` で無効化、`cacheTtlSeconds` で TTL（秒。既定 1 年）
+- 明示的な削除は `await client.purgeCache({ all: true })` または `{ keys: [...] }`（他オプションは cachian に準拠）。`data` モード / `cache: false` では no-op
 - 例外: **全国対象**の文字列検索で取得した県別データと JLIX はメモリのみ
 - 正規化後長が 2 未満 → 空 / 2 → ホット 2-gram のみ / 3 以上 → 2-gram と 3-gram をマージ
 - スキーマ不一致・不正データ → `LocalGovSchemaError`。見つからない・衝突 → `null` / `[]`

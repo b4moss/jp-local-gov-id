@@ -34,19 +34,21 @@ Do not open or update a PR while this gate is failing.
 
 | Item | Rule |
 |------|------|
-| Trigger | `pull_request` whose **base** is `develop` or `dev-*` |
-| Not triggered | Push to arbitrary branches; PRs into `main` / `release` / `doc-site` / other bases |
-| Skip heavy jobs | Same head SHA already has a successful `CI` workflow run |
+| Trigger | `pull_request` whose **base** is `develop` or `dev-*`; `push` to **`main`** or **`release`** |
+| Not triggered | Push to `develop` / arbitrary branches; PRs into `main` / `release` / `doc-site` / other bases |
+| Skip heavy jobs | Same head SHA already has a successful `CI` workflow run; or docs-only change set |
 | Docs-only | Changes limited to `docs/**`, `site/content/**`, `*.md` (and similar) → skip Test/Build on GitHub; local act still runs full jobs by default |
-| Parallelism | `Test` and `Build` jobs run in parallel after `Gate` |
-| Required check name | Aggregate job **`Test & Build`** (stable for branch protection) |
+| Jobs | `Gate` then a single **`Test & Build`** job (`npm ci` once → test → build). Site workspace is not installed |
+| Required check name | **`Test & Build`** (stable for branch protection; job always reports, even when heavy work is skipped) |
+| Why `main` push | Codecov default-branch coverage upload (#121) |
+| Why `release` push | Tag SHAs created from `release` get CI history so publish can skip Test |
 
 ## Docs CI (`.github/workflows/ci-docs.yml`)
 
 | Item | Rule |
 |------|------|
 | Trigger | `pull_request` whose **base** is `doc-site` |
-| Job | **`Docs Build`**: `npm ci` + `npm run build:site` |
+| Job | **`Docs Build`**: scoped `npm ci` (site + library/data) + `npm run build:site` |
 | Out of scope | App `npm test`, app package-only verification, and app CI success/failure — **ignored** for merging into `doc-site` |
 
 ### PR targets
@@ -75,8 +77,16 @@ When the playground needs a newer published library build that already landed on
 |------|------|
 | Trigger | Weekly cron (Monday 01:30 UTC) + `workflow_dispatch` |
 | Action | Fetch MIC Excel, SHA-256 vs `resources/000925835.xlsx`, commit `site/public/source-monitor.json` |
+| Install | scripts workspace only |
 | On anomaly | Open/comment Issue with `source-monitor` label; fail the job |
 | Details | [test-spec-66-source-hash.md](./test-spec-66-source-hash.md) / Issue #66 |
+
+## OpenSSF Scorecard (`.github/workflows/scorecard.yml`)
+
+| Item | Rule |
+|------|------|
+| Trigger | Weekly cron (Monday 01:30 UTC), `branch_protection_rule`, `workflow_dispatch` |
+| Not on | Every `main` push (removed to cut redundant runs) |
 
 ## CD — npm publish (`.github/workflows/publish.yml`)
 
@@ -84,11 +94,22 @@ When the playground needs a newer published library build that already landed on
 |------|------|
 | Trigger | GitHub Release **published** for `data-v*` / `app-v*`, or `workflow_dispatch` with a tag |
 | Ancestry | Tag commit must be an ancestor of `origin/release` (`git merge-base --is-ancestor`) |
-| Verify skip | If that SHA already has CI success → skip Test/Build; always pack + provenance publish |
+| Verify skip | If that SHA already has CI success → skip **Test**; **Build always runs** (`dist/` is gitignored) |
 | No CI history | Run Test + Build, then publish |
-| Dispatch | Optional `force_test` to always run Test+Build |
+| Dispatch | Optional `force_test` to always run Test |
+| Install | App workspaces only (no site) |
 
 Create `data-v*` / `app-v*` tags from the **`release`** branch. `release-on-tag.yml` auto-creates the GitHub Release for those tag patterns only.
+
+## v1.0.0 GA (Issue #121)
+
+Official release is gated on Codecov **project coverage ≥ 90%** (`target: 90%` in `codecov.yml`).
+
+1. PR into `develop` is green and Codecov project status is ≥ 90%
+2. After merge to `main` / `release`, a `main` push coverage upload refreshes the default-branch badge to ≥ 90%
+3. Bump app / data package versions to `1.0.0` (drop rc)
+4. Tag `app-v1.0.0` / `data-v1.0.0` from `release` → Release → Publish
+5. Close Issue #121
 
 ## Quick reference
 
@@ -96,8 +117,9 @@ Create `data-v*` / `app-v*` tags from the **`release`** branch. `release-on-tag.
 # App / library
 local change → npm run ci:local (must pass)
             → open PR to develop / dev-*
-            → CI Gate → Test ‖ Build → "Test & Build"
-tag on release → Release → Publish (reuse CI or re-verify) → npm
+            → CI Gate → "Test & Build" (single job)
+release push → CI (history for publish skip)
+tag on release → Release → Publish (reuse CI Test or re-verify; always Build) → npm
 
 # Documentation site
 site change → open PR to doc-site

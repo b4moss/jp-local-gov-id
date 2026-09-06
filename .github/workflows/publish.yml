@@ -68,7 +68,7 @@ jobs:
           echo "package_dir=$PKG_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: refs/tags/${{ steps.meta.outputs.tag }}
           fetch-depth: 0
@@ -113,7 +113,7 @@ jobs:
             );
             core.setOutput('skip_verify', ok ? 'true' : 'false');
             core.info(ok
-              ? `CI success found for ${sha} — skipping Test/Build`
+              ? `CI success found for ${sha} — skipping Test (Build always runs)`
               : `No CI success for ${sha} — will run Test+Build`);
 
       - name: Setup Node.js
@@ -123,15 +123,21 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      # Publish does not need the Nuxt site workspace.
+      - name: Install dependencies (app workspaces)
+        run: >
+          npm ci
+          -w @b4moss/jp-local-gov-id
+          -w @b4moss/jp-local-gov-id-data
+          -w jp-local-gov-id-scripts
+          --include-workspace-root
 
       - name: Test
         if: steps.ci_history.outputs.skip_verify != 'true'
         run: npm test
 
+      # dist/ is gitignored — always build before pack for app-v*.
       - name: Build
-        if: steps.ci_history.outputs.skip_verify != 'true'
         run: npm run build
 
       - name: Pack

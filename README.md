@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml/badge.svg)](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/b4moss/jp-local-gov-id)](https://codecov.io/gh/b4moss/jp-local-gov-id)
-[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id/rc)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
+[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
 [![Release](https://img.shields.io/github/v/release/b4moss/jp-local-gov-id?include_prereleases&filter=app-v*)](https://github.com/b4moss/jp-local-gov-id/releases)
 [![License](https://img.shields.io/github/license/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/blob/main/LICENSE)
 [![OpenSSF Scorecard](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.scorecard.dev%2Fprojects%2Fgithub.com%2Fb4moss%2Fjp-local-gov-id&label=OpenSSF%20Scorecard&query=$.score)](https://scorecard.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
@@ -15,8 +15,8 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0-rc.11 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli binary (`.bin.br`) datasets | 1.0.0-rc.11 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.2.0 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli binary (`.bin.br`) datasets | 1.0.0 |
 
 ## Install (consumers)
 
@@ -57,12 +57,13 @@ Fetch from a versioned index URL:
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0/index.json",
 });
 ```
 
-- When `url` is set, fetched files are decompressed/decoded and cached in localStorage by default (key = file URL). The cached value is a minified `JSON.stringify` of the decoded object — **separate from on-wire `.bin.br` (Brotli)**; raw bytes are never stored in localStorage
+- When `url` is set, fetched files are decompressed/decoded and cached in localStorage by default via `@b4moss/cachian` (keys prefixed with `jp-local-gov-id:`). The cached value is a minified `JSON.stringify` of the decoded object — **separate from on-wire `.bin.br` (Brotli)**; raw bytes are never stored in localStorage
 - Disable with `cache: false`; set TTL via `cacheTtlSeconds` (seconds; default 1 year = `31536000`)
+- Clear with `await client.purgeCache({ all: true })` (or `{ keys: [...] }`, etc.)
 - Exception: municipality data and JLIX (`search-ngrams/**`) loaded by **nationwide** string search stay in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`). After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram

@@ -109,7 +109,7 @@ import dataset from "@b4moss/jp-local-gov-id-data";
 const client = await createLocalGovClient({ data: dataset });
 
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0/index.json",
 });
 ```
 
@@ -136,6 +136,8 @@ const client = await createLocalGovClient({
   - 保存する文字列は `JSON.stringify`（**minify**。空白なし）
   - **転送ペイロードの Brotli（`.bin.br`）とは別レイヤ**。生バイトを localStorage に保存することはない
 - `cache?: boolean`（既定 `true`）、`cacheTtlSeconds?: number`（既定 `31536000`）
+- キャッシュは `@b4moss/cachian`（prefix `jp-local-gov-id:`）。`purgeCache` で明示削除
+- キャッシュ実装は `@b4moss/cachian`（キー prefix `jp-local-gov-id:`）。`purgeCache` で明示削除
 - 例外: **全国対象の文字列検索**で取得した県別データと JLIX は localStorage に書かず、**メモリのみ**
 - `data` を直接渡した場合はキャッシュしない
 - **キャッシュキーは版付き URL そのもの**
@@ -254,6 +256,8 @@ type LocalGovClient = {
   searchByText(text: string, options?: SearchOptions): Promise<LocalGov[]>
   /** 正式名称 → 地方公共団体コード（6 桁）。都道府県ヒット時も 6 桁 */
   getLocalGovCodeByName(name: string, options?: SearchOptions): Promise<string | null>
+  /** URL モードの localStorage キャッシュを明示削除（`@b4moss/cachian` CachePurgeOptions） */
+  purgeCache(options: CachePurgeOptions): Promise<void>
 }
 ```
 

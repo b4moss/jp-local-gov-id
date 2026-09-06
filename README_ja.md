@@ -15,8 +15,8 @@
 
 | パッケージ | 説明 | バージョン |
 |------------|------|------------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0-rc.11 |
-| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0-rc.11 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API（データ非同梱・遅延ロード） | 1.0.0 |
+| [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli バイナリ（`.bin.br`）データ | 1.0.0 |
 
 ## インストール（利用側）
 
@@ -57,12 +57,13 @@ await client.getLocalGovCodeByName("千代田区"); // "131016"
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://example.com/jp-local-gov-id-data/1.0.0-rc.11/index.json",
+  url: "https://example.com/jp-local-gov-id-data/1.0.0/index.json",
 });
 ```
 
-- `url` 指定時、取得したファイルを展開・デコードして localStorage にキャッシュします（既定 ON。キーは各ファイルの URL）。保存する文字列はデコード後オブジェクトの `JSON.stringify`（minify。空白なし）。**転送ペイロードの `.bin.br`（Brotli）とは別**で、localStorage に生バイトは置きません
+- `url` 指定時、取得したファイルを展開・デコードして localStorage にキャッシュします（既定 ON。`@b4moss/cachian`、キーは `jp-local-gov-id:` プレフィックス）。保存する文字列はデコード後オブジェクトの `JSON.stringify`（minify。空白なし）。**転送ペイロードの `.bin.br`（Brotli）とは別**で、localStorage に生バイトは置きません
 - `cache: false` で無効化、`cacheTtlSeconds` で有効期限を秒単位で指定（既定 1 年 = `31536000`）
+- `await client.purgeCache({ all: true })` などで明示削除
 - 例外: **全国対象**の文字列検索で取得した県別データ、および JLIX（`search-ngrams/**`）は localStorage に書かず、メモリのみ保持します
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）。正規化後長が 2 未満は空、2 はホット 2-gram のみ、3 以上は 2-gram と 3-gram をマージ

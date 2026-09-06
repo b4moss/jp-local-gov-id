@@ -19,7 +19,6 @@ export { LocalGovBinaryError } from "./errors";
 export {
   decodeMunicipalities,
   decodeMunicipalitiesFile,
-  encodeMunicipalities,
   municipalityRecordToLocalGov,
   prefectureCodeFromMunicipalityCode,
   toMunicipalitiesFile,
@@ -28,19 +27,19 @@ export {
   type MunicipalityBinRecord,
   type PrefectureNameLookup,
 } from "./municipalities";
+export { encodeMunicipalities } from "./municipalities.encode";
 export {
   decodePrefectures,
   decodePrefecturesFile,
-  encodePrefectures,
   prefectureRecordToLocalGov,
   toPrefecturesFile,
   type DecodedPrefecturesBin,
   type EncodePrefecturesMeta,
   type PrefectureBinRecord,
 } from "./prefectures";
+export { encodePrefectures } from "./prefectures.encode";
 export {
   decodeSearchNgrams,
-  encodeSearchNgrams,
   sortSearchNgramPostings,
   type DecodedSearchNgramsBin,
   type EncodeSearchNgramsMeta,
@@ -48,3 +47,4 @@ export {
   type GramType,
   type SearchNgramPostingRecord,
 } from "./searchNgrams";
+export { encodeSearchNgrams } from "./searchNgrams.encode";

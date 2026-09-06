@@ -20,6 +20,7 @@ import type {
   SearchIndexes,
 } from "./store";
 import type { SearchNgramsPathSpec } from "./types";
+import { fmt } from "./messages.search";
 
 export function twoGramPartitionPath(
   spec: SearchNgramsPathSpec,
@@ -180,7 +181,7 @@ export function createDatasetSearchIndexLoader(options: {
         const bytes = options.shards[key];
         if (!bytes) {
           throw new LocalGovSchemaError(
-            `Dataset searchNgramShards missing 2-gram region "${key}"`,
+            fmt("search.missingTwoGramRegion", { key }),
           );
         }
         return toArrayBuffer(bytes);
@@ -193,13 +194,13 @@ export function createDatasetSearchIndexLoader(options: {
         const bytes = options.shards[key];
         if (!bytes) {
           throw new LocalGovSchemaError(
-            `Dataset searchNgramShards missing 3-gram shard "${key}"`,
+            fmt("search.missingThreeGramShard", { key }),
           );
         }
         return toArrayBuffer(bytes);
       }
       throw new LocalGovSchemaError(
-        `Unrecognized search index path for dataset: ${relativePath}`,
+        fmt("search.unrecognizedPath", { relativePath }),
       );
     },
     // Dataset reads are local — no network stagger needed, but keep semantics.

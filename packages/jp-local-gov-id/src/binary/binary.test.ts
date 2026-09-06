@@ -9,6 +9,7 @@ import {
   encodeMunicipalities,
   encodePrefectures,
   encodeSearchNgrams,
+  prefectureCodeFromMunicipalityCode,
   GRAM_TYPE_KANA,
   GRAM_TYPE_NAME,
   KIND_MUNI,
@@ -384,5 +385,243 @@ describe("strict decode errors", () => {
     expect(MAGIC_JLPR).toBe("JLPR");
     expect(MAGIC_JLDT).toBe("JLDT");
     expect(MAGIC_JLIX).toBe("JLIX");
+  });
+});
+
+
+describe("JLDT encode/decode error paths", () => {
+  it("rejects invalid hasWard / isWard / code on encode", () => {
+    expect(() =>
+      encodeMunicipalities(
+        [{ code: 11002, name: "x", nameKana: "y", hasWard: 2 as 0 | 1, isWard: 0 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/hasWard must be 0 or 1/);
+    expect(() =>
+      encodeMunicipalities(
+        [{ code: 11002, name: "x", nameKana: "y", hasWard: 0, isWard: 2 as 0 | 1 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/isWard must be 0 or 1/);
+    expect(() =>
+      encodeMunicipalities(
+        [{ code: -1, name: "x", nameKana: "y", hasWard: 0, isWard: 0 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/code out of u4 range/);
+  });
+
+  it("rejects invalid version / asOf / record_count on encode", () => {
+    expect(() =>
+      encodeMunicipalities(sampleMunis, { asOf: "R6.1.1", version: 256 }),
+    ).toThrow(/version out of u1 range/);
+    expect(() =>
+      encodeMunicipalities(sampleMunis, { asOf: "a".repeat(256) }),
+    ).toThrow(/asOf exceeds u1 length/);
+    const tooMany: MunicipalityBinRecord[] = Array.from({ length: 0x10000 }, (_, i) => ({
+      code: i,
+      name: "n",
+      nameKana: "k",
+      hasWard: 0 as const,
+      isWard: 0 as const,
+    }));
+    expect(() => encodeMunicipalities(tooMany, { asOf: "R6.1.1" })).toThrow(
+      /record_count exceeds u2/,
+    );
+  });
+
+  it("round-trips empty municipality records", () => {
+    const buf = encodeMunicipalities([], { asOf: "R6.1.1" });
+    const decoded = decodeMunicipalities(buf);
+    expect(decoded.records).toEqual([]);
+    expect(decoded.asOf).toBe("R6.1.1");
+  });
+
+  it("rejects truncated JLDT buffers at each stage", () => {
+    const buf = encodeMunicipalities(sampleMunis, { asOf: "R6.1.1" });
+    expect(() => decodeMunicipalities(buf.slice(0, 4))).toThrow(LocalGovBinaryError);
+    expect(() => decodeMunicipalities(buf.slice(0, 5))).toThrow(
+      /buffer too short for version\/asOfLen/,
+    );
+    // version + asOfLen present but asOf/record_count truncated
+    const view = new DataView(buf);
+    const asOfLen = view.getUint8(5);
+    const cut = 4 + 1 + 1 + asOfLen; // before record_count
+    expect(() => decodeMunicipalities(buf.slice(0, cut))).toThrow(
+      /buffer too short for asOf\/record_count/,
+    );
+    // header ok but records truncated
+    const headerEnd = 4 + 1 + 1 + asOfLen + 2;
+    expect(() => decodeMunicipalities(buf.slice(0, headerEnd + 4))).toThrow(
+      /buffer too short for records/,
+    );
+  });
+
+  it("rejects unsupported JLDT version", () => {
+    const buf = encodeMunicipalities(sampleMunis, { asOf: "R6.1.1" });
+    const bytes = new Uint8Array(buf.slice(0));
+    bytes[4] = 9;
+    expect(() => decodeMunicipalities(bytes.buffer)).toThrow(/Unsupported version/);
+  });
+
+  it("rejects invalid magic for JLDT", () => {
+    const buf = encodeMunicipalities(sampleMunis, { asOf: "R6.1.1" });
+    const bytes = new Uint8Array(buf.slice(0));
+    bytes[0] = 0;
+    expect(() => decodeMunicipalities(bytes.buffer)).toThrow(LocalGovBinaryError);
+  });
+
+  it("rejects trailing bytes for JLDT", () => {
+    const buf = encodeMunicipalities(sampleMunis, { asOf: "R6.1.1" });
+    const withTrailing = new Uint8Array(buf.byteLength + 1);
+    withTrailing.set(new Uint8Array(buf));
+    expect(() => decodeMunicipalities(withTrailing.buffer)).toThrow(
+      /trailing or unused bytes/,
+    );
+  });
+
+  it("rejects bad hasWard flag in decoded payload", () => {
+    const buf = encodeMunicipalities(sampleMunis, { asOf: "R6.1.1" });
+    const copy = buf.slice(0);
+    const view = new DataView(copy);
+    const asOfLen = view.getUint8(5);
+    const recordStart = 4 + 1 + 1 + asOfLen + 2;
+    // hasWard is at offset +12 within record (code4 + name4 + kana4)
+    view.setUint8(recordStart + 12, 3);
+    expect(() => decodeMunicipalities(copy)).toThrow(/hasWard must be 0 or 1/);
+  });
+
+  it("derives prefecture code from municipality code", () => {
+    expect(prefectureCodeFromMunicipalityCode(11002)).toBe("01");
+    expect(prefectureCodeFromMunicipalityCode("131016")).toBe("13");
+  });
+});
+
+describe("JLPR encode/decode extra error paths", () => {
+  it("rejects invalid field ranges on encode", () => {
+    expect(() =>
+      encodePrefectures(
+        [{ ...samplePrefs[0]!, prefCode: 256 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/prefCode out of u1 range/);
+    expect(() =>
+      encodePrefectures(
+        [{ ...samplePrefs[0]!, muniCode: -1 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/muniCode out of u4 range/);
+    expect(() =>
+      encodePrefectures(samplePrefs, { asOf: "R6.1.1", version: 300 }),
+    ).toThrow(/version out of u1 range/);
+    expect(() =>
+      encodePrefectures(samplePrefs, { asOf: "b".repeat(256) }),
+    ).toThrow(/asOf exceeds u1 length/);
+    const tooMany: PrefectureBinRecord[] = Array.from({ length: 0x10000 }, (_, i) => ({
+      prefCode: i % 200,
+      name: "n",
+      nameKana: "k",
+      muniCode: i,
+      muniCountBoth: 1,
+      muniCountCity: 1,
+      muniCountWard: 1,
+    }));
+    expect(() => encodePrefectures(tooMany, { asOf: "R6.1.1" })).toThrow(
+      /record_count exceeds u2/,
+    );
+  });
+
+  it("round-trips empty prefecture records", () => {
+    const buf = encodePrefectures([], { asOf: "R6.1.1" });
+    expect(decodePrefectures(buf).records).toEqual([]);
+  });
+
+  it("rejects truncated JLPR buffers", () => {
+    const buf = encodePrefectures(samplePrefs, { asOf: "R6.1.1" });
+    expect(() => decodePrefectures(buf.slice(0, 5))).toThrow(
+      /buffer too short for version\/asOfLen/,
+    );
+    const view = new DataView(buf);
+    const asOfLen = view.getUint8(5);
+    expect(() => decodePrefectures(buf.slice(0, 4 + 1 + 1 + asOfLen))).toThrow(
+      /buffer too short for asOf\/record_count/,
+    );
+    const headerEnd = 4 + 1 + 1 + asOfLen + 2;
+    expect(() => decodePrefectures(buf.slice(0, headerEnd + 2))).toThrow(
+      /buffer too short for records/,
+    );
+  });
+});
+
+describe("JLIX encode/decode extra error paths", () => {
+  it("rejects invalid posting fields on encode", () => {
+    expect(() =>
+      encodeSearchNgrams(
+        [{ ...sampleNgrams[0]!, gramType: 3 as 0 | 1 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/gramType must be 0\|1/);
+    expect(() =>
+      encodeSearchNgrams(
+        [{ ...sampleNgrams[0]!, kind: 3 as 0 | 1 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/kind must be 0\|1/);
+    expect(() =>
+      encodeSearchNgrams(
+        [{ ...sampleNgrams[0]!, hasWard: 2 as 0 | 1 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/hasWard must be 0 or 1/);
+    expect(() =>
+      encodeSearchNgrams(
+        [{ ...sampleNgrams[0]!, muniCode: -1 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/muniCode out of u4 range/);
+    expect(() =>
+      encodeSearchNgrams(
+        [{ ...sampleNgrams[0]!, prefCode: 300 }],
+        { asOf: "R6.1.1" },
+      ),
+    ).toThrow(/prefCode out of u1 range/);
+    expect(() =>
+      encodeSearchNgrams(sampleNgrams, { asOf: "R6.1.1", version: 999 }),
+    ).toThrow(/version out of u1 range/);
+    expect(() =>
+      encodeSearchNgrams(sampleNgrams, { asOf: "c".repeat(256) }),
+    ).toThrow(/asOf exceeds u1 length/);
+  });
+
+  it("round-trips empty ngram postings", () => {
+    const buf = encodeSearchNgrams([], { asOf: "R6.1.1" });
+    expect(decodeSearchNgrams(buf).records).toEqual([]);
+  });
+
+  it("rejects truncated JLIX buffers", () => {
+    const buf = encodeSearchNgrams(sampleNgrams, { asOf: "R6.1.1" });
+    expect(() => decodeSearchNgrams(buf.slice(0, 5))).toThrow(
+      /buffer too short for version\/asOfLen/,
+    );
+    const view = new DataView(buf);
+    const asOfLen = view.getUint8(5);
+    expect(() => decodeSearchNgrams(buf.slice(0, 4 + 1 + 1 + asOfLen))).toThrow(
+      /buffer too short for asOf\/record_count/,
+    );
+    const headerEnd = 4 + 1 + 1 + asOfLen + 2;
+    expect(() => decodeSearchNgrams(buf.slice(0, headerEnd + 2))).toThrow(
+      /buffer too short for records/,
+    );
+  });
+
+  it("rejects bad flag bytes on decode", () => {
+    const buf = encodeSearchNgrams(sampleNgrams, { asOf: "R6.1.1" });
+    const copy = buf.slice(0);
+    const view = new DataView(copy);
+    const asOfLen = view.getUint8(5);
+    const recordStart = 4 + 1 + 1 + asOfLen + 2;
+    // hasWard at +11 within posting (gramOff4 + type1 + kind1 + muni4 + pref1 = 11)
+    view.setUint8(recordStart + 11, 5);
+    expect(() => decodeSearchNgrams(copy)).toThrow(/hasWard must be 0 or 1/);
   });
 });
