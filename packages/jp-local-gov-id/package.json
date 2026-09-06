@@ -55,6 +55,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@b4moss/cachian": "0.4.0",
     "brotli-wasm": "^3.0.1"
   },
   "sideEffects": false

@@ -1,7 +1,7 @@
 import {
   DEFAULT_CACHE_TTL_SECONDS,
-  getCachedData,
-  setCachedData,
+  createLocalGovCache,
+  type LocalGovCache,
 } from "./cache";
 import { buildLocalGovClient } from "./api";
 import {
@@ -193,10 +193,10 @@ async function fetchAndCache<T>(
   url: string,
   load: () => Promise<unknown>,
   validate: (data: unknown) => T,
-  cache: ResolvedCacheConfig,
+  cache: LocalGovCache,
   options?: { persist?: boolean },
 ): Promise<T> {
-  const cached = getCachedData(url, { enabled: cache.enabled });
+  const cached = await cache.get(url);
   if (cached !== null) {
     return validate(cached);
   }
@@ -204,18 +204,19 @@ async function fetchAndCache<T>(
   const parsed = await load();
   const validated = validate(parsed);
   if (options?.persist !== false) {
-    setCachedData(url, validated, {
-      enabled: cache.enabled,
-      ttlSeconds: cache.ttlSeconds,
-    });
+    await cache.set(url, validated);
   }
   return validated;
 }
 
 async function createFromUrl(
   indexUrl: string,
-  cache: ResolvedCacheConfig,
+  cacheConfig: ResolvedCacheConfig,
 ): Promise<LocalGovClient> {
+  const cache = createLocalGovCache({
+    enabled: cacheConfig.enabled,
+    ttlSeconds: cacheConfig.ttlSeconds,
+  });
   // Normalize path-only bases (e.g. "/data/index.json") so sibling resolution works.
   const absoluteIndexUrl = toAbsoluteUrl(indexUrl);
 
@@ -271,7 +272,7 @@ async function createFromUrl(
     { prefecturesAsOf: prefecturesFile.asOf },
   );
 
-  return buildLocalGovClient(store);
+  return buildLocalGovClient(store, { cache });
 }
 
 async function createFromData(data: unknown): Promise<LocalGovClient> {
@@ -326,9 +327,10 @@ async function createFromData(data: unknown): Promise<LocalGovClient> {
  * Pass either `{ data }` (dataset) or `{ url }` (versioned index.json URL).
  *
  * For `url` mode, localStorage caching is on by default (`cache: true`,
- * `cacheTtlSeconds` defaults to 1 year). Cached values are decoded objects
- * stored via `JSON.stringify` (minified). JLIX and nationwide municipality
- * loads skip localStorage.
+ * `cacheTtlSeconds` defaults to 1 year) via `@b4moss/cachian` (localStorage
+ * driver + get/set/purge). Keys are prefixed with `jp-local-gov-id:`.
+ * Call `client.purgeCache(...)` to clear. Cached values are decoded objects
+ * (minified JSON). JLIX and nationwide municipality loads skip localStorage.
  */
 export async function createLocalGovClient(
   options: CreateLocalGovOptions,
@@ -349,8 +351,8 @@ export async function createLocalGovClient(
   }
 
   if (urlProvided) {
-    const cache = resolveCacheConfig(options);
-    return createFromUrl(options.url, cache);
+    const cacheConfig = resolveCacheConfig(options);
+    return createFromUrl(options.url, cacheConfig);
   }
 
   resolveCacheConfig(options);
