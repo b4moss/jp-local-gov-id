@@ -1,6 +1,5 @@
+// Runtime catalog for createLocalGovClient initial chunk (#93).
 {
-  // Runtime catalog (createLocalGovClient graph) — #93
-  // schema.*
   "schema.versionMustBeNumber": "{label}: schemaVersion must be a number",
   "schema.unsupportedVersion": "Unsupported schemaVersion: expected {expected}, got {got}",
   "schema.mustBeObject": "{label} must be a non-null object",
@@ -18,38 +17,22 @@
   "schema.municipalitiesPrefectureCode": "Municipalities file must include string prefectureCode",
   "schema.municipalitiesArray": "Municipalities file must include a municipalities array of Municipality objects",
   "schema.datasetObject": "Dataset must be a non-null object with index and prefectures",
-  "schema.datasetIndexPrefectures": "Dataset must include index and prefectures (and optionally municipalitiesByCode / loadMunicipalities)",
+  "schema.datasetIndexPrefectures": "Dataset must include index and prefectures (optional municipalitiesByCode / loadMunicipalities)",
   "schema.searchNgramShardsRecord": "Dataset searchNgramShards must be a Record of ArrayBuffer or Uint8Array",
   "schema.searchNgramShardsEntry": "Dataset searchNgramShards[{key}] must be ArrayBuffer or Uint8Array",
-
-  // create.*
   "create.cacheTtlSeconds": "cacheTtlSeconds must be a finite number greater than or equal to 0",
   "create.urlParse": "\"{url}\" cannot be parsed as a URL (pass an absolute URL, or use in a browser)",
   "create.fetchFailed": "Failed to fetch local gov data: {status} {statusText}",
   "create.parseJsonFailed": "Failed to parse local gov data as JSON from URL",
   "create.readBinaryFailed": "Failed to read local gov binary data from URL",
   "create.unknownPrefectureDecode": "Unknown prefecture code while decoding municipalities: {code}",
-  "create.missingSearchNgramShards": "Dataset is missing searchNgramShards (JLIX partition bytes) required for nationwide string search",
-  "create.noMunicipalitiesData": "No municipalities data for prefecture {code}: provide municipalitiesByCode or loadMunicipalities",
+  "create.missingSearchNgramShards": "Dataset missing searchNgramShards (JLIX bytes) required for nationwide search",
+  "create.noMunicipalitiesData": "No municipalities for prefecture {code}: set municipalitiesByCode or loadMunicipalities",
   "create.optionsRequired": "createLocalGovClient requires options with either `data` or `url`",
   "create.optionsExclusive": "createLocalGovClient accepts either `data` or `url`, not both",
   "create.dataOrUrlRequired": "createLocalGovClient requires either `data` or `url`",
-
-  // cache.*
   "cache.ttlSeconds": "cacheTtlSeconds must be a finite number greater than or equal to 0",
-
-  // brotli.*
-  "brotli.unavailable": "Brotli decompression requires DecompressionStream(\"brotli\"), brotli-wasm, or a Node.js runtime",
-
-  // search.*
-  "search.jlixAsOfMismatch": "[jp-local-gov-id] JLIX asOf ({searchAsOf}) differs from prefectures asOf ({prefecturesAsOf})",
-  "search.missingTwoGramRegion": "Dataset searchNgramShards missing 2-gram region \"{key}\"",
-  "search.missingThreeGramShard": "Dataset searchNgramShards missing 3-gram shard \"{key}\"",
-  "search.unrecognizedPath": "Unrecognized search index path for dataset: {relativePath}",
-  "search.nPositiveInteger": "n must be a positive integer",
-  "search.shardCountPositiveInteger": "shardCount must be a positive integer",
-
-  // binary.*
+  "brotli.unavailable": "Brotli needs DecompressionStream(\"brotli\"), brotli-wasm, or Node.js",
   "binary.invalidStringOffset": "Invalid string offset: {relativeOffset}",
   "binary.stringOffsetOutOfRange": "String offset out of range: {relativeOffset}",
   "binary.unterminatedString": "Unterminated string at offset {relativeOffset}",

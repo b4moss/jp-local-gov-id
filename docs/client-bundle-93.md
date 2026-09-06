@@ -6,6 +6,7 @@
 
 ```bash
 npm run measure:client-bundle -w @b4moss/jp-local-gov-id
+npm run measure:client-bundle -w @b4moss/jp-local-gov-id -- --meta
 ```
 
 ## 測定条件
@@ -28,6 +29,10 @@ npm run measure:client-bundle -w @b4moss/jp-local-gov-id
 | 分割前ベースライン（#85 後） | 単一 `MESSAGES` | 31620 | 8920 |
 | 分割後（#128） | runtime / encode カタログ分割 + encode ファイル分離 + assert 共通化 | 30767 | 8846 |
 | follow-up 起点 | `dev-v1.2.0` + `dev-v1.1.0`（`@b4moss/cachian` 取り込み後） | 35428 | 10325 |
+| Phase 0 | metafile / 初期ロード定義を測定スクリプトに追加 | 35428 | 10325 |
+| Phase A1+A2 | Search + cachian 動的 import | 25911 | 7476 |
+| Phase B | search メッセージ分離 | 25402 | 7339 |
+| Phase C–E | binary 直接 import・文言短縮・normalize 整理 | **24339** | **7212** |
 
 差分: minify 生 **−853 B**（約 −2.7%）。encode 専用キーは create グラフおよび `decode.js` から除外済み。
 
@@ -38,3 +43,14 @@ npm run measure:client-bundle -w @b4moss/jp-local-gov-id
 - `decode.js` は `binary/decodeEntry.ts` から生成（runtime のみ）
 - `brotli-wasm` は維持
 - `binary/assert.ts` で共通 assert を整理
+
+## follow-up 実施内容（≤25KB）
+
+- Phase A1: `api.search.ts` へ全国検索を分離し、`searchByText` / `getLocalGovCodeByName` から動的 import
+- Phase A1: `searchIndexLoader` を create 時は薄いラッパ、初回 `ensureSearchIndexes` で動的 import
+- Phase A2: URL モードの `cache` / `@b4moss/cachian` を `import("./cache")` で遅延
+- Phase B: `messages.search.jsonc` を追加し search 実装のみが参照
+- Phase C–E: create の binary import を decode ファイル直指定、runtime 文言短縮、normalize の桁抽出共通化
+- `brotli-wasm` は維持。公開 API 互換を維持
+
+最終: 初期ロード minify 生 **24339**（目標 ≤25600）

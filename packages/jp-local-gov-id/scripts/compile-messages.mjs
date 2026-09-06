@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Compile message catalogs:
- * - src/messages.jsonc → src/messages.generated.ts (runtime)
+ * - src/messages.jsonc → src/messages.generated.ts (runtime / create initial chunk)
  * - src/messages.encode.jsonc → src/messages.encode.generated.ts (encode)
+ * - src/messages.search.jsonc → src/messages.search.generated.ts (search chunk)
  * (Vite/TS cannot import JSONC directly.)
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -128,12 +129,29 @@ function main() {
     "ENCODE_MESSAGES",
     "EncodeMessageKey",
   );
+  const searchKeys = compileOne(
+    "messages.search.jsonc",
+    "messages.search.generated.ts",
+    "SEARCH_MESSAGES",
+    "SearchMessageKey",
+  );
 
-  const overlap = [...runtimeKeys].filter((k) => encodeKeys.has(k));
-  if (overlap.length > 0) {
-    throw new Error(
-      `[compile-messages] Duplicate keys across catalogs: ${overlap.join(", ")}`,
-    );
+  const catalogs = [
+    ["runtime", runtimeKeys],
+    ["encode", encodeKeys],
+    ["search", searchKeys],
+  ];
+  for (let i = 0; i < catalogs.length; i++) {
+    for (let j = i + 1; j < catalogs.length; j++) {
+      const [aName, aKeys] = catalogs[i];
+      const [bName, bKeys] = catalogs[j];
+      const overlap = [...aKeys].filter((k) => bKeys.has(k));
+      if (overlap.length > 0) {
+        throw new Error(
+          `[compile-messages] Duplicate keys across ${aName}/${bName}: ${overlap.join(", ")}`,
+        );
+      }
+    }
   }
 }
 

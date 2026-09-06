@@ -6,6 +6,12 @@ import {
   type EncodeMessageKey,
 } from "./messages.encode";
 import { fmt, msg, MESSAGES, type MessageKey } from "./messages";
+import {
+  SEARCH_MESSAGES,
+  fmt as searchFmt,
+  msg as searchMsg,
+  type SearchMessageKey,
+} from "./messages.search";
 
 describe("messages catalog helpers", () => {
   it("msg returns static runtime catalog strings", () => {
@@ -21,6 +27,12 @@ describe("messages catalog helpers", () => {
     expect(encodeMsg("binary.asOfExceedsU1")).toBe("asOf exceeds u1 length");
     expect(encodeMsg("data.unknownPrefectureCode")).toBe(
       ENCODE_MESSAGES["data.unknownPrefectureCode"],
+    );
+  });
+
+  it("search msg returns search catalog strings", () => {
+    expect(searchMsg("search.nPositiveInteger")).toBe(
+      SEARCH_MESSAGES["search.nPositiveInteger"],
     );
   });
 
@@ -41,6 +53,9 @@ describe("messages catalog helpers", () => {
     expect(() => encodeMsg("no.such.key" as EncodeMessageKey)).toThrow(
       /Unknown message key/,
     );
+    expect(() => searchMsg("no.such.key" as SearchMessageKey)).toThrow(
+      /Unknown message key/,
+    );
   });
 
   it("fmt throws when a required placeholder is missing", () => {
@@ -57,16 +72,23 @@ describe("messages catalog helpers", () => {
     ).toThrow(/must not be null or undefined/);
   });
 
-  it("runtime and encode catalogs are disjoint and cover namespaces", () => {
+  it("runtime / encode / search catalogs are disjoint and cover namespaces", () => {
     const runtimeKeys = Object.keys(MESSAGES) as MessageKey[];
     const encodeKeys = Object.keys(ENCODE_MESSAGES) as EncodeMessageKey[];
+    const searchKeys = Object.keys(SEARCH_MESSAGES) as SearchMessageKey[];
     expect(runtimeKeys.some((k) => k.startsWith("schema."))).toBe(true);
     expect(runtimeKeys.some((k) => k.startsWith("create."))).toBe(true);
     expect(runtimeKeys.some((k) => k.startsWith("binary."))).toBe(true);
+    expect(runtimeKeys.some((k) => k.startsWith("search."))).toBe(false);
     expect(runtimeKeys.some((k) => k.startsWith("data."))).toBe(false);
     expect(encodeKeys).toContain("data.unknownPrefectureCode");
     expect(encodeKeys).toContain("binary.jlpr.encodeSizeMismatch");
+    expect(searchKeys.some((k) => k.startsWith("search."))).toBe(true);
     for (const key of encodeKeys) {
+      expect(runtimeKeys).not.toContain(key);
+      expect(searchKeys).not.toContain(key);
+    }
+    for (const key of searchKeys) {
       expect(runtimeKeys).not.toContain(key);
     }
   });
@@ -111,6 +133,8 @@ describe("messages catalog helpers", () => {
           after.startsWith("fmt(") ||
           after.startsWith("encodeMsg(") ||
           after.startsWith("encodeFmt(") ||
+          after.startsWith("searchMsg(") ||
+          after.startsWith("searchFmt(") ||
           after.startsWith("error.message") ||
           after.startsWith("err.message")
         ) {
