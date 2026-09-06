@@ -12,6 +12,7 @@ import {
   type SearchIndexHit,
 } from "./searchIndex";
 import type { LocalGovStore } from "./store";
+import type { LocalGovCache } from "./cache";
 import type {
   ListMunicipalitiesOptions,
   LocalGov,
@@ -180,8 +181,18 @@ async function collectNationwideViaIndex(
   return sortSearchHits([...prefs, ...filteredMunis]);
 }
 
+export type BuildLocalGovClientOptions = {
+  /** Shared URL-mode cache; omit / no-op for `data` mode. */
+  cache?: LocalGovCache;
+};
+
 /** Build a client from an in-memory store (internal). */
-export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
+export function buildLocalGovClient(
+  store: LocalGovStore,
+  options?: BuildLocalGovClientOptions,
+): LocalGovClient {
+  const cache = options?.cache;
+
   return {
     listPrefectures(): Prefecture[] {
       return [...store.prefectures];
@@ -346,6 +357,11 @@ export function buildLocalGovClient(store: LocalGovStore): LocalGovClient {
 
       if (matches.length !== 1) return null;
       return matches[0]?.code ?? null;
+    },
+
+    async purgeCache(purgeOptions) {
+      if (!cache) return;
+      await cache.purge(purgeOptions);
     },
   };
 }

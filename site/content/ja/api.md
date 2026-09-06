@@ -14,7 +14,7 @@ schemaRole: TechArticle
 |------------|------|
 | `data` | npm データセット（または同等オブジェクト。`searchNgramShards` 含む） |
 | `url` | `index.json` の版付き URL（配下の `.bin.br` を相対解決） |
-| `cache` | `url` モードの localStorage キャッシュ。既定 `true` |
+| `cache` | `url` モードの localStorage キャッシュ（`@b4moss/cachian`）。既定 `true`。キーは `jp-local-gov-id:` プレフィックス |
 | `cacheTtlSeconds` | キャッシュ TTL（秒）。既定 `31536000`（1 年） |
 
 どちらか一方が必須（`data` または `url`）。
@@ -52,6 +52,7 @@ schemaRole: TechArticle
 | `getByCode(code)` | `Promise<LocalGov \| null>` | 2 桁 / 6 桁を自動判定（6 桁は都道府県エンティティ優先） |
 | `searchByText(text, options?)` | `Promise<LocalGov[]>` | 部分一致検索 |
 | `getLocalGovCodeByName(name, options?)` | `Promise<string \| null>` | 正式名称から**地方公共団体コード（6 桁）** |
+| `purgeCache(options)` | `Promise<void>` | URL モードの localStorage キャッシュを削除（`{ all: true }` / `{ keys }` 等。cachian の `CachePurgeOptions`） |
 
 ### `designatedCity` オプション
 

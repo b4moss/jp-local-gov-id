@@ -70,7 +70,10 @@
 
 - `cache` 既定 `true`。`false` で localStorage 読み書きなし
 - `cacheTtlSeconds` 既定 `31536000`（1 年）。単位は秒
-- `data` モードではキャッシュしない
+- 実装は `@b4moss/cachian`（localStorage + get/set/purge）。物理キーは `jp-local-gov-id:` プレフィックス付き
+- 利用者は `LocalGovClient.purgeCache(options)` で明示削除できる（`{ all: true }` / `{ keys }` / 時間条件）。内部経路は自動 purge しない
+- TTL 切れの高度な振る舞いは cachian 側に委譲（本パッケージでは自前の期限切れ削除を持たない）
+- `data` モードではキャッシュしない（`purgeCache` は no-op）
 
 全国市区町村検索はハイブリッド JLIX（ホット団体は **2-gram 地域ファイル**、それ以外は **3-gram を 3 シャード**）で候補 `muniCode` を絞り、該当県 `.bin.br` のみ並列取得（同時 6、取得後 Brotli 展開）。索引ファイル自体は **concurrency=3・開始 100ms ずらし**でロード。正規化後長が 2 なら 2-gram のみ、3 以上なら両索引をマージ（2-gram ヒットでも 3-gram は省略しない）。`target: "prefectures"` および都道府県指定時は索引を使わない。配信ペイロードは npm / CDN とも **Brotli（`.bin.br`）**（#74）。
 
@@ -83,8 +86,9 @@
 #### `createLocalGovClient(options)` → `Promise<LocalGovClient>`
 
 - `options`: `{ data }` または `{ url }`（どちらか必須、両方不可）
-- `cache?: boolean`（既定 `true`）— `url` モードの localStorage キャッシュ
+- `cache?: boolean`（既定 `true`）— `url` モードの localStorage キャッシュ（`@b4moss/cachian`）
 - `cacheTtlSeconds?: number`（既定 `31536000`）— TTL（秒）。`url` かつ `cache: true` のとき有効
+- `LocalGovClient.purgeCache(options: CachePurgeOptions): Promise<void>` — URL キャッシュの明示削除
 - index + 都道府県を読み込み、スキーマ検証してクライアントを返す
 - 市区町村はまだ読まない
 
@@ -163,9 +167,11 @@
 | `isPrefecture` / `isMunicipality` | fn | union 判別 |
 | `prefectureOrgCode` | fn | 都道府県エンティティ → 2 桁組織キー |
 
-型: `Prefecture`, `Municipality`, `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
+型: `Prefecture`, `Municipality`, `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `CachePurgeOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
 
-定数: `DEFAULT_CACHE_TTL_SECONDS`（`31536000`）、`CACHE_TTL_MS`（deprecated 互換）、`LOCAL_GOV_SCHEMA_VERSION`、`MUNICIPALITY_FETCH_CONCURRENCY`
+定数: `DEFAULT_CACHE_TTL_SECONDS`（`31536000`）、`CACHE_TTL_MS`（deprecated 互換）、`CACHE_KEY_PREFIX`（`jp-local-gov-id:`）、`LOCAL_GOV_SCHEMA_VERSION`、`MUNICIPALITY_FETCH_CONCURRENCY`
+
+型: `CachePurgeOptions`（`@b4moss/cachian` から re-export）
 
 旧名（`createLocalGov`, `getPrefectureCode`, `getMunicipalitiesByPrefecture`, `search`, `getCodeByName`）に互換エイリアスは置かない。
 
