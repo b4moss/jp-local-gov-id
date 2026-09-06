@@ -1,6 +1,6 @@
 {
   "name": "@b4moss/jp-local-gov-id",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "全国地方公共団体コードヘルパ — 日本の全国地方公共団体コードを扱う npm パッケージ",
   "type": "module",
   "main": "./dist/jp-local-gov-id.cjs",
@@ -23,8 +23,9 @@
   ],
   "scripts": {
     "dev": "vite build --watch",
-    "build": "node ./scripts/build.mjs",
-    "test": "vitest run --coverage"
+    "build": "node ./scripts/compile-messages.mjs && node ./scripts/build.mjs",
+    "test": "node ./scripts/compile-messages.mjs && vitest run --coverage",
+    "compileMessages": "node ./scripts/compile-messages.mjs"
   },
   "keywords": [
     "japan",
@@ -53,6 +54,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@b4moss/cachian": "0.4.0",
     "brotli-wasm": "^3.0.1"
   }
 }

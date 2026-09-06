@@ -1,0 +1,91 @@
+{
+  // schema.ts
+  "schema.versionMustBeNumber": "{label}: schemaVersion must be a number",
+  "schema.unsupportedVersion": "Unsupported schemaVersion: expected {expected}, got {got}",
+  "schema.mustBeObject": "{label} must be a non-null object",
+  "schema.twoGramMustBeObject": "Index paths.searchNgrams.twoGram must be an object",
+  // Literal `{region}` / `{shard}` — use msg(), not fmt()
+  "schema.twoGramPatternRegion": "Index paths.searchNgrams.twoGram.pattern must contain {region}",
+  "schema.twoGramRegions": "Index paths.searchNgrams.twoGram.regions must be a non-empty string array",
+  "schema.threeGramMustBeObject": "Index paths.searchNgrams.threeGram must be an object",
+  "schema.threeGramPatternShard": "Index paths.searchNgrams.threeGram.pattern must contain {shard}",
+  "schema.threeGramShardCount": "Index paths.searchNgrams.threeGram.shardCount must be a positive integer",
+  "schema.searchNgramsObject": "Index paths.searchNgrams must be an object with twoGram and threeGram",
+  "schema.indexPathsObject": "Index must include a paths object",
+  "schema.indexPathsPrefectures": "Index paths must include string prefectures and municipalitiesByPrefecture",
+  "schema.indexPrefectureCodes": "Index must include prefectureCodes as a string array",
+  "schema.prefecturesArray": "Prefectures file must include a prefectures array of Prefecture objects",
+  "schema.municipalitiesPrefectureCode": "Municipalities file must include string prefectureCode",
+  "schema.municipalitiesArray": "Municipalities file must include a municipalities array of Municipality objects",
+  "schema.datasetObject": "Dataset must be a non-null object with index and prefectures",
+  "schema.datasetIndexPrefectures": "Dataset must include index and prefectures (and optionally municipalitiesByCode / loadMunicipalities)",
+  "schema.searchNgramShardsRecord": "Dataset searchNgramShards must be a Record of ArrayBuffer or Uint8Array",
+  "schema.searchNgramShardsEntry": "Dataset searchNgramShards[{key}] must be ArrayBuffer or Uint8Array",
+
+  // create.ts
+  "create.cacheTtlSeconds": "cacheTtlSeconds must be a finite number greater than or equal to 0",
+  "create.urlParse": "\"{url}\" cannot be parsed as a URL (pass an absolute URL, or use in a browser)",
+  "create.fetchFailed": "Failed to fetch local gov data: {status} {statusText}",
+  "create.parseJsonFailed": "Failed to parse local gov data as JSON from URL",
+  "create.readBinaryFailed": "Failed to read local gov binary data from URL",
+  "create.unknownPrefectureDecode": "Unknown prefecture code while decoding municipalities: {code}",
+  "create.missingSearchNgramShards": "Dataset is missing searchNgramShards (JLIX partition bytes) required for nationwide string search",
+  "create.noMunicipalitiesData": "No municipalities data for prefecture {code}: provide municipalitiesByCode or loadMunicipalities",
+  "create.optionsRequired": "createLocalGovClient requires options with either `data` or `url`",
+  "create.optionsExclusive": "createLocalGovClient accepts either `data` or `url`, not both",
+  "create.dataOrUrlRequired": "createLocalGovClient requires either `data` or `url`",
+
+  // cache.ts
+  "cache.ttlSeconds": "cacheTtlSeconds must be a finite number greater than or equal to 0",
+
+  // brotli.ts
+  "brotli.unavailable": "Brotli decompression requires DecompressionStream(\"brotli\"), brotli-wasm, or a Node.js runtime",
+
+  // searchIndex.ts
+  "search.jlixAsOfMismatch": "[jp-local-gov-id] JLIX asOf ({searchAsOf}) differs from prefectures asOf ({prefecturesAsOf})",
+
+  // searchIndexLoader.ts
+  "search.missingTwoGramRegion": "Dataset searchNgramShards missing 2-gram region \"{key}\"",
+  "search.missingThreeGramShard": "Dataset searchNgramShards missing 3-gram shard \"{key}\"",
+  "search.unrecognizedPath": "Unrecognized search index path for dataset: {relativePath}",
+
+  // searchNgrams.ts
+  "search.nPositiveInteger": "n must be a positive integer",
+  "search.shardCountPositiveInteger": "shardCount must be a positive integer",
+
+  // binary/stringTable.ts
+  "binary.invalidStringOffset": "Invalid string offset: {relativeOffset}",
+  "binary.stringOffsetOutOfRange": "String offset out of range: {relativeOffset}",
+  "binary.unterminatedString": "Unterminated string at offset {relativeOffset}",
+  "binary.bufferTooShortForMagic": "{label}: buffer too short for magic",
+  "binary.invalidMagic": "{label}: invalid magic (expected {expected}, got {magic})",
+
+  // binary shared
+  "binary.fieldMustBe0Or1": "{field} must be 0 or 1: {n}",
+  "binary.fieldOutOfU1": "{field} out of u1 range: {n}",
+  "binary.fieldOutOfU4": "{field} out of u4 range: {n}",
+  "binary.trailingOrUnusedBytes": "{label}: trailing or unused bytes (expected end {expectedEnd}, got {actualEnd})",
+  "binary.versionOutOfU1": "version out of u1 range: {version}",
+  "binary.asOfExceedsU1": "asOf exceeds u1 length",
+  "binary.recordCountExceedsU2": "record_count exceeds u2",
+  "binary.unsupportedVersion": "Unsupported version: {version}",
+  "binary.gramTypeMustBe0Or1": "gramType must be 0|1: {n}",
+  "binary.kindMustBe0Or1": "kind must be 0|1: {n}",
+
+  // binary formats
+  "binary.jldt.encodeSizeMismatch": "Internal encode size mismatch (JLDT)",
+  "binary.jldt.shortVersionAsOfLen": "JLDT: buffer too short for version/asOfLen",
+  "binary.jldt.shortAsOfRecordCount": "JLDT: buffer too short for asOf/record_count",
+  "binary.jldt.shortRecords": "JLDT: buffer too short for records",
+  "binary.jlpr.encodeSizeMismatch": "Internal encode size mismatch (JLPR)",
+  "binary.jlpr.shortVersionAsOfLen": "JLPR: buffer too short for version/asOfLen",
+  "binary.jlpr.shortAsOfRecordCount": "JLPR: buffer too short for asOf/record_count",
+  "binary.jlpr.shortRecords": "JLPR: buffer too short for records",
+  "binary.jlix.encodeSizeMismatch": "Internal encode size mismatch (JLIX)",
+  "binary.jlix.shortVersionAsOfLen": "JLIX: buffer too short for version/asOfLen",
+  "binary.jlix.shortAsOfRecordCount": "JLIX: buffer too short for asOf/record_count",
+  "binary.jlix.shortRecords": "JLIX: buffer too short for records",
+
+  // scripts/generate.ts → dataset.js
+  "data.unknownPrefectureCode": "Unknown prefecture code: {code}"
+}

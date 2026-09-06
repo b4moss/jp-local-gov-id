@@ -1,4 +1,5 @@
 import { LocalGovBinaryError } from "./errors";
+import { fmt } from "../messages";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -47,19 +48,21 @@ export function readCString(
   endExclusive: number,
 ): string {
   if (relativeOffset < 0) {
-    throw new LocalGovBinaryError(`Invalid string offset: ${relativeOffset}`);
+    throw new LocalGovBinaryError(
+      fmt("binary.invalidStringOffset", { relativeOffset }),
+    );
   }
   const start = stringTableOffset + relativeOffset;
   if (start >= endExclusive) {
     throw new LocalGovBinaryError(
-      `String offset out of range: ${relativeOffset}`,
+      fmt("binary.stringOffsetOutOfRange", { relativeOffset }),
     );
   }
   let end = start;
   while (end < endExclusive && bytes[end] !== 0) end++;
   if (end >= endExclusive) {
     throw new LocalGovBinaryError(
-      `Unterminated string at offset ${relativeOffset}`,
+      fmt("binary.unterminatedString", { relativeOffset }),
     );
   }
   return textDecoder.decode(bytes.subarray(start, end));
@@ -79,12 +82,18 @@ export function assertMagic(
   label: string,
 ): void {
   if (bytes.length < 4) {
-    throw new LocalGovBinaryError(`${label}: buffer too short for magic`);
+    throw new LocalGovBinaryError(
+      fmt("binary.bufferTooShortForMagic", { label }),
+    );
   }
   const magic = decodeUtf8(bytes.subarray(0, 4));
   if (magic !== expected) {
     throw new LocalGovBinaryError(
-      `${label}: invalid magic (expected ${expected}, got ${JSON.stringify(magic)})`,
+      fmt("binary.invalidMagic", {
+        label,
+        expected,
+        magic: JSON.stringify(magic),
+      }),
     );
   }
 }

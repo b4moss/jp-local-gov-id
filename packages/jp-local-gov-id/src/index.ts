@@ -27,9 +27,11 @@ export {
 } from "./types";
 export { createLocalGovClient } from "./create";
 export {
+  CACHE_KEY_PREFIX,
   CACHE_TTL_MS,
   DEFAULT_CACHE_TTL_SECONDS,
 } from "./cache";
+export type { CachePurgeOptions } from "./cache";
 export {
   LOCAL_GOV_SCHEMA_VERSION,
   LocalGovSchemaError,
