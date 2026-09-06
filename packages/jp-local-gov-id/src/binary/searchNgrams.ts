@@ -15,6 +15,7 @@ import {
   encodeUtf8,
   readCString,
 } from "./stringTable";
+import { fmt, msg } from "../messages";
 
 export type GramType = typeof GRAM_TYPE_NAME | typeof GRAM_TYPE_KANA;
 export type EntityKind = typeof KIND_PREF | typeof KIND_MUNI;
@@ -43,35 +44,35 @@ export type DecodedSearchNgramsBin = {
 
 function requireU8(n: number, field: string): number {
   if (!Number.isInteger(n) || n < 0 || n > 0xff) {
-    throw new LocalGovBinaryError(`${field} out of u1 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU1", { field, n }));
   }
   return n;
 }
 
 function requireU32(n: number, field: string): number {
   if (!Number.isInteger(n) || n < 0 || n > 0xffff_ffff) {
-    throw new LocalGovBinaryError(`${field} out of u4 range: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldOutOfU4", { field, n }));
   }
   return n;
 }
 
 function requireFlag(n: number, field: string): 0 | 1 {
   if (n !== 0 && n !== 1) {
-    throw new LocalGovBinaryError(`${field} must be 0 or 1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.fieldMustBe0Or1", { field, n }));
   }
   return n;
 }
 
 function requireGramType(n: number): GramType {
   if (n !== GRAM_TYPE_NAME && n !== GRAM_TYPE_KANA) {
-    throw new LocalGovBinaryError(`gramType must be 0|1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.gramTypeMustBe0Or1", { n }));
   }
   return n;
 }
 
 function requireKind(n: number): EntityKind {
   if (n !== KIND_PREF && n !== KIND_MUNI) {
-    throw new LocalGovBinaryError(`kind must be 0|1: ${n}`);
+    throw new LocalGovBinaryError(fmt("binary.kindMustBe0Or1", { n }));
   }
   return n;
 }
@@ -111,7 +112,7 @@ function assertPayloadEndsAt(
 ): void {
   if (expectedEnd !== actualEnd) {
     throw new LocalGovBinaryError(
-      `${label}: trailing or unused bytes (expected end ${expectedEnd}, got ${actualEnd})`,
+      fmt("binary.trailingOrUnusedBytes", { label, expectedEnd, actualEnd }),
     );
   }
 }
@@ -124,12 +125,12 @@ export function encodeSearchNgrams(
   requireU8(version, "version");
   const asOfBytes = encodeUtf8(meta.asOf);
   if (asOfBytes.length > 0xff) {
-    throw new LocalGovBinaryError("asOf exceeds u1 length");
+    throw new LocalGovBinaryError(msg("binary.asOfExceedsU1"));
   }
 
   const sorted = sortSearchNgramPostings(records);
   if (sorted.length > 0xffff) {
-    throw new LocalGovBinaryError("record_count exceeds u2");
+    throw new LocalGovBinaryError(msg("binary.recordCountExceedsU2"));
   }
 
   const strings = createStringTableBuilder();
@@ -174,7 +175,7 @@ export function encodeSearchNgrams(
 
   const end = strings.writeTo(bytes, pos);
   if (end !== total) {
-    throw new LocalGovBinaryError("Internal encode size mismatch (JLIX)");
+    throw new LocalGovBinaryError(msg("binary.jlix.encodeSizeMismatch"));
   }
   return buffer;
 }
@@ -188,15 +189,15 @@ export function decodeSearchNgrams(buffer: ArrayBuffer): DecodedSearchNgramsBin 
   let pos = 4;
 
   if (pos + 2 > end) {
-    throw new LocalGovBinaryError("JLIX: buffer too short for version/asOfLen");
+    throw new LocalGovBinaryError(msg("binary.jlix.shortVersionAsOfLen"));
   }
   const version = view.getUint8(pos++);
   if (version !== BINARY_FORMAT_VERSION) {
-    throw new LocalGovBinaryError(`Unsupported version: ${version}`);
+    throw new LocalGovBinaryError(fmt("binary.unsupportedVersion", { version }));
   }
   const asOfLen = view.getUint8(pos++);
   if (pos + asOfLen + 2 > end) {
-    throw new LocalGovBinaryError("JLIX: buffer too short for asOf/record_count");
+    throw new LocalGovBinaryError(msg("binary.jlix.shortAsOfRecordCount"));
   }
   const asOf = new TextDecoder().decode(bytes.subarray(pos, pos + asOfLen));
   pos += asOfLen;
@@ -205,7 +206,7 @@ export function decodeSearchNgrams(buffer: ArrayBuffer): DecodedSearchNgramsBin 
 
   const recordsByteLength = NGRAM_POSTING_RECORD_SIZE * recordCount;
   if (pos + recordsByteLength > end) {
-    throw new LocalGovBinaryError("JLIX: buffer too short for records");
+    throw new LocalGovBinaryError(msg("binary.jlix.shortRecords"));
   }
   const stringTableOffset = pos + recordsByteLength;
 
