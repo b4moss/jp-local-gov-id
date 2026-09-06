@@ -43,17 +43,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const sourcePath = resolve(root, "resources/000925835.xlsx");
 const dataDir = resolve(root, "packages/jp-local-gov-id-data");
-const messagesJsoncPath = resolve(
+const messagesEncodeJsoncPath = resolve(
   root,
-  "packages/jp-local-gov-id/src/messages.jsonc",
+  "packages/jp-local-gov-id/src/messages.encode.jsonc",
 );
 const prefecturesDir = resolve(dataDir, "prefectures");
 const searchNgramsDir = resolve(dataDir, "search-ngrams");
 const searchNgrams2Dir = resolve(searchNgramsDir, "2gram");
 const searchNgrams3Dir = resolve(searchNgramsDir, "3gram");
-const binaryEntry = resolve(
+const decodeEntry = resolve(
   root,
-  "packages/jp-local-gov-id/src/binary/index.ts",
+  "packages/jp-local-gov-id/src/binary/decodeEntry.ts",
 );
 
 /** Public #53 prefecture shape: `code` is 6-digit 地方公共団体コード. */
@@ -357,7 +357,7 @@ function wardFlagsForPrefecture(list: Municipality[]): Map<string, { hasWard: 0 
 
 function emitDecodeJs(): void {
   buildSync({
-    entryPoints: [binaryEntry],
+    entryPoints: [decodeEntry],
     outfile: resolve(dataDir, "decode.js"),
     bundle: true,
     format: "esm",
@@ -409,17 +409,19 @@ function stripJsonc(input: string): string {
   return out;
 }
 
-function loadMessageCatalog(): Record<string, string> {
+function loadEncodeMessageCatalog(): Record<string, string> {
   const parsed: unknown = JSON.parse(
-    stripJsonc(readFileSync(messagesJsoncPath, "utf8")),
+    stripJsonc(readFileSync(messagesEncodeJsoncPath, "utf8")),
   );
   if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("messages.jsonc must be a non-null object");
+    throw new Error("messages.encode.jsonc must be a non-null object");
   }
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(parsed)) {
     if (typeof value !== "string" || value.length === 0) {
-      throw new Error(`messages.jsonc: ${key} must be a non-empty string`);
+      throw new Error(
+        `messages.encode.jsonc: ${key} must be a non-empty string`,
+      );
     }
     out[key] = value;
   }
@@ -432,14 +434,14 @@ function writeDatasetJs(prefectureCodes: string[]): void {
     { length: THREE_GRAM_SHARD_COUNT },
     (_, i) => JSON.stringify(String(i)),
   ).join(", ");
-  const catalog = loadMessageCatalog();
+  const catalog = loadEncodeMessageCatalog();
   const unknownPrefectureTemplate = catalog["data.unknownPrefectureCode"];
   if (
     unknownPrefectureTemplate === undefined ||
     !unknownPrefectureTemplate.includes("{code}")
   ) {
     throw new Error(
-      'messages.jsonc must define data.unknownPrefectureCode with a {code} placeholder',
+      "messages.encode.jsonc must define data.unknownPrefectureCode with a {code} placeholder",
     );
   }
   const unknownPrefectureJs = unknownPrefectureTemplate.replaceAll(
