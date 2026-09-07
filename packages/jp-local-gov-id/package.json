@@ -48,11 +48,11 @@
   },
   "devDependencies": {
     "@b4moss/jp-local-gov-id-data": "1.0.0",
-    "@vitest/coverage-v8": "^4",
+    "@vitest/coverage-v8": "^5",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
-    "vite-plugin-dts": "^5.0.3",
-    "vitest": "^4.1.10"
+    "vite-plugin-dts": "^5.1.0",
+    "vitest": "^5.0.0"
   },
   "dependencies": {
     "@b4moss/cachian": "0.4.0",
