@@ -22,8 +22,10 @@ const IMPORT_SOURCE_RE =
 
 let entryId = 0;
 let packageSourcesPromise: Promise<{
-  api: string;
+  apiEntryFile: string;
+  apiModules: Record<string, string>;
   data: string;
+  chunkPrefix: string;
 }> | null = null;
 
 export function assertAllowedImports(code: string): void {
@@ -40,11 +42,20 @@ export function assertAllowedImports(code: string): void {
   }
 }
 
-async function getPackageSources(): Promise<{ api: string; data: string }> {
+async function getPackageSources(): Promise<{
+  apiEntryFile: string;
+  apiModules: Record<string, string>;
+  data: string;
+  chunkPrefix: string;
+}> {
   if (!packageSourcesPromise) {
-    packageSourcesPromise = import("./packageSources").then((m) =>
-      m.buildPackageSources(),
-    );
+    packageSourcesPromise = import("./packageSources").then((m) => {
+      const sources = m.buildPackageSources();
+      return {
+        ...sources,
+        chunkPrefix: m.PLAYGROUND_CHUNK_PREFIX,
+      };
+    });
   }
   return packageSourcesPromise;
 }
@@ -52,6 +63,14 @@ async function getPackageSources(): Promise<{ api: string; data: string }> {
 /** Embed a JS string literal inside a classic <script> without breaking out of the tag. */
 function embedAsJsString(value: string): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+/** Embed a Record<string, string> as a JS object literal of string values. */
+function embedStringRecord(record: Record<string, string>): string {
+  const parts = Object.entries(record).map(
+    ([key, value]) => `${embedAsJsString(key)}:${embedAsJsString(value)}`,
+  );
+  return `{${parts.join(",")}}`;
 }
 
 function serializeArg(value: unknown): unknown {
@@ -115,7 +134,8 @@ export async function runPlaygroundCode(
   // Re-check after transform (in case of weird rewrite); sources should be unchanged.
   assertAllowedImports(transformed);
 
-  const { api, data } = await getPackageSources();
+  const { apiEntryFile, apiModules, data, chunkPrefix } =
+    await getPackageSources();
 
   if (signal?.aborted) return;
 
@@ -157,18 +177,23 @@ export async function runPlaygroundCode(
 
   const toBlobUrl = (source) =>
     URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-  const apiUrl = toBlobUrl(${embedAsJsString(api)});
-  const dataUrl = toBlobUrl(${embedAsJsString(data)});
+  const chunkPrefix = ${embedAsJsString(chunkPrefix)};
+  const apiEntryFile = ${embedAsJsString(apiEntryFile)};
+  const apiModules = ${embedStringRecord(apiModules)};
+  const imports = {};
+  for (const [name, source] of Object.entries(apiModules)) {
+    const url = toBlobUrl(source);
+    imports[chunkPrefix + name] = url;
+    if (name === apiEntryFile) {
+      imports["@b4moss/jp-local-gov-id"] = url;
+    }
+  }
+  imports["@b4moss/jp-local-gov-id-data"] = toBlobUrl(${embedAsJsString(data)});
   const userUrl = toBlobUrl(${embedAsJsString(transformed)});
 
   const map = document.createElement("script");
   map.type = "importmap";
-  map.textContent = JSON.stringify({
-    imports: {
-      "@b4moss/jp-local-gov-id": apiUrl,
-      "@b4moss/jp-local-gov-id-data": dataUrl,
-    },
-  });
+  map.textContent = JSON.stringify({ imports });
   document.head.appendChild(map);
   window.__pgUserUrl = userUrl;
 })();
