@@ -1,12 +1,46 @@
-import apiSource from "../../../../packages/jp-local-gov-id/dist/jp-local-gov-id.js?raw";
 import {
   index,
   municipalitiesByCode,
   prefectures,
   searchNgramShardArrays,
 } from "./generatedDataset";
+import {
+  API_ENTRY_FILE,
+  rewriteChunkRelativeImports,
+} from "./chunkImports";
 
-export function buildPackageSources(): { api: string; data: string } {
+export {
+  API_ENTRY_FILE,
+  PLAYGROUND_CHUNK_PREFIX,
+  rewriteChunkRelativeImports,
+} from "./chunkImports";
+
+/** Vite/Rollup ESM outputs under packages/jp-local-gov-id/dist (excludes IIFE). */
+const rawDistModules = import.meta.glob(
+  "../../../../packages/jp-local-gov-id/dist/*.js",
+  { query: "?raw", import: "default", eager: true },
+) as Record<string, string>;
+
+function collectApiModules(): Record<string, string> {
+  const modules: Record<string, string> = {};
+  for (const [path, source] of Object.entries(rawDistModules)) {
+    const fileName = path.slice(path.lastIndexOf("/") + 1);
+    if (!fileName.endsWith(".js") || fileName.includes(".iife.")) continue;
+    modules[fileName] = rewriteChunkRelativeImports(source);
+  }
+  if (!(API_ENTRY_FILE in modules)) {
+    throw new Error(
+      `Playground API entry missing: ${API_ENTRY_FILE} (build @b4moss/jp-local-gov-id first)`,
+    );
+  }
+  return modules;
+}
+
+export function buildPackageSources(): {
+  apiEntryFile: string;
+  apiModules: Record<string, string>;
+  data: string;
+} {
   const dataSource = `const index = ${JSON.stringify(index)};
 const prefectures = ${JSON.stringify(prefectures)};
 const municipalitiesByCode = ${JSON.stringify(municipalitiesByCode)};
@@ -27,7 +61,8 @@ export default dataset;
 `;
 
   return {
-    api: apiSource,
+    apiEntryFile: API_ENTRY_FILE,
+    apiModules: collectApiModules(),
     data: dataSource,
   };
 }
