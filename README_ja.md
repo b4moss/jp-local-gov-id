@@ -66,7 +66,7 @@ const client = await createLocalGovClient({
 - `await client.purgeCache({ all: true })` などで明示削除
 - 例外: **全国対象**の文字列検索で取得した県別データ、および JLIX（`search-ngrams/**`）は localStorage に書かず、メモリのみ保持します
 - localStorage が無い環境（Node 等）ではキャッシュをスキップします
-- **1.2.0** 以降、`createLocalGovClient` の初期グラフから検索実装と `@b4moss/cachian` を動的 import で切り離しています（初期 minify 実測 ≈ **24339** bytes。詳細は `docs/client-bundle-93.md`）
+- **1.2.0** 以降、`createLocalGovClient` の初期グラフから検索実装と `@b4moss/cachian` を動的 import で切り離しています（初期 minify 実測 ≈ **24339** bytes。詳細は `docs/plans/unscheduled/client-bundle-93.md`）
 - 文字列検索はひらがな／全角カナを半角カナへ正規化します（`matchField` 既定: `"both"`）。正規化後長が 2 未満は空、2 はホット 2-gram のみ、3 以上は 2-gram と 3-gram をマージ
 - スキーマ不一致・不正な JSON・不正なバイナリは `LocalGovSchemaError`、ネットワーク / HTTP エラーは通常の fetch エラーです
 - クエリで見つからない・同名衝突の場合は `null` / `[]` を返します（throw しません）
@@ -112,7 +112,7 @@ npm run ci:local            # 推奨（nektos/act + Docker）
 npm run ci:local:fallback   # Docker が無いときのみ
 ```
 
-発火条件・スキップ・publish は [docs/ci-cd.ja.md](./docs/ci-cd.ja.md) を参照。
+発火条件・スキップ・publish は [docs/specs/ops/ci-cd.ja.md](./docs/specs/ops/ci-cd.ja.md) を参照。
 
 ## バージョン方針
 

@@ -66,7 +66,7 @@ const client = await createLocalGovClient({
 - Clear with `await client.purgeCache({ all: true })` (or `{ keys: [...] }`, etc.)
 - Exception: municipality data and JLIX (`search-ngrams/**`) loaded by **nationwide** string search stay in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
-- As of **1.2.0**, the initial `createLocalGovClient` graph keeps search and `@b4moss/cachian` behind dynamic import (measured initial minify ≈ **24339** bytes; see `docs/client-bundle-93.md`)
+- As of **1.2.0**, the initial `createLocalGovClient` graph keeps search and `@b4moss/cachian` behind dynamic import (measured initial minify ≈ **24339** bytes; see `docs/plans/unscheduled/client-bundle-93.md`)
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`). After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
 - Schema mismatches, invalid JSON, or invalid binary raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
 - Missing or ambiguous query results return `null` / `[]` (they do not throw)
@@ -112,7 +112,7 @@ npm run ci:local            # preferred (nektos/act + Docker)
 npm run ci:local:fallback   # only if Docker is unavailable
 ```
 
-See [docs/ci-cd.md](./docs/ci-cd.md) for triggers, skip rules, and publish.
+See [docs/specs/ops/ci-cd.md](./docs/specs/ops/ci-cd.md) for triggers, skip rules, and publish.
 
 ## Versioning
 
