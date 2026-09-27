@@ -1,5 +1,7 @@
 # データパッケージ容量比較（#73: JSON → `.bin`）
 
+> **現行コード注記**: 本メモは JSON→非圧縮 `.bin` 時点のスナップショット。現行 npm 配信は `.bin.br`（#74）。最新の公開面は pillar / `index.json` を参照。
+
 測定日: 2026-08-29  
 比較対象:
 
@@ -8,7 +10,7 @@
 | 参照 | `main`（`@b4moss/jp-local-gov-id-data@1.0.0-rc.3`、分割 JSON） | `feat/73-generate-data`（`1.0.0-rc.10`、分割 `.bin`） |
 | 方法 | `npm pack` / `package.json` の `files` 相当を集計 | 同左（CSV は npm 非同梱のため除外） |
 
-関連: [Issue #73](https://github.com/b4moss/jp-local-gov-id/issues/73) / [test-spec-73-csv-binary.md](./test-spec-73-csv-binary.md) / [main.md](./main.md)
+関連: [Issue #73](https://github.com/b4moss/jp-local-gov-id/issues/73) / [test-spec-73-csv-binary.md](../../tests/data/test-spec-73-csv-binary.md) / [README.md](../../README.md)
 
 ## 結論
 

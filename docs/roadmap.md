@@ -1,6 +1,6 @@
 # 全国地方公共団体コードヘルパ 開発ロードマップ
 
-仕様書（[main.md](./main.md)）に基づく開発ステップ。
+仕様書（[README.md](./README.md)）に基づく開発ステップ。
 
 ## ~v0.5.0
 
@@ -54,7 +54,7 @@
 - `createLocalGovClient` 初期ロード ≤25KB（#93 / follow-up）
   - 検索実装・cachian の動的 import
   - メッセージカタログ分割、binary decode 直参照など
-- 計測: 初期 minify ≈ 24339（`docs/client-bundle-93.md`）
+- 計測: 初期 minify ≈ 24339（`docs/specs/client/client-bundle-93.md`）
 
 ----
 

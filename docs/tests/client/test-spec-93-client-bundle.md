@@ -1,9 +1,9 @@
 # テスト仕様書: クライアント JS バンドル減量（#93）
 
 対象マイルストーン: `v1.2.0`  
-関連: Issue #93 / [≤25KB follow-up 計画](./plan-93-followup-25kb.md) / [計測ログ](./client-bundle-93.md)  
+関連: Issue #93 / [≤25KB follow-up 計画](../../_archived/history/plans/plan-93-followup-25kb.md) / [計測ログ](../../specs/client/client-bundle-93.md)  
 作業ブランチ（follow-up）: `cursor/issue-93-client-25kb-12a3` / 統合先 `dev-v1.2.0`  
-前提: Issue #85（メッセージ JSONC 外だし）済み。[test-spec-85-messages-jsonc.md](./test-spec-85-messages-jsonc.md)  
+前提: Issue #85（メッセージ JSONC 外だし）済み。[test-spec-85-messages-jsonc.md](../messages/test-spec-85-messages-jsonc.md)  
 想定実装:
 
 - runtime 正本: `packages/jp-local-gov-id/src/messages.jsonc`
@@ -13,7 +13,7 @@
 - コンパイル: `packages/jp-local-gov-id/scripts/compile-messages.mjs`
 - ランタイムヘルパ: `messages.ts`（および encode / search 用ヘルパ）
 - 計測: `packages/jp-local-gov-id/scripts/measure-client-bundle.mjs`
-- 計測手順ドキュメント: `docs/client-bundle-93.md`
+- 計測手順ドキュメント: `docs/specs/client/client-bundle-93.md`
 
 本仕様は二段構えである。
 
@@ -131,7 +131,7 @@
 
 ## 5. バンドル計測ケース（TC-B）
 
-実装先の目安: `scripts/measure-client-bundle.mjs`、`docs/client-bundle-93.md`。
+実装先の目安: `scripts/measure-client-bundle.mjs`、`docs/specs/client/client-bundle-93.md`。
 
 ### TC-B01: 計測エントリと条件
 
@@ -160,7 +160,7 @@
 
 ### TC-B04: 計測結果をドキュメントに残す
 
-- **期待**: `docs/client-bundle-93.md` に次を記録する:
+- **期待**: `docs/specs/client/client-bundle-93.md` に次を記録する:
   - 測定コマンド
   - 測定条件（エントリ・platform・minify・external）
   - 時点ごとの minify 生サイズ
@@ -257,7 +257,7 @@
 
 # B. follow-up: createLocalGovClient 初期チャンク ≤25KB
 
-関連計画: [plan-93-followup-25kb.md](./plan-93-followup-25kb.md)  
+関連計画: [plan-93-followup-25kb.md](../../_archived/history/plans/plan-93-followup-25kb.md)  
 作業ブランチ: `cursor/issue-93-client-25kb-12a3`
 
 ## 12. follow-up の目的と指標
@@ -394,7 +394,7 @@ PR 分割の目安: PR1 = Phase 0+A1+A2+B、PR2 = C–E。
 3. Phase C–E を実施した場合は TC-F-D を満たす
 4. `brotli-wasm` は依存・ブラウザフォールバックとして残存（TC-Z）
 5. 公開 API 互換（TC-F03 / TC-R）
-6. `docs/client-bundle-93.md` に Phase ごとの実測が並ぶ
+6. `docs/specs/client/client-bundle-93.md` に Phase ごとの実測が並ぶ
 7. 計測スクリプトはサイズ未達だけで非 0 終了しない（TC-B05）。完了判定は本節の条件で行う
 8. 未達時は残ギャップと次候補を PR に明記する
 
@@ -406,5 +406,5 @@ PR 分割の目安: PR1 = Phase 0+A1+A2+B、PR2 = C–E。
 | search 分離 | `src/api.ts`, `src/api.search.ts`（新規）, `src/searchIndexLoader.ts` |
 | cache 遅延 | `src/cache.ts`, create の URL 経路 |
 | カタログ | `messages.jsonc`, `messages.search.jsonc`（新規）, `scripts/compile-messages.mjs` |
-| 計測 | `scripts/measure-client-bundle.mjs`, `docs/client-bundle-93.md` |
+| 計測 | `scripts/measure-client-bundle.mjs`, `docs/specs/client/client-bundle-93.md` |
 | 密度 | `src/schema.ts`, `src/normalize.ts`, messages 正本 |

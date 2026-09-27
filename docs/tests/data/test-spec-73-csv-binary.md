@@ -1,20 +1,20 @@
 # テスト仕様書: データソース CSV / 独自バイナリ移行（#73）
 
-> **注記（現行コード）**: 本仕様は当時のマイルストーン向け。現行の公開エンベロープ `schemaVersion` は **2**（`LOCAL_GOV_SCHEMA_VERSION`）。本文中の `schemaVersion === 1` は歴史的期待値。
+> **現行コード同期（2026-09-27）**: 公開エンベロープ `schemaVersion` は **2**（`LOCAL_GOV_SCHEMA_VERSION` / `DECODED_SCHEMA_VERSION`）。バイナリヘッダ `version` は **1**（`BINARY_FORMAT_VERSION`）。npm / CDN 配信は **`.bin.br`**（#74）。都道府県公開 `code` は **6 桁**（#53）。リポジトリのみ非圧縮 `.bin` / CSV。
 
-対象マイルストーン: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`  
-関連: [main.md](./main.md) / [logics.md](./logics.md) / [binary-size-73.md](./binary-size-73.md) / Issue #73  
-作業ブランチ: `dev-app-v1.0.0-rc.10`
+対象マイルストーン（着手時）: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`（現行: data `1.0.0` / app `1.2.0`）  
+関連: [README.md](../../README.md) / [logics.md](../../specs/api/logics.md) / [binary-size-73.md](../../specs/data/binary-size-73.md) / [test-spec-53](../api/test-spec-53-prefecture-schema.md) / Issue #73 / #74  
+作業ブランチ（着手時）: `dev-app-v1.0.0-rc.10`
 
 ## 1. 目的
 
-配信データを JSON から独自 `.bin` に移行しても、**公開 API・公開オブジェクト形・キャッシュ意味**が現行と同等であることを固定する。
+配信データを JSON から独自バイナリに移行しても、**公開 API・公開オブジェクト形・キャッシュ意味**を壊さないことを固定する。
 
-- 中間形式 CSV（リポジトリ同梱・npm 非同梱）→ 配信形式 `.bin`（npm 公開）
-- `index.json` は残し、`paths` のみ `.bin` を指す
-- `schemaVersion` は `1` 据え置き。フォーマット版はバイナリヘッダ `version`
+- 中間形式 CSV（リポジトリ同梱・npm 非同梱）→ 非圧縮 `.bin`（リポジトリレビュー用）→ 配信形式 **`.bin.br`**（npm / CDN）
+- `index.json` は残し、`paths` は **`.bin.br`** を指す
+- 公開エンベロープ `schemaVersion` は **`2`**。フォーマット版はバイナリヘッダ `version`（`1`）
 - 公開 `LocalGov` に `hasWard` / `isWard` / 生の数値コードを載せない
-- Brotli 等の転送圧縮は **#74（非対象）**
+- 都道府県公開 `code` は **6 桁**（#53）。組織キー 2 桁はパス・`prefectureCodes` 等で維持
 - localStorage の「文字列圧縮」は **minify**（`JSON.stringify` の空白なし）の意味
 
 ## 2. 用語
@@ -29,11 +29,11 @@
 
 代表サンプル（公開形・現行踏襲）:
 
-| 名称 | 都道府県 `code` | 団体 `code` |
-|------|-----------------|-------------|
-| 北海道 | `"01"` | （県本体の団体コードは bin/CSV の `muniCode`。公開 pref の `code` は 2 桁） |
+| 名称 | 都道府県 `code`（公開） | 組織キー / 団体 `code` |
+|------|-------------------------|------------------------|
+| 北海道 | `"010006"` | 組織キー `"01"` / 札幌市 `"011002"` |
 | 札幌市 | — | `"011002"` |
-| 大阪府 | `"27"` | — |
+| 大阪府 | `"270008"` | 組織キー `"27"` |
 
 ## 3. バイナリ形式ケース（TC-B）
 
@@ -43,7 +43,7 @@
 
 - **操作**: 既知の都道府県レコード配列 + `asOf` を encode → decode
 - **期待**: `version === 1`、`asOf` 一致、各フィールド一致
-- **期待**: 公開正規化後、`prefCode` は 2 桁ゼロ埋め文字列、`municipalityCounts` が復元される
+- **期待**: 公開正規化後、都道府県 `code` は 6 桁（組織キーは先頭 2 桁）、`municipalityCounts` が復元される
 
 ### TC-B02: JLDT ラウンドトリップ
 
@@ -55,7 +55,7 @@
 
 - **期待**: 都道府県レコード **16 bytes**（`u1+u4+u4+u4+u1+u1+u1`）
 - **期待**: 市区町村レコード **14 bytes**
-- **期待**: [`schema/local-government-code.ksy`](../schema/local-government-code.ksy) の定義と定数が一致
+- **期待**: [`schema/local-government-code.ksy`](../../../schema/local-government-code.ksy) の定義と定数が一致
 
 ### TC-B04: string table の必須共有
 
@@ -101,8 +101,10 @@
 - **期待**: 存在すること
   - `packages/jp-local-gov-id-data/prefectures.csv`
   - `packages/jp-local-gov-id-data/prefectures/{01..47}.csv`
-  - `packages/jp-local-gov-id-data/prefectures.bin`
-  - `packages/jp-local-gov-id-data/prefectures/{01..47}.bin`
+  - `packages/jp-local-gov-id-data/prefectures.bin`（リポジトリのみ）
+  - `packages/jp-local-gov-id-data/prefectures/{01..47}.bin`（リポジトリのみ）
+  - `packages/jp-local-gov-id-data/prefectures.bin.br`（npm）
+  - `packages/jp-local-gov-id-data/prefectures/{01..47}.bin.br`（npm）
   - `packages/jp-local-gov-id-data/index.json`
   - `packages/jp-local-gov-id-data/dataset.js`
   - `packages/jp-local-gov-id-data/decode.js`
@@ -110,9 +112,9 @@
 
 ### TC-G02: `index.json` の paths
 
-- **期待**: `schemaVersion === 1`
-- **期待**: `paths.prefectures === "prefectures.bin"`
-- **期待**: `paths.municipalitiesByPrefecture === "prefectures/{code}.bin"`
+- **期待**: `schemaVersion === 2`
+- **期待**: `paths.prefectures === "prefectures.bin.br"`
+- **期待**: `paths.municipalitiesByPrefecture === "prefectures/{code}.bin.br"`
 - **期待**: `prefectureCodes` は `["01", …, "47"]`（2 桁）
 
 ### TC-G03: CSV 列
@@ -123,8 +125,8 @@
 
 ### TC-G04: npm 公開面
 
-- **期待**: `package.json` の `files` / `exports` に CSV を **含めない**
-- **期待**: `index.json` / `*.bin` / `dataset.js` / `decode.js` / 型定義は含める
+- **期待**: `package.json` の `files` / `exports` に CSV・非圧縮 `*.bin` を **含めない**
+- **期待**: `index.json` / `*.bin.br` / `dataset.js` / `decode.js` / 型定義は含める
 - **期待**: `prefectures.json` サブパス export が **無い**
 
 ### TC-G05: `dataset.js` ロード時デコード
@@ -145,13 +147,12 @@
 
 ## 5. 公開データ形ケース（TC-D）
 
-実装先の目安: `municipalityCounts.test.ts` 更新、または data 契約テスト
-
-※ #53（都道府県 `code` 6 桁化）は **本 Issue の非対象**。現行どおり都道府県公開 `code` は 2 桁。
+実装先の目安: `municipalityCounts.test.ts`、または data 契約テスト。都道府県 6 桁化の詳細は [test-spec-53](../api/test-spec-53-prefecture-schema.md)。
 
 ### TC-D01: 都道府県公開形
 
-- **期待**: 各要素が `code`(2桁) / `name` / `nameKana` / `prefectureCode` / `prefectureName` / `prefectureNameKana` / `municipalityCounts` を持つ
+- **期待**: 各要素が `code`(6桁) / `name` / `nameKana` / `municipalityCounts?` を持つ
+- **期待**: `prefectureCode` / `prefectureName` / `prefectureNameKana` を **持たない**
 - **期待**: `hasWard` / `isWard` / 生の `muniCode` 数値フィールドを **公開オブジェクトに持たない**
 
 ### TC-D02: 市区町村公開形
@@ -167,21 +168,21 @@
 - **期待**: 北海道 `195/185/194`、新潟 `38/30/37`、東京・沖縄は三値が等しい、など既存代表値を維持
 - **期待**: `designatedCity` は **名前ヒューリスティック**（現行）で動き、bin フラグ非依存
 
-### TC-D04: `schemaVersion` は 1
+### TC-D04: `schemaVersion` は 2
 
-- **期待**: `index` / デコード後都道府県ファイル / デコード後県別ファイルの `schemaVersion === 1`
-- **期待**: app の `LOCAL_GOV_SCHEMA_VERSION === 1`
+- **期待**: `index` / デコード後都道府県ファイル / デコード後県別ファイルの `schemaVersion === 2`
+- **期待**: app の `LOCAL_GOV_SCHEMA_VERSION === 2`（旧 `1` はスキーマエラー）
 
 ## 6. API・クライアントケース（TC-A）
 
 実装先の目安: `api.test.ts`
 
-### TC-A01: url モード — index は JSON、ペイロードは bin
+### TC-A01: url モード — index は JSON、ペイロードは `.bin.br`
 
-- **前提**: `create({ url })`。`index.json` の paths が `.bin`
+- **前提**: `create({ url })`。`index.json` の paths が `.bin.br`
 - **期待**: index は `response.json()` 相当で取得
-- **期待**: 都道府県・県別は `arrayBuffer()` → decode → 既存 validator
-- **期待**: 公開 API の戻りは現行と同形（例: `listPrefectures` 47 件、`code === "01"` 等）
+- **期待**: 都道府県・県別は `arrayBuffer()` → Brotli 展開 → decode → 既存 validator
+- **期待**: 公開 API の戻りは現行と同形（例: `listPrefectures` 47 件、北海道 `code === "010006"` 等）
 
 ### TC-A02: data モード — dataset 互換
 
@@ -191,13 +192,13 @@
 ### TC-A03: 市区町村の所属名付与
 
 - **前提**: JLDT 単体には都道府県名・かなが無い
-- **操作**: url モードで県別 `.bin` をロード
+- **操作**: url モードで県別 `.bin.br` をロード
 - **期待**: 各市区町村に正しい `prefectureName` / `prefectureNameKana` が付く（ロード済み都道府県一覧から）
 
 ### TC-A04: localStorage キャッシュ（minify）
 
 - **前提**: `cache: true` の url モード
-- **期待**: キーはファイル URL（`.bin` URL を含む）
+- **期待**: キーはファイル URL（`.bin.br` URL を含む）
 - **期待**: 値は `{ expiresAt, data }` の JSON 文字列で、`data` は **デコード後オブジェクト**（ArrayBuffer / Base64 ではない）
 - **期待**: 保存文字列は minify 相当（`JSON.stringify` 既定。余分な pretty-print 空白を付けない）
 - **期待**: 全国文字列検索で読んだ県別データは従来どおり persist しない
@@ -209,7 +210,7 @@
 
 ### TC-A06: バイナリ取得失敗・不正 bin
 
-- **操作**: HTTP エラー、または不正 magic の `.bin` を返す stub
+- **操作**: HTTP エラー、または不正 magic の `.bin.br` を返す stub
 - **期待**: 適切なエラー（ネットワークエラー / デコードエラー / `LocalGovSchemaError`）。旧「JSON parse 失敗」文言のみに依存しない
 
 ### TC-A07: 既存 API 振る舞い回帰
@@ -223,8 +224,8 @@
 
 ### TC-A08: fetch モック契約
 
-- **期待**: テスト stub は `.bin` URL に対し `arrayBuffer()` を提供できる
-- **期待**: パス断言は `prefectures.bin` / `prefectures/13.bin` など（旧 `.json` 断言は更新）
+- **期待**: テスト stub は `.bin.br` URL に対し `arrayBuffer()` を提供できる
+- **期待**: パス断言は `prefectures.bin.br` / `prefectures/13.bin.br` など（旧 `.json` / 非圧縮 `.bin` 断言は更新）
 
 ## 7. ドキュメント・版（TC-DOC）
 
@@ -232,13 +233,13 @@
 
 ### TC-DOC01: パス表記
 
-- README / site / `docs/main.md` / `docs/logics.md` が `prefectures.bin` / `prefectures/{code}.bin` 前提
+- README / site / `docs/README.md` / `docs/specs/api/logics.md` が `prefectures.bin.br` / `prefectures/{code}.bin.br` 前提（非圧縮 `.bin` はリポジトリのみと明記）
 - `url` 例は引き続き `index.json` で終わる
 
 ### TC-DOC02: 版
 
-- data / app パッケージ版が `1.0.0-rc.10`
-- サイトの CDN 例が大きな矛盾を起こさない（可能な範囲で rc.10 に寄せる）
+- 現行: data `1.0.0` / app `1.2.0`（着手時 rc.10 からの GA）
+- サイトの CDN 例が大きな矛盾を起こさない
 
 ### TC-DOC03: dataset 利用ガイド
 
@@ -247,16 +248,15 @@
 
 ## 8. 非対象（この仕様書では見ない）
 
-- Brotli / gzip 等の転送圧縮（#74）
-- #53 の都道府県 6 桁 `code` 化・型分割
 - localStorage への独自バイナリ保存や追加圧縮アルゴリズム
-- CJS 対応・minify 配布・逆引きインデックスなど他 Issue
+- CJS 対応・minify 配布など他 Issue
 - CSV の npm 公開
+- #53 / #74 の詳細受け入れ（別仕様・実装済み。本仕様は現行契約に合わせて同期）
 
 ## 9. 合格条件
 
 1. TC-B / TC-G / TC-D / TC-A が自動テストとして実装され、CI でグリーン
-2. `npm run generate` 後に JSON ペイロードが消え、CSV（repo）と bin（npm 対象）が揃う
-3. 公開 API・`designatedCity`・`municipalityCounts`・`schemaVersion === 1` の回帰が無い
+2. `npm run generate` 後に JSON ペイロードが消え、CSV・非圧縮 `.bin`（repo）と `.bin.br`（npm）が揃う
+3. 公開 API・`designatedCity`・`municipalityCounts`・`schemaVersion === 2`・都道府県 6 桁 `code` の回帰が無い
 4. docs / site が本仕様と矛盾しない
 5. デコード厳格性（TC-B05〜B09）を満たす
