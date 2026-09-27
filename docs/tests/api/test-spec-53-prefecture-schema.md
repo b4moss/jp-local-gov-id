@@ -1,7 +1,7 @@
 # テスト仕様書: 都道府県返却スキーマの変更（#53）
 
 対象マイルストーン: `data-v1.0.0-rc.4` / `app-v1.0.0-rc.3`  
-関連: [main.md](./main.md) / [logics.md](./logics.md) / Issue #53
+関連: [README.md](../../README.md) / [logics.md](../../specs/api/logics.md) / Issue #53
 
 ## 1. 目的
 

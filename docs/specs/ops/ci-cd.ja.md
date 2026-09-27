@@ -14,7 +14,7 @@ npm run ci:local
 act pull_request -W .github/workflows/ci.yml
 ```
 
-既定は [`.actrc`](../.actrc) です。`act` 実行時はゲートが API スキップせず Test/Build を必ず実行します（`ACT=true`）。Codecov は `ACT` 時にスキップされます。
+既定は [`.actrc`](../../../.actrc) です。`act` 実行時はゲートが API スキップせず Test/Build を必ず実行します（`ACT=true`）。Codecov は `ACT` 時にスキップされます。
 
 Docker が無い環境（一部の Cloud Agent など）では次の代替を使えます。ただし **可能な環境では act を正**とします。
 
@@ -84,7 +84,7 @@ Playground が参照するライブラリを、すでに `main` / `release` に�
 | 内容 | 総務省 Excel を取得し `resources/000925835.xlsx` と SHA-256 比較 → `site/public/source-monitor.json` を更新コミット |
 | Install | scripts ワークスペースのみ |
 | 異常時 | `source-monitor` ラベルの Issue 起票／コメント、job failure |
-| 詳細 | [test-spec-66-source-hash.md](./test-spec-66-source-hash.md) / Issue #66 |
+| 詳細 | [test-spec-66-source-hash.md](../../tests/ops/test-spec-66-source-hash.md) / Issue #66 |
 
 ## OpenSSF Scorecard（`.github/workflows/scorecard.yml`）
 

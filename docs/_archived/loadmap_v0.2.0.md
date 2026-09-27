@@ -1,10 +1,10 @@
 # jp-local-gov-id 開発ロードマップ
 
-仕様書（[main.md](./main.md)）に基づく開発ステップ。
+仕様書（[README.md](../README.md)（旧 `main.md`））に基づく開発ステップ。
 
 ## 現状
 
-- [x] 仕様の骨子を固める（`docs/main.md`）
+- [x] 仕様の骨子を固める（`docs/README.md`（旧 `main.md`））
 - [x] ディレクトリの枠を用意（`src/` / `resources/` / `scripts/`）
 
 ## Step 1. プロジェクト基盤
@@ -44,7 +44,7 @@
 
 - [x] エラー時の振る舞い（`null` / 空配列。throw しない）
 - [x] 文字の正規化方針（当面はなし。将来検討）
-- [x] 政令市区の `name`（元データどおり）・カナ含有を決定し `docs/main.md` に反映
+- [x] 政令市区の `name`（元データどおり）・カナ含有を決定し `docs/README.md`（旧 `main.md`） に反映
 
 ## Step 6. テスト
 

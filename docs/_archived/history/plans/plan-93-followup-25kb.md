@@ -1,6 +1,6 @@
 # #93 follow-up: createLocalGovClient ≤25KB 計画
 
-関連: [Issue #93](https://github.com/b4moss/jp-local-gov-id/issues/93) / [client-bundle-93.md](./client-bundle-93.md) / [PR #128](https://github.com/b4moss/jp-local-gov-id/pull/128)
+関連: [Issue #93](https://github.com/b4moss/jp-local-gov-id/issues/93) / [client-bundle-93.md](../../../specs/client/client-bundle-93.md) / [PR #128](https://github.com/b4moss/jp-local-gov-id/pull/128)
 
 ## 前提
 
@@ -44,7 +44,7 @@
 ### Phase 0 — 測定基盤の強化（小さく）
 
 - `measure-client-bundle.mjs` に metafile 上位モジュール一覧（bytesInOutput）を出すオプションを追加
-- 各 Phase 終了時に `docs/client-bundle-93.md` へ行を追加
+- 各 Phase 終了時に `docs/specs/client/client-bundle-93.md` へ行を追加
 - ゲート案: Phase A+B 後に **≤ 27000**、最終 **≤ 25600**（未達なら差分内訳を Issue/PR に残し、追加レバーを検討）
 
 ### Phase A — Search lazy-load（#1）【主】
@@ -160,14 +160,14 @@
 - 追加:
   - 「search を呼ばない create」で search 実装モジュールが初期チャンクに含まれないこと（metafile アサーション、または測定スクリプトの回帰チェック）
   - lazy 後も `searchByText` のヒット順・件数互換
-- [x] `docs/test-spec-93-client-bundle.md` に Phase ゲートと「初期チャンク vs search/cache チャンク」の定義を追記（§12〜）
+- [x] `docs/tests/client/test-spec-93-client-bundle.md` に Phase ゲートと「初期チャンク vs search/cache チャンク」の定義を追記（§12〜）
 
 ## 完了条件
 
 1. 測定条件固定のまま、create 初期チャンク minify 生 **≤ 25600**
 2. `brotli-wasm` は依存・ブラウザフォールバックとして残存
 3. 公開 API 互換（メソッド名・主なエラー型）
-4. `docs/client-bundle-93.md` に Phase ごとの実測が並ぶ
+4. `docs/specs/client/client-bundle-93.md` に Phase ごとの実測が並ぶ
 5. 未達の場合は、残ギャップと次候補（さらなる API 分割、型ガードの外出し等）を PR に明記（推測のまま閉じない）
 
 ## 実装順序（実行チェックリスト）

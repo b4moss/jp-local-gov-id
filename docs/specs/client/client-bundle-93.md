@@ -1,6 +1,6 @@
 # クライアントバンドル計測（#93）
 
-関連: [Issue #93](https://github.com/b4moss/jp-local-gov-id/issues/93) / [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md) / [≤25KB follow-up 計画](./plan-93-followup-25kb.md)
+関連: [Issue #93](https://github.com/b4moss/jp-local-gov-id/issues/93) / [test-spec-93-client-bundle.md](../../tests/client/test-spec-93-client-bundle.md) / [≤25KB follow-up 計画](../../_archived/history/plans/plan-93-followup-25kb.md)
 
 ## 測定コマンド
 
@@ -20,7 +20,7 @@ npm run measure:client-bundle -w @b4moss/jp-local-gov-id -- --meta
 | minify | `true` |
 | external | `brotli-wasm`, `node:zlib` |
 
-サイズ超過だけではスクリプトは失敗しない（レポート用途）。#93 本体では 25KB は目安だったが、[follow-up テスト仕様 §12](./test-spec-93-client-bundle.md) では初期チャンク ≤25600 を完了条件とする（CI fail ゲート化はしない）。
+サイズ超過だけではスクリプトは失敗しない（レポート用途）。#93 本体では 25KB は目安だったが、[follow-up テスト仕様 §12](../../tests/client/test-spec-93-client-bundle.md) では初期チャンク ≤25600 を完了条件とする（CI fail ゲート化はしない）。
 
 ## 結果
 

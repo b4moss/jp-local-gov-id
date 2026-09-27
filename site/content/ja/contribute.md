@@ -68,6 +68,6 @@ npm run dev:site
 
 - バグ修正・ドキュメント改善・テスト追加は歓迎です
 - API の破壊的変更やデータ形式の変更は、Issue で先に相談してください
-- 詳細な仕様はリポジトリ内の `docs/`（特に `logics.md` / `main.md` / `test-spec-63-search-ngrams.md`）を参照してください
+- 詳細な仕様はリポジトリ内の `docs/`（特に `specs/api/logics.md` / `README.md` / `tests/search/test-spec-63-search-ngrams.md`）を参照してください
 
 ライセンスは MIT です。

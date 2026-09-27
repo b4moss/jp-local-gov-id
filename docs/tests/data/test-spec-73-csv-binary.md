@@ -3,7 +3,7 @@
 > **注記（現行コード）**: 本仕様は当時のマイルストーン向け。現行の公開エンベロープ `schemaVersion` は **2**（`LOCAL_GOV_SCHEMA_VERSION`）。本文中の `schemaVersion === 1` は歴史的期待値。
 
 対象マイルストーン: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`  
-関連: [main.md](./main.md) / [logics.md](./logics.md) / [binary-size-73.md](./binary-size-73.md) / Issue #73  
+関連: [README.md](../../README.md) / [logics.md](../../specs/api/logics.md) / [binary-size-73.md](../../specs/data/binary-size-73.md) / Issue #73  
 作業ブランチ: `dev-app-v1.0.0-rc.10`
 
 ## 1. 目的
@@ -55,7 +55,7 @@
 
 - **期待**: 都道府県レコード **16 bytes**（`u1+u4+u4+u4+u1+u1+u1`）
 - **期待**: 市区町村レコード **14 bytes**
-- **期待**: [`schema/local-government-code.ksy`](../schema/local-government-code.ksy) の定義と定数が一致
+- **期待**: [`schema/local-government-code.ksy`](../../../schema/local-government-code.ksy) の定義と定数が一致
 
 ### TC-B04: string table の必須共有
 
@@ -232,7 +232,7 @@
 
 ### TC-DOC01: パス表記
 
-- README / site / `docs/main.md` / `docs/logics.md` が `prefectures.bin` / `prefectures/{code}.bin` 前提
+- README / site / `docs/README.md` / `docs/specs/api/logics.md` が `prefectures.bin` / `prefectures/{code}.bin` 前提
 - `url` 例は引き続き `index.json` で終わる
 
 ### TC-DOC02: 版

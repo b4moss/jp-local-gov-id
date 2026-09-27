@@ -6,7 +6,7 @@
 
 - 依存: `@b4moss/cachian@0.4.0`
 - 取り込み範囲: `localStorageDriver` + `get` / `set` / `purge` のみ
-- 内部配線: [`packages/jp-local-gov-id/src/cache.ts`](../packages/jp-local-gov-id/src/cache.ts) / [`create.ts`](../packages/jp-local-gov-id/src/create.ts) / [`api.ts`](../packages/jp-local-gov-id/src/api.ts) / [`types.ts`](../packages/jp-local-gov-id/src/types.ts)
+- 内部配線: [`packages/jp-local-gov-id/src/cache.ts`](../../../packages/jp-local-gov-id/src/cache.ts) / [`create.ts`](../../../packages/jp-local-gov-id/src/create.ts) / [`api.ts`](../../../packages/jp-local-gov-id/src/api.ts) / [`types.ts`](../../../packages/jp-local-gov-id/src/types.ts)
 - 公開: `LocalGovClient.purgeCache(options)`、`CachePurgeOptions` の型 re-export
 
 ## 1. 目的
@@ -201,7 +201,7 @@
 - **期待**: 次に依存・prefix・`purgeCache`・破壊的変更（旧キー無効、TTL 切れは cachian 委譲）が書かれる
   - `packages/jp-local-gov-id/README.md` / `README_ja.md`
   - `site/content/*/api.md`（および必要なら usage）
-  - `docs/logics.md` / `docs/main.md`
+  - `docs/specs/api/logics.md` / `docs/README.md`
 
 ## 8. 非対象（明示）
 
@@ -228,4 +228,4 @@
 | TC-G* | `cache.test.ts`、`api.test.ts` |
 | TC-K* | `cache.test.ts` |
 | TC-P* | `api.test.ts`、`types.ts`、`index.ts` |
-| TC-R* | `index.ts`、README、site、`docs/logics.md` |
+| TC-R* | `index.ts`、README、site、`docs/specs/api/logics.md` |
