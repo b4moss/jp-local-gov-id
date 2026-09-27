@@ -47,20 +47,47 @@ jobs:
               return;
             }
 
+            // App Test/Build is irrelevant for docs / documentation-site trees.
+            // site/** is covered by Docs CI / Deploy Docs, not this workflow.
+            const isAppCiSkippable = (p) =>
+              p.startsWith('docs/') ||
+              p.startsWith('site/') ||
+              p.endsWith('.md') ||
+              p === 'LICENSE' ||
+              (p.startsWith('.github/') && p.endsWith('.md')) ||
+              p === '.github/workflows/ci-docs.yml' ||
+              p === '.github/workflows/deploy-docs.yml';
+
+            const base = context.repo;
             const pr = context.payload.pull_request;
-            if (!pr) {
+            let baseSha = null;
+            let headSha = null;
+
+            if (pr) {
+              baseSha = pr.base.sha;
+              headSha = pr.head.sha;
+            } else if (context.eventName === 'push') {
+              // Push to main/release: compare against the previous tip so
+              // docs-only merges skip Test/Build (Codecov not needed).
+              baseSha = context.payload.before;
+              headSha = context.sha;
+              if (!baseSha || /^0+$/.test(baseSha)) {
+                core.setOutput('skip_heavy', 'false');
+                core.setOutput('reason', 'full');
+                core.info('No usable before SHA; running full CI');
+                return;
+              }
+            } else {
               core.setOutput('skip_heavy', 'false');
-              core.setOutput('reason', 'no-pr');
+              core.setOutput('reason', 'no-compare');
               return;
             }
 
-            const sha = pr.head.sha;
-            const base = context.repo;
             const { data: runs } = await github.rest.actions.listWorkflowRuns({
               owner: base.owner,
               repo: base.repo,
               workflow_id: 'ci.yml',
-              head_sha: sha,
+              head_sha: headSha,
               status: 'completed',
               per_page: 30,
             });
@@ -70,34 +97,24 @@ jobs:
             if (priorSuccess) {
               core.setOutput('skip_heavy', 'true');
               core.setOutput('reason', 'sha-already-green');
-              core.info(`Skip heavy jobs: CI already succeeded for ${sha}`);
+              core.info(`Skip heavy jobs: CI already succeeded for ${headSha}`);
               return;
             }
 
-            // Docs-only path filter via compare API
+            // Docs / site-only path filter via compare API (PR and push)
             const { data: comp } = await github.rest.repos.compareCommits({
               owner: base.owner,
               repo: base.repo,
-              base: pr.base.sha,
-              head: sha,
+              base: baseSha,
+              head: headSha,
             });
             const files = comp.files || [];
-            const isDocsOnly =
-              files.length > 0 &&
-              files.every((f) => {
-                const p = f.filename;
-                return (
-                  p.startsWith('docs/') ||
-                  p.startsWith('site/content/') ||
-                  p.endsWith('.md') ||
-                  p === 'LICENSE' ||
-                  (p.startsWith('.github/') && p.endsWith('.md'))
-                );
-              });
-            if (isDocsOnly) {
+            const isDocsOrSiteOnly =
+              files.length > 0 && files.every((f) => isAppCiSkippable(f.filename));
+            if (isDocsOrSiteOnly) {
               core.setOutput('skip_heavy', 'true');
               core.setOutput('reason', 'docs-only');
-              core.info('Skip heavy jobs: docs-only change set');
+              core.info('Skip heavy jobs: docs/site-only change set');
               return;
             }
 

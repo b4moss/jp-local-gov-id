@@ -27,6 +27,7 @@ Exactly one of `data` or `url` is required.
 - Index fetch: concurrency 3 with 100ms start stagger; candidate pref bins: concurrency 6
 - localStorage stores minified decoded JSON (not raw Brotli). Nationwide pref loads + JLIX are memory-only
 - `schemaVersion` is **2** (prefecture `code` is 6-digit; no `prefecture*` fields on prefectures)
+- **1.2.0**: `createLocalGovClient` initial graph keeps search and `@b4moss/cachian` behind dynamic import (initial minify ≈ 24339 bytes)
 
 ## `Prefecture` / `Municipality`
 

@@ -1,5 +1,7 @@
 # テスト仕様書: ハイブリッド n-gram 検索インデックス（#63）
 
+> **注記（現行コード）**: 本仕様は当時のマイルストーン向け。現行の公開エンベロープ `schemaVersion` は **2**（`LOCAL_GOV_SCHEMA_VERSION`）。本文中の `schemaVersion === 1` は歴史的期待値。
+
 対象マイルストーン: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`  
 関連: [main.md](./main.md) / [logics.md](./logics.md) / [test-spec-73-csv-binary.md](./test-spec-73-csv-binary.md) / Issue #63 / #74  
 作業ベース: `dev-app-v1.0.0-rc.10`  

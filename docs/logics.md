@@ -91,6 +91,7 @@
 - `LocalGovClient.purgeCache(options: CachePurgeOptions): Promise<void>` — URL キャッシュの明示削除
 - index + 都道府県を読み込み、スキーマ検証してクライアントを返す
 - 市区町村はまだ読まない
+- **1.2.0**: 検索実装と `@b4moss/cachian` は動的 import（初期グラフ ≤25KB minify）
 
 #### クライアントメソッド
 

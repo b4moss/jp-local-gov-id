@@ -44,7 +44,7 @@ For plain HTML, the minified IIFE build is simplest. APIs are exposed on the glo
 <!DOCTYPE html>
 <html lang="en">
   <body>
-    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0/dist/jp-local-gov-id.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.2.0/dist/jp-local-gov-id.iife.min.js"></script>
     <script>
       const { createLocalGovClient } = JpLocalGovId;
 
@@ -69,7 +69,7 @@ The non-minified IIFE is `dist/jp-local-gov-id.iife.js`.
 <html lang="en">
   <body>
     <script type="module">
-      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0/dist/jp-local-gov-id.js";
+      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.2.0/dist/jp-local-gov-id.js";
 
       const client = await createLocalGovClient({
         url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0/index.json",

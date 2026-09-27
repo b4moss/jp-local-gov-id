@@ -24,7 +24,7 @@ npm install @b4moss/jp-local-gov-id-data
 | `dataset.js` | Default export; decompresses `.bin.br` and decodes at module load (Node-friendly) |
 | `decode.js` | Low-level decode functions for the uncompressed `.bin` formats |
 
-A single file of all municipalities is **not** distributed. `schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`.
+A single file of all municipalities is **not** distributed. `schemaVersion` (currently `2`) describes the decoded object shape; it is unrelated to the binary format's own header `version`.
 
 The intermediate CSV and uncompressed `.bin` used to generate the `.bin.br` files live in the repository for review, but are **not** published in this npm package (npm ships Brotli only).
 

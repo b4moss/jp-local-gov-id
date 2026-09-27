@@ -63,7 +63,7 @@ JavaScript で、現在の都道府県・市区町村の地方自治体コード
 | `prefectures.csv` / `prefectures/{code}.csv` / `search-ngrams.csv` | 生成用中間 CSV | リポジトリのみ |
 | `*.bin`（非圧縮） | 上記 `.bin.br` の展開前バイナリ | リポジトリのみ |
 
-`schemaVersion`（現行 `1`）は公開エンベロープ（デコード後オブジェクト）の版であり、バイナリ形式自体のヘッダにある `version` とは独立している。
+`schemaVersion`（現行 `2`）は公開エンベロープ（デコード後オブジェクト）の版であり、バイナリ形式自体のヘッダにある `version` とは独立している。
 
 `paths.searchNgrams` はオブジェクト形（`twoGram.regions` / `threeGram.shardCount` など）。詳細は #63 テスト仕様。
 
@@ -103,6 +103,7 @@ resources/*.xlsx
 2. `prefectures.bin.br`（展開・デコード済み）
 
 県別の市区町村データと JLIX は、必要になった時点で遅延ロードする。
+**1.2.0** 以降、検索実装と `@b4moss/cachian` 自体も `createLocalGovClient` の初期モジュールグラフから動的 import で切り離す（初期 minify 目標 ≤25600、実測 ≈24339）。
 
 ```ts
 import dataset from "@b4moss/jp-local-gov-id-data";
@@ -136,7 +137,6 @@ const client = await createLocalGovClient({
   - 保存する文字列は `JSON.stringify`（**minify**。空白なし）
   - **転送ペイロードの Brotli（`.bin.br`）とは別レイヤ**。生バイトを localStorage に保存することはない
 - `cache?: boolean`（既定 `true`）、`cacheTtlSeconds?: number`（既定 `31536000`）
-- キャッシュは `@b4moss/cachian`（prefix `jp-local-gov-id:`）。`purgeCache` で明示削除
 - キャッシュ実装は `@b4moss/cachian`（キー prefix `jp-local-gov-id:`）。`purgeCache` で明示削除
 - 例外: **全国対象の文字列検索**で取得した県別データと JLIX は localStorage に書かず、**メモリのみ**
 - `data` を直接渡した場合はキャッシュしない
@@ -145,7 +145,7 @@ const client = await createLocalGovClient({
 
 ### 公式 URL と自前データ
 
-- 公式の利用方法は **バージョン付き URL**（例: パスに `0.3.2` を含める）。エントリは `index.json`
+- 公式の利用方法は **バージョン付き URL**（例: パスにデータパッケージ版 `1.0.0` を含める）。エントリは `index.json`
 - 利用側が自前でデータを配信する場合も、**公式と同様にバージョン付き URL** と同等のファイル構成で提供すること
 - 自前データ配信（可用性・CORS・内容の正しさ・URL 運用など）について、**当パッケージ開発者は一切の責任を負わない**
 - CORS は配信側で許可する前提とし、本仕様ではこれ以上扱わない
@@ -267,7 +267,7 @@ type LocalGovClient = {
 
 ```ts
 const client = await createLocalGovClient({
-  url: "https://.../0.3.2/index.json",
+  url: "https://.../jp-local-gov-id-data/1.0.0/index.json",
 })
 
 client.listPrefectures()

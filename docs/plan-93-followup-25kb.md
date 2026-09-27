@@ -179,4 +179,4 @@
 - [x] Phase C–E: binary 直 import・文言短縮・normalize 整理（schema 大規模表駆動は見送り：目標達成済み）
 - [x] Phase D: 文言短縮
 - [x] Phase E: normalize 桁抽出共通化
-- [x] 最終測定 **24339** ≤25600 → ドキュメント更新
+- [x] 最終測定 **24339** ≤25600 → ドキュメント更新（内部計測 doc + 公開 README / site / 仕様の v1.2.0 同期）

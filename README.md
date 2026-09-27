@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml/badge.svg)](https://github.com/b4moss/jp-local-gov-id/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/codecov/c/github/b4moss/jp-local-gov-id)](https://codecov.io/gh/b4moss/jp-local-gov-id)
-[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id/rc)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
+[![npm](https://img.shields.io/npm/v/@b4moss/jp-local-gov-id)](https://www.npmjs.com/package/@b4moss/jp-local-gov-id)
 [![Release](https://img.shields.io/github/v/release/b4moss/jp-local-gov-id?include_prereleases&filter=app-v*)](https://github.com/b4moss/jp-local-gov-id/releases)
 [![License](https://img.shields.io/github/license/b4moss/jp-local-gov-id)](https://github.com/b4moss/jp-local-gov-id/blob/main/LICENSE)
 [![OpenSSF Scorecard](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.scorecard.dev%2Fprojects%2Fgithub.com%2Fb4moss%2Fjp-local-gov-id&label=OpenSSF%20Scorecard&query=$.score)](https://scorecard.dev/viewer/?uri=github.com/b4moss/jp-local-gov-id)
@@ -15,7 +15,7 @@ A monorepo for Japan’s nationwide local government codes (npm workspaces).
 
 | Package | Description | Version |
 |---------|-------------|---------|
-| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.0.0 |
+| [`@b4moss/jp-local-gov-id`](./packages/jp-local-gov-id) | JS API (data not bundled; lazy-loaded) | 1.2.0 |
 | [`@b4moss/jp-local-gov-id-data`](./packages/jp-local-gov-id-data) | `index.json` + Brotli binary (`.bin.br`) datasets | 1.0.0 |
 
 ## Install (consumers)
@@ -66,6 +66,7 @@ const client = await createLocalGovClient({
 - Clear with `await client.purgeCache({ all: true })` (or `{ keys: [...] }`, etc.)
 - Exception: municipality data and JLIX (`search-ngrams/**`) loaded by **nationwide** string search stay in memory only (not written to localStorage)
 - Environments without localStorage (e.g. Node) skip caching
+- As of **1.2.0**, the initial `createLocalGovClient` graph keeps search and `@b4moss/cachian` behind dynamic import (measured initial minify ≈ **24339** bytes; see `docs/client-bundle-93.md`)
 - String search normalizes hiragana / fullwidth kana to halfwidth kana (`matchField` default: `"both"`). After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram and 3-gram
 - Schema mismatches, invalid JSON, or invalid binary raise `LocalGovSchemaError`; network / HTTP failures are normal fetch errors
 - Missing or ambiguous query results return `null` / `[]` (they do not throw)
@@ -82,7 +83,7 @@ A single file of all municipalities is not distributed. The data package ships *
 | `search-ngrams/2gram/{region}.bin.br` | Hot-set 2-gram search index (JLIX, regional splits) |
 | `search-ngrams/3gram/{shard}.bin.br` | Cold-set 3-gram search index (JLIX, 3 shards) |
 
-`schemaVersion` (currently `1`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. Intermediate CSV / uncompressed `.bin` live in the repository for review but are not published to npm.
+`schemaVersion` (currently `2`) describes the decoded object shape; it is unrelated to the binary format's own header `version`. Intermediate CSV / uncompressed `.bin` live in the repository for review but are not published to npm.
 
 ### Hosting your own data
 

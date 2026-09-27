@@ -27,6 +27,7 @@ schemaRole: TechArticle
 - 索引ロードは concurrency=3・開始 100ms ずらし。候補県 `.bin.br` は同時最大 6
 - localStorage に書くのはデコード後オブジェクトの minify JSON（転送 Brotli とは別）。全国検索の県別・JLIX はメモリのみ
 - `schemaVersion` は **2**（都道府県は 6 桁団体コード、所属フィールドなし）
+- **1.2.0**: `createLocalGovClient` 初期グラフは検索実装と `@b4moss/cachian` を動的 import（初期 minify ≈ 24339 bytes）
 
 ## `Prefecture` / `Municipality`
 
