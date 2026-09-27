@@ -1,6 +1,6 @@
 # テスト仕様書: 都道府県返却スキーマの変更（#53）
 
-対象マイルストーン: `data-v1.0.0-rc.4` / `app-v1.0.0-rc.3`  
+対象マイルストーン: `data-v1.0.0-rc.4` / `app-v1.0.0-rc.3`（現行: data `1.0.0` / app `1.2.0`）  
 関連: [README.md](../../README.md) / [logics.md](../../specs/api/logics.md) / Issue #53
 
 ## 1. 目的
@@ -37,19 +37,19 @@
 
 ### TC-D01: 全都道府県の `code` が 6 桁
 
-- **前提**: 再生成後の `prefectures.json`
+- **前提**: 再生成後のデコード済み都道府県エンベロープ（`prefectures.bin.br` → decode）
 - **操作**: 47 件すべてを検査
 - **期待**: 各 `code` が `/^\d{6}$/`。先頭 2 桁は従来の都道府県コードと一致（`01`…`47`）
 
 ### TC-D02: 都道府県に `prefecture*` が無い
 
-- **前提**: `prefectures.json` の各都道府県
+- **前提**: デコード済み都道府県エンベロープの各都道府県
 - **期待**: `prefectureCode` / `prefectureName` / `prefectureNameKana` を **持たない**
 - **期待**: 必須は `code` / `name` / `nameKana`。`municipalityCounts` は従来どおり都道府県にのみ存在
 
 ### TC-D03: 市区町村は所属フィールドを維持
 
-- **前提**: `prefectures/{2桁}.json`（少なくとも `01` / `13`）
+- **前提**: `prefectures/{2桁}.bin.br` デコード後（少なくとも `01` / `13`）
 - **期待**: 各市区町村が `code`(6桁) / `name` / `nameKana` / `prefectureCode`(2桁) / `prefectureName` / `prefectureNameKana` を持つ
 - **期待**: 市区町村に `municipalityCounts` は無い
 
@@ -65,16 +65,16 @@
 ### TC-D05: 索引・パスは 2 桁のまま
 
 - **期待**: `index.prefectureCodes` は `["01", …, "47"]`（2 桁）
-- **期待**: 県別ファイルパスは `prefectures/01.json` 形式（2 桁）。6 桁ファイル名にしない
+- **期待**: 県別ファイルパスは `prefectures/01.bin.br` 形式（2 桁）。6 桁ファイル名にしない
 
 ### TC-D06: `schemaVersion` が 2
 
-- **期待**: `index.json` / `prefectures.json` / `prefectures/{code}.json` の `schemaVersion === 2`
+- **期待**: `index.json` / デコード後都道府県・県別エンベロープの `schemaVersion === 2`
 - **期待**: app の `LOCAL_GOV_SCHEMA_VERSION === 2`。旧 `1` データはスキーマエラー
 
 ### TC-D07: `municipalityCounts` の配置は不変
 
-- **期待**: `prefectures.json` の都道府県にのみ存在
+- **期待**: デコード済み都道府県エンベロープの都道府県にのみ存在
 - **期待**: `index.json` および県別ファイル本体・市区町村要素には無い
 - **期待**: `both` / `city` / `ward` の意味・値の整合は既存 TC（旧 TC-01〜07 相当）を維持。ただし都道府県の Map キーは 2 桁組織キー（`code.slice(0,2)`）で解決する
 
@@ -178,5 +178,5 @@
 
 1. TC-D / TC-A / TC-T が自動テストとして実装され、CI でグリーン
 2. 既存の 2 桁解決・`getPrefectureCodeByName`（2 桁）・`municipalityCounts` 系の意図が回帰していない
-3. `schemaVersion === 2` と版バンプ（data rc.4 / app rc.3）が揃っている
+3. `schemaVersion === 2` が現行パッケージ（data `1.0.0` / app `1.2.0`）と揃っている
 4. docs / site API が本仕様と矛盾しない

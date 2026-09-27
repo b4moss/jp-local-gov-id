@@ -166,12 +166,11 @@
 - **期待**: A のみ消え、B は残る
 - **期待**: その後 A を要すると再フェッチ、B はヒットし得る
 
-### TC-P04: `olderThan` / `createdBefore` / `createdAfter`
+### TC-P04: 時間条件オプション（委譲・本リポジトリでは薄い）
 
-- **前提**: 新規 set 済みエントリ（`createdAt` あり）
-- **操作**: cachian が受け付ける時間条件で `purgeCache` を呼ぶ
-- **期待**: 条件に合うエントリだけ削除される（詳細閾値は cachian 契約に委譲。本パッケージは委譲呼び出しが届くことを固定）
-- **期待**: `olderThan` と `createdBefore` / `createdAfter` の混在は TypeError（cachian と同じ）
+- **契約**: `purgeCache` の引数型は cachian の `CachePurgeOptions` をそのまま通す（`olderThan` / `createdBefore` / `createdAfter` を含む）
+- **本リポジトリの自動テスト**: `{ all: true }` と `{ keys }` を固定（`api.test.ts`）。時間条件の閾値・混在 TypeError は **cachian 側契約に委譲**し、本パッケージでは専用ケースを必須としない
+- **期待**: 時間条件を渡しても本パッケージが握りつぶさず、cachian の `purge` に到達する（実装は薄い委譲）
 
 ### TC-P05: `cache: false` のクライアント
 

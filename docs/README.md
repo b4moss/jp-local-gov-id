@@ -334,6 +334,7 @@ jp-local-gov-id/
 ├── docs/
 ├── resources/                   # 元 Excel（共有素材・非配布）
 ├── scripts/                     # 生成ツール（private・Node.js 専用）
+├── site/                        # ドキュメントサイト（workspace）
 └── packages/
     ├── jp-local-gov-id/         # JS API（公開）
     └── jp-local-gov-id-data/    # データパッケージ（index.json + .bin.br を公開／CSV・非圧縮 .bin はリポジトリのみ）
@@ -355,6 +356,7 @@ jp-local-gov-id/
 |------|------|------|
 | `packages/jp-local-gov-id/` | JS API 本体 | API パッケージとして npm 公開 |
 | `packages/jp-local-gov-id-data/` | `index.json` / `.bin.br`（都道府県・県別・JLIX）＋レビュー用 CSV/`.bin` | データパッケージとして npm 公開（CSV / 非圧縮 `.bin` は非同梱） |
+| `site/` | 利用ガイド・サンプルのドキュメントサイト | 含めない（静的生成） |
 | `resources/` | 元ソースのエクセルデータ | 含めない |
 | `scripts/` | Excel → CSV → `.bin` → `.bin.br` の生成 | 含めない |
 | `docs/` | 仕様・ロードマップ | 含めない |
@@ -364,7 +366,7 @@ jp-local-gov-id/
 ```json
 {
   "private": true,
-  "workspaces": ["packages/*", "scripts"]
+  "workspaces": ["packages/*", "scripts", "site"]
 }
 ```
 

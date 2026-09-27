@@ -158,21 +158,39 @@
 - `designatedCity` で候補をフィルタしてから一致判定
 - ロード／キャッシュ方針は `searchByText` と同じ
 
-#### その他の export
+#### その他の export（`src/index.ts` 正）
 
 | 名前 | 種別 | 内容 |
 |------|------|------|
 | `LocalGovSchemaError` | class | スキーマ不一致／不正な JSON・バイナリデータ |
-| `LOCAL_GOV_SCHEMA_VERSION` | const | 現行スキーマ版（`2`） |
-| `MUNICIPALITY_FETCH_CONCURRENCY` | const | 全国検索の並列度（`6`） |
+| `LOCAL_GOV_SCHEMA_VERSION` | const | 公開エンベロープ版（`2`） |
+| `DECODED_SCHEMA_VERSION` | const | デコード後エンベロープ版（`2`、バイナリ側） |
+| `BINARY_FORMAT_VERSION` | const | バイナリヘッダ `version`（`1`） |
+| `LocalGovBinaryError` | class | magic / version / バッファ不正などバイナリエラー |
+| `MAGIC_JLPR` / `MAGIC_JLDT` / `MAGIC_JLIX` | const | バイナリ magic 文字列 |
+| `PREFECTURE_RECORD_SIZE` / `MUNICIPALITY_RECORD_SIZE` / `NGRAM_POSTING_RECORD_SIZE` | const | レコードバイト長（16 / 14 / 13） |
+| `encodePrefectures` / `decodePrefectures` / `decodePrefecturesFile` | fn | JLPR |
+| `encodeMunicipalities` / `decodeMunicipalities` / `decodeMunicipalitiesFile` | fn | JLDT |
+| `encodeSearchNgrams` / `decodeSearchNgrams` | fn | JLIX |
+| `prefectureCodeFromMunicipalityCode` | fn | 団体コード → 2 桁組織キー |
+| `MUNICIPALITY_FETCH_CONCURRENCY` | const | 全国検索の県別取得並列度（`6`） |
+| `SEARCH_INDEX_FETCH_CONCURRENCY` | const | 索引ファイル取得並列度（`3`） |
+| `SEARCH_INDEX_FETCH_STAGGER_MS` | const | 索引取得開始ずらし（`100`） |
+| `mapWithStaggeredConcurrency` | fn | 上記ずらし付きプール |
+| `THREE_GRAM_SHARD_COUNT` | const | コールド 3-gram シャード数（`3`） |
+| `codePointBigrams` / `codePointTrigrams` / `gramShardId` / `gramShardIndex` | fn | n-gram / シャードヘルパ |
+| `TWO_GRAM_REGIONS` / `assignTwoGramRegion` / `isHotMunicipality` | const/fn | ホット集合・2-gram 地域 |
+| `normalizeSearchText` | fn | 検索文字列正規化 |
+| `decompressBrotli` / `isBinaryPayloadUrl` / `isBrotliPayloadUrl` / `maybeDecompressPayload` | fn | Brotli / ペイロード判定 |
 | `isPrefecture` / `isMunicipality` | fn | union 判別 |
 | `prefectureOrgCode` | fn | 都道府県エンティティ → 2 桁組織キー |
+| `DEFAULT_CACHE_TTL_SECONDS` | const | `31536000` |
+| `CACHE_TTL_MS` | const | deprecated 互換 |
+| `CACHE_KEY_PREFIX` | const | `jp-local-gov-id:` |
 
-型: `Prefecture`, `Municipality`, `LocalGov`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `CachePurgeOptions`, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `LocalGovDataFile`（deprecated）
+型（クライアント／データ）: `Prefecture`, `Municipality`, `LocalGov`, `MunicipalityCounts`, `LocalGovClient`, `CreateLocalGovOptions`, `CreateLocalGovCacheOptions`, `CachePurgeOptions`（cachian re-export）, `SearchOptions`, `SearchTarget`, `MatchField`, `DesignatedCityMode`, `ListMunicipalitiesOptions`, `LocalGovDataset`, `LocalGovIndexFile`, `LocalGovPrefecturesFile`, `LocalGovMunicipalitiesFile`, `SearchNgramsPathSpec`, `SearchNgramsTwoGramSpec`, `SearchNgramsThreeGramSpec`, `LocalGovDataFile`（deprecated）
 
-定数: `DEFAULT_CACHE_TTL_SECONDS`（`31536000`）、`CACHE_TTL_MS`（deprecated 互換）、`CACHE_KEY_PREFIX`（`jp-local-gov-id:`）、`LOCAL_GOV_SCHEMA_VERSION`、`MUNICIPALITY_FETCH_CONCURRENCY`
-
-型: `CachePurgeOptions`（`@b4moss/cachian` から re-export）
+型（バイナリ）: `MunicipalityBinRecord`, `PrefectureBinRecord`, `PrefectureNameLookup`, `SearchNgramPostingRecord`
 
 旧名（`createLocalGov`, `getPrefectureCode`, `getMunicipalitiesByPrefecture`, `search`, `getCodeByName`）に互換エイリアスは置かない。
 
@@ -199,3 +217,4 @@
 | 2026-07-11 | 整理案を確定（改名 + カナ検索 `matchField`） |
 | 2026-07-11 | `designatedCity` オプション（`both` / `city` / `ward`）を追加 |
 | 2026-08-29 | 配信を `.bin.br` + ハイブリッド JLIX（2-gram 地域 / 3-gram シャード）に更新 |
+| 2026-09-27 | 公開 export 一覧を `src/index.ts` に同期（binary / search / brotli / stagger 等） |

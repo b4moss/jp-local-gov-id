@@ -1,8 +1,8 @@
 # テスト仕様書: ハイブリッド n-gram 検索インデックス（#63）
 
-> **注記（現行コード）**: 本仕様は当時のマイルストーン向け。現行の公開エンベロープ `schemaVersion` は **2**（`LOCAL_GOV_SCHEMA_VERSION`）。本文中の `schemaVersion === 1` は歴史的期待値。
+> **現行コード同期**: 公開エンベロープ `schemaVersion` は **2**。配信は `.bin.br`。バイナリヘッダ `version` は `1`（`BINARY_FORMAT_VERSION`）。
 
-対象マイルストーン: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`  
+対象マイルストーン（着手時）: `data-v1.0.0-rc.10` / `app-v1.0.0-rc.10`（現行: data `1.0.0` / app `1.2.0`）  
 関連: [README.md](../../README.md) / [logics.md](../../specs/api/logics.md) / [test-spec-73-csv-binary.md](../data/test-spec-73-csv-binary.md) / Issue #63 / #74  
 作業ベース: `dev-app-v1.0.0-rc.10`  
 想定実装ブランチ: `cursor/issue-63-jlix-generate-4c4d`
@@ -104,7 +104,7 @@
 ```
 
 - `{region}` / `{shard}` プレースホルダ必須
-- `schemaVersion` は `1` 据え置き
+- 公開エンベロープ `schemaVersion` は **`2`**（`LOCAL_GOV_SCHEMA_VERSION`）。バイナリヘッダ `version` は `BINARY_FORMAT_VERSION`（`1`）で別物
 - 既存 `paths.prefectures` / `paths.municipalitiesByPrefecture` は `.bin.br` 契約を維持（#74）
 
 ### dataset（`{ data }`）
