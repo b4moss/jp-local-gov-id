@@ -44,7 +44,7 @@ CDN では **JS（API）とデータ（版付き `index.json`）を同じ版で�
 <!DOCTYPE html>
 <html lang="ja">
   <body>
-    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0/dist/jp-local-gov-id.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.2.0/dist/jp-local-gov-id.iife.min.js"></script>
     <script>
       const { createLocalGovClient } = JpLocalGovId;
 
@@ -69,7 +69,7 @@ CDN では **JS（API）とデータ（版付き `index.json`）を同じ版で�
 <html lang="ja">
   <body>
     <script type="module">
-      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.0.0/dist/jp-local-gov-id.js";
+      import { createLocalGovClient } from "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id@1.2.0/dist/jp-local-gov-id.js";
 
       const client = await createLocalGovClient({
         url: "https://cdn.jsdelivr.net/npm/@b4moss/jp-local-gov-id-data@1.0.0/index.json",

@@ -141,6 +141,8 @@ URL は **バージョン付き**にしてください（キャッシュキー�
 
 - `url` 指定時、取得ファイルを展開・デコードして localStorage にキャッシュ（既定 ON）。保存はデコード後オブジェクトの minify JSON。**転送の `.bin.br` とは別**
 - 例外: **全国対象**の文字列検索で取得した県別データと JLIX はメモリのみ
+- 実装は `@b4moss/cachian`（キー prefix `jp-local-gov-id:`）。明示削除は `await client.purgeCache({ all: true })` など
+- **1.2.0** 以降、初期バンドルから検索実装と cachian を動的 import（初期 minify ≈ 24339 bytes）
 - 正規化後長が 2 未満 → 空 / 2 → ホット 2-gram のみ / 3 以上 → 2-gram と 3-gram をマージ
 - スキーマ不一致・不正データ → `LocalGovSchemaError`
 

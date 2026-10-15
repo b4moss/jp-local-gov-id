@@ -14,7 +14,7 @@ npm run ci:local
 act pull_request -W .github/workflows/ci.yml
 ```
 
-既定は [`.actrc`](../.actrc) です。`act` 実行時はゲートが API スキップせず Test/Build を必ず実行します（`ACT=true`）。Codecov は `ACT` 時にスキップされます。
+既定は [`.actrc`](../../../.actrc) です。`act` 実行時はゲートが API スキップせず Test/Build を必ず実行します（`ACT=true`）。Codecov は `ACT` 時にスキップされます。
 
 Docker が無い環境（一部の Cloud Agent など）では次の代替を使えます。ただし **可能な環境では act を正**とします。
 
@@ -36,20 +36,25 @@ npm run ci:local:fallback   # npm ci && npm test && npm run build
 |------|--------|
 | トリガ | base が `develop` または `dev-*` の `pull_request`、および **`main` / `release` への `push`** |
 | 発火しない例 | `develop` への push、任意ブランチへの push、`main` / `release` / `doc-site` などへの PR |
-| 重いジョブのスキップ | 同一 head SHA に成功済みの `CI` ワークフローがある、または docs のみの変更 |
-| docs のみ | `docs/**`・`site/content/**`・`*.md` 等のみ → GitHub 上は Test/Build スキップ。ローカル act は原則フル実行 |
+| 重いジョブのスキップ | 同一 head SHA に成功済みの `CI` ワークフローがある、または docs/site のみの変更（**PR と push の両方**） |
+| docs/site のみ | `docs/**`・`site/**`・`*.md`・docs 系 deploy ワークフロー等のみ → GitHub 上は Test/Build スキップ（`main` / `release` push も含む）。ローカル act は原則フル実行 |
 | ジョブ | `Gate` のあと **`Test & Build` 単一ジョブ**（`npm ci` 1回 → test → build）。site ワークスペースは入れない |
 | required check 名 | **`Test & Build`**（重い処理をスキップしてもジョブ自体は常に成功/失敗を報告） |
-| `main` push の理由 | Codecov default branch の coverage 更新（#121） |
+| `main` push の理由 | Codecov default branch の coverage 更新（#121）。コード push ごとにアプリ CI は **1回**。docs/site のみの push は重い処理をスキップ |
 | `release` push の理由 | release 由来タグ SHA に CI 履歴を付け、publish の Test スキップを効かせる |
+| 対象外 | GitHub **CodeQL** default setup（`dynamic/github-code-scanning/codeql`）は別ワークフローで、`main` push 時に併せて動くことがある |
 
 ## Docs CI（`.github/workflows/ci-docs.yml`）
 
 | 項目 | ルール |
 |------|--------|
 | トリガ | base が `doc-site` の `pull_request` |
-| ジョブ | **`Docs Build`**: スコープ付き `npm ci`（site + library/data）+ `npm run build:site` |
+| 重いジョブのスキップ | **コンテンツのみ**の変更 → サイトビルドをスキップ（チェック自体は成功扱い） |
+| コンテンツのみ | `docs/**`・`site/content/**`・`site/public/**`・`*.md`・`site/site.meta.yaml.example` など |
+| フル Docs Build | サイトの JS / 設定変更（例: `site/app/**`、`site/server/**`、`nuxt.config.ts`、`package.json`、i18n など） |
+| ジョブ | **`Docs Build`**: スキップしないときスコープ付き `npm ci`（site + library/data）+ `npm run build:site` |
 | 対象外 | アプリの `npm test`、アプリ単体の検証、およびアプリ CI の成否 — **`doc-site` へのマージ判定では無視** |
+| Deploy は続く | コンテンツのみでも `doc-site` へのマージ後は **Deploy Docs** が走り Pages を更新する |
 
 ### PR の向け先
 
@@ -79,7 +84,7 @@ Playground が参照するライブラリを、すでに `main` / `release` に�
 | 内容 | 総務省 Excel を取得し `resources/000925835.xlsx` と SHA-256 比較 → `site/public/source-monitor.json` を更新コミット |
 | Install | scripts ワークスペースのみ |
 | 異常時 | `source-monitor` ラベルの Issue 起票／コメント、job failure |
-| 詳細 | [test-spec-66-source-hash.md](./test-spec-66-source-hash.md) / Issue #66 |
+| 詳細 | [test-spec-66-source-hash.md](../../tests/ops/test-spec-66-source-hash.md) / Issue #66 |
 
 ## OpenSSF Scorecard（`.github/workflows/scorecard.yml`）
 
@@ -111,6 +116,10 @@ Codecov の **project coverage ≥ 90%**（`codecov.yml` の `target: 90%`）を
 4. `release` ブランチから `app-v1.0.0` / `data-v1.0.0` をタグ → Release → Publish
 5. Issue #121 を Close
 
+## v1.0.0 以降
+
+以降の app タグ（`app-v1.1.0`、`app-v1.2.0` など）も同じ **`release` からタグ → Release → Publish** の流れ。API のみの変更では data を `data-v1.0.0` のままにする場合がある（app `1.2.0` など）。
+
 ## 流れ
 
 ```text
@@ -122,8 +131,8 @@ release への push → CI（publish スキップ用の履歴）
 release 上のタグ → Release → Publish（Test 再利用 or 再検証、Build は常時）→ npm
 
 # ドキュメントサイト
-サイト変更 → doc-site へ PR
-          → Docs CI（"Docs Build"）
-          → doc-site へマージ → Deploy Docs → GitHub Pages（Actions）
+サイト JS/設定 → doc-site へ PR → Docs CI（"Docs Build"）
+コンテンツのみ → doc-site へ PR → Docs CI Gate がビルドをスキップ
+              → doc-site へマージ → Deploy Docs → GitHub Pages（Actions）
 ```
 

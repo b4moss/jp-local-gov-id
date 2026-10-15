@@ -62,6 +62,6 @@ npm run dev:site
 
 - Bug fixes, docs, and tests are welcome
 - Breaking API or data-format changes should start with an Issue
-- See `docs/` (especially `logics.md`, `main.md`, `test-spec-63-search-ngrams.md`) for contracts
+- See `docs/` (especially `specs/api/logics.md`, `README.md`, `tests/search/test-spec-63-search-ngrams.md`) for contracts
 
 License: MIT.

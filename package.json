@@ -1,7 +1,7 @@
 {
   "name": "jp-local-gov-id-monorepo",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "jp-local-gov-id monorepo (npm workspaces)",
   "workspaces": [
     "packages/*",
@@ -28,5 +28,21 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/b4moss/jp-local-gov-id"
+  },
+  "devDependencies": {
+    "shell-quote": "1.12.0",
+    "devalue": "5.9.4",
+    "brace-expansion": "5.0.12",
+    "simple-git": "4.0.2",
+    "@simple-git/argv-parser": "2.0.1",
+    "uuid": "11.1.1"
+  },
+  "overrides": {
+    "shell-quote": "1.12.0",
+    "devalue": "5.9.4",
+    "simple-git": "4.0.2",
+    "@simple-git/argv-parser": "2.0.1",
+    "uuid": "11.1.1",
+    "brace-expansion": "5.0.12"
   }
 }

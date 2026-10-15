@@ -84,9 +84,11 @@ const client = await createLocalGovClient({
 
 Use a **versioned** URL (cache keys are URLs).
 
-- `url` mode caches decoded objects in localStorage (minified JSON) — **separate from on-wire `.bin.br`**
+- `url` mode caches decoded objects in localStorage via `@b4moss/cachian` (minified JSON) — **separate from on-wire `.bin.br`**
+- Clear with `await client.purgeCache({ all: true })` (or `{ keys }`, etc.)
 - Nationwide search municipality loads and JLIX stay **memory-only**
 - After normalize: length &lt; 2 → empty; length 2 → hot 2-gram only; length ≥ 3 → merge 2-gram + 3-gram
+- As of **1.2.0**, search and cachian stay behind dynamic import (initial minify ≈ **24339** bytes)
 
 ## Data layout
 

@@ -24,7 +24,7 @@ npm install @b4moss/jp-local-gov-id-data
 | `dataset.js` | API 向けデフォルト export。`.bin.br` を展開・デコードしてから公開形を組み立てます |
 | `decode.js` | 非圧縮 `.bin` 形式の低レベルデコード関数 |
 
-全市区町村をまとめた単一ファイルは**配布しません**。`schemaVersion`（現在 `1`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。
+全市区町村をまとめた単一ファイルは**配布しません**。`schemaVersion`（現在 `2`）はデコード後オブジェクトの形を表すもので、バイナリ形式自体のヘッダにある `version` とは別物です。
 
 中間 CSV と非圧縮 `.bin` はリポジトリ内に置きますが、npm には**同梱しません**（npm は Brotli のみ）。
 
@@ -37,7 +37,7 @@ npm install @b4moss/jp-local-gov-id-data
 | 展開時のデータ本体（都道府県＋県別） | 約 436 KiB | 約 88 KiB | （転送は Brotli。展開後は `.bin` 相当） |
 | 検索索引 | （なし／別方式） | （単一 JLIX 時代あり） | ハイブリッド 2-gram / 3-gram 分割 |
 
-容量の経緯は [docs/binary-size-73.md](../../docs/binary-size-73.md)（JSON→`.bin`）と [docs/test-spec-63-search-ngrams.md](../../docs/test-spec-63-search-ngrams.md)（ハイブリッド JLIX）を参照。
+容量の経緯は [docs/specs/data/binary-size-73.md](../../docs/specs/data/binary-size-73.md)（JSON→`.bin`）と [docs/tests/search/test-spec-63-search-ngrams.md](../../docs/tests/search/test-spec-63-search-ngrams.md)（ハイブリッド JLIX）を参照。
 
 ## インポート
 
