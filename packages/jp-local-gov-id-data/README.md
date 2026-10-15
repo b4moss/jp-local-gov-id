@@ -37,7 +37,7 @@ Measured against the last JSON release (`1.0.0-rc.3`):
 | Unpacked prefecture + municipality payload | ~436 KiB | ~88 KiB | (wire is Brotli; decode yields `.bin`-sized bytes) |
 | Search index | (none / older approach) | (monolith JLIX era) | Hybrid 2-gram / 3-gram partitions |
 
-Size history: [docs/binary-size-73.md](../../docs/binary-size-73.md) (JSON→`.bin`) and [docs/test-spec-63-search-ngrams.md](../../docs/test-spec-63-search-ngrams.md) (hybrid JLIX).
+Size history: [docs/specs/data/binary-size-73.md](../../docs/specs/data/binary-size-73.md) (JSON→`.bin`) and [docs/tests/search/test-spec-63-search-ngrams.md](../../docs/tests/search/test-spec-63-search-ngrams.md) (hybrid JLIX).
 
 ## Import
 

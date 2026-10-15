@@ -5,7 +5,7 @@
 想定実装:
 
 - runtime 正本: `packages/jp-local-gov-id/src/messages.jsonc`
-- encode 正本: `packages/jp-local-gov-id/src/messages.encode.jsonc`（#93 で追加。詳細は [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md)）
+- encode 正本: `packages/jp-local-gov-id/src/messages.encode.jsonc`（#93 で追加。詳細は [test-spec-93-client-bundle.md](../client/test-spec-93-client-bundle.md)）
 - 生成物: `messages.generated.ts`（runtime）/ `messages.encode.generated.ts`（encode）
 - コンパイル: `packages/jp-local-gov-id/scripts/compile-messages.mjs`（両カタログ）
 - 参照ヘルパ: runtime は `messages.ts` の `msg` / `fmt`、encode は `messages.encode.ts` の `msg` / `fmt`
@@ -223,7 +223,7 @@
 - サイト（`site/`）の警告・i18n・Playground エラー表示
 - ドキュメントサイト文言、README の文言統一
 - メッセージの多言語化・ロケール切替 API
-- バンドルサイズ目標・カタログ分割の詳細（Issue #93 / v1.2.0 — [test-spec-93-client-bundle.md](./test-spec-93-client-bundle.md)）
+- バンドルサイズ目標・カタログ分割の詳細（Issue #93 / v1.2.0 — [test-spec-93-client-bundle.md](../client/test-spec-93-client-bundle.md)）
 - 例外クラスの統合・エラーコード（数値 / symbol）化
 - 文言の日本語化やトーン変更（現行英語の意味維持が前提）
 

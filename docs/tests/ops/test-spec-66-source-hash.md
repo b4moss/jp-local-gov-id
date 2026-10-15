@@ -1,7 +1,7 @@
 # テスト仕様書: 総務省 Excel ソースハッシュ監視スクリプト（#66）
 
 対象マイルストーン: `app-v1.0.0-rc.11`  
-関連: [main.md](./main.md) / [ci-cd.ja.md](./ci-cd.ja.md) / Issue #66  
+関連: [README.md](../../README.md) / [ci-cd.ja.md](../../specs/ops/ci-cd.ja.md) / Issue #66  
 作業ブランチ: `cursor/issue-66-source-hash-test-spec-b22c`  
 想定実装: `scripts/check-source-hash.ts`（ルート `npm run check:source-hash`）
 
