@@ -11,6 +11,7 @@
 
 | パス | テーマ | 状態 |
 |------|--------|------|
+| [v1.2.1/](./v1.2.1/) | Dependabot 取り込み・vulnerability 解消・`app-v1.2.1` | 進行中 |
 | [unscheduled/](./unscheduled/) | マイルストーン未割当 | 現状空（`.gitkeep` のみ） |
 
 完了済みの #73 容量メモ・#93 バンドル計測は [../specs/data/](../specs/data/) / [../specs/client/](../specs/client/) へ昇格済み。  
