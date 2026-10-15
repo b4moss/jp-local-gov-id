@@ -1,5 +1,9 @@
 # 全国地方公共団体コードヘルパ 仕様書
 
+プロダクトの意味的な pillar 正本（目的・スコープ・技術方針のハブ）。  
+OKF の版索引は [`index.md`](./index.md)（`okf_version`）。憲章は [`charter/`](./charter/)。
+
+
 ## このプロジェクトについて
 
 日本の地方自治体コードを扱うための仕組みです。配布は次の **2 パッケージ**に分けます。
@@ -51,7 +55,7 @@ JavaScript で、現在の都道府県・市区町村の地方自治体コード
 - **npm / CDN 配信:** Brotli 圧縮バイナリ（`.bin.br`）+ プレーン JSON の `index.json`
 - **リポジトリのみ:** 中間 CSV と非圧縮 `.bin`（レビュー・差分用。npm 非同梱）
 
-詳細な生成契約は [test-spec-73-csv-binary.md](./test-spec-73-csv-binary.md)（#73）と [test-spec-63-search-ngrams.md](./test-spec-63-search-ngrams.md)（#63 ハイブリッド索引）。容量メモは [binary-size-73.md](./binary-size-73.md)。
+詳細な生成契約は [test-spec-73-csv-binary.md](./tests/data/test-spec-73-csv-binary.md)（#73）と [test-spec-63-search-ngrams.md](./tests/search/test-spec-63-search-ngrams.md)（#63 ハイブリッド索引）。容量メモは [binary-size-73.md](./specs/data/binary-size-73.md)。
 
 | ファイル | 内容 | 配布 |
 |----------|------|------|
@@ -317,7 +321,7 @@ await client.getLocalGovCodeByName("札幌市", { designatedCity: "city" })
 | 実行 | GitHub Actions `monitor-source-hash.yml`（週 1・月曜 UTC + 手動） |
 | 公開ステータス | `site/public/source-monitor.json`（サイト contribute ページで表示） |
 
-表示状態: 取得成功かつハッシュ一致 → 問題なし（最終確認日を更新）／取得失敗 → 「取得失敗・詳細調査中」／ハッシュ差分 → 「ハッシュ差分検知・詳細調査中」。差分時も Excel の自動差し替えはしない。契約の詳細は [test-spec-66-source-hash.md](./test-spec-66-source-hash.md)。
+表示状態: 取得成功かつハッシュ一致 → 問題なし（最終確認日を更新）／取得失敗 → 「取得失敗・詳細調査中」／ハッシュ差分 → 「ハッシュ差分検知・詳細調査中」。差分時も Excel の自動差し替えはしない。契約の詳細は [test-spec-66-source-hash.md](./tests/ops/test-spec-66-source-hash.md)。
 
 ### ディレクトリ構成（モノレポ）
 
@@ -330,6 +334,7 @@ jp-local-gov-id/
 ├── docs/
 ├── resources/                   # 元 Excel（共有素材・非配布）
 ├── scripts/                     # 生成ツール（private・Node.js 専用）
+├── site/                        # ドキュメントサイト（workspace）
 └── packages/
     ├── jp-local-gov-id/         # JS API（公開）
     └── jp-local-gov-id-data/    # データパッケージ（index.json + .bin.br を公開／CSV・非圧縮 .bin はリポジトリのみ）
@@ -351,6 +356,7 @@ jp-local-gov-id/
 |------|------|------|
 | `packages/jp-local-gov-id/` | JS API 本体 | API パッケージとして npm 公開 |
 | `packages/jp-local-gov-id-data/` | `index.json` / `.bin.br`（都道府県・県別・JLIX）＋レビュー用 CSV/`.bin` | データパッケージとして npm 公開（CSV / 非圧縮 `.bin` は非同梱） |
+| `site/` | 利用ガイド・サンプルのドキュメントサイト | 含めない（静的生成） |
 | `resources/` | 元ソースのエクセルデータ | 含めない |
 | `scripts/` | Excel → CSV → `.bin` → `.bin.br` の生成 | 含めない |
 | `docs/` | 仕様・ロードマップ | 含めない |
@@ -360,7 +366,7 @@ jp-local-gov-id/
 ```json
 {
   "private": true,
-  "workspaces": ["packages/*", "scripts"]
+  "workspaces": ["packages/*", "scripts", "site"]
 }
 ```
 
@@ -395,7 +401,7 @@ jp-local-gov-id/
 - リポジトリは npm workspaces のモノレポとする
 - API パッケージ（`packages/jp-local-gov-id`）の開発は Vite + TypeScript（ライブラリモード）
 - パーススクリプト（`scripts/`）は独自の `package.json` を持ち、Node.js で実行する
-- CI/CD（PR 前の `act` 必須・発火条件・publish）は [ci-cd.ja.md](./ci-cd.ja.md) / [ci-cd.md](./ci-cd.md) を参照
+- CI/CD（PR 前の `act` 必須・発火条件・publish）は [ci-cd.ja.md](./specs/ops/ci-cd.ja.md) / [ci-cd.md](./specs/ops/ci-cd.md) を参照
 
 ### パッケージサイズ・取得
 
@@ -416,6 +422,16 @@ jp-local-gov-id/
 - 文字の正規化の拡充（「ヶ/ケ」・旧字体など）。検索時のひらがな／カナ正規化は実装済み
 - 公式の版付き配信 URL の具体（現状は決め打ち URL + 週次ハッシュ監視で追跡）
 
------
+## 索引
+
+- [roadmap](./roadmap.md) — マイルストーン
+- [specs](./specs/) — 現行仕様
+- [plans](./plans/) — これからやる内容
+- [tests](./tests/) — テスト仕様
+- [憲章](./charter/) — 開発ルール
+- [OKF v0.1](./charter/okf/) — 知識バンドル定義
+
+
+----
 
 以上

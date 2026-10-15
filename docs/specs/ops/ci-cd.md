@@ -14,7 +14,7 @@ npm run ci:local
 act pull_request -W .github/workflows/ci.yml
 ```
 
-Defaults live in [`.actrc`](../.actrc). Under `act`, the CI gate always runs Test/Build (`ACT=true` bypasses the GitHub API skip). Codecov is skipped when `ACT` is set.
+Defaults live in [`.actrc`](../../../.actrc). Under `act`, the CI gate always runs Test/Build (`ACT=true` bypasses the GitHub API skip). Codecov is skipped when `ACT` is set.
 
 If Docker is unavailable (some Cloud Agent / constrained environments), use the fallback and treat it as a temporary substitute — **act remains the source of truth** wherever Docker works:
 
@@ -84,7 +84,7 @@ When the playground needs a newer published library build that already landed on
 | Action | Fetch MIC Excel, SHA-256 vs `resources/000925835.xlsx`, commit `site/public/source-monitor.json` |
 | Install | scripts workspace only |
 | On anomaly | Open/comment Issue with `source-monitor` label; fail the job |
-| Details | [test-spec-66-source-hash.md](./test-spec-66-source-hash.md) / Issue #66 |
+| Details | [test-spec-66-source-hash.md](../../tests/ops/test-spec-66-source-hash.md) / Issue #66 |
 
 ## OpenSSF Scorecard (`.github/workflows/scorecard.yml`)
 

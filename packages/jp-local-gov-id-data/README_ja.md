@@ -37,7 +37,7 @@ npm install @b4moss/jp-local-gov-id-data
 | 展開時のデータ本体（都道府県＋県別） | 約 436 KiB | 約 88 KiB | （転送は Brotli。展開後は `.bin` 相当） |
 | 検索索引 | （なし／別方式） | （単一 JLIX 時代あり） | ハイブリッド 2-gram / 3-gram 分割 |
 
-容量の経緯は [docs/binary-size-73.md](../../docs/binary-size-73.md)（JSON→`.bin`）と [docs/test-spec-63-search-ngrams.md](../../docs/test-spec-63-search-ngrams.md)（ハイブリッド JLIX）を参照。
+容量の経緯は [docs/specs/data/binary-size-73.md](../../docs/specs/data/binary-size-73.md)（JSON→`.bin`）と [docs/tests/search/test-spec-63-search-ngrams.md](../../docs/tests/search/test-spec-63-search-ngrams.md)（ハイブリッド JLIX）を参照。
 
 ## インポート
 
