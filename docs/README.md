@@ -1,7 +1,7 @@
 # 全国地方公共団体コードヘルパ 仕様書
 
 プロダクトの意味的な pillar 正本（目的・スコープ・技術方針のハブ）。  
-OKF の版索引は [`index.md`](./index.md)（`okf_version`）。憲章は [`charter/`](./charter/)。
+OKF の版索引は [`index.md`](./index.md)（`okf_version`）。憲章は [AGENTS.md](../AGENTS.md) の「開発憲章（charter）」節（[b4moss/charter](https://github.com/b4moss/charter) v1）。
 
 
 ## このプロジェクトについて
@@ -428,8 +428,8 @@ jp-local-gov-id/
 - [specs](./specs/) — 現行仕様
 - [plans](./plans/) — これからやる内容
 - [tests](./tests/) — テスト仕様
-- [憲章](./charter/) — 開発ルール
-- [OKF v0.1](./charter/okf/) — 知識バンドル定義
+- [憲章](https://github.com/b4moss/charter/tree/v1/docs/charter) — 開発ルール（[AGENTS.md](../AGENTS.md)）
+- [文書ルール（OKF）](https://github.com/b4moss/charter/blob/v1/docs/charter/doc-rule.md) — 知識バンドル定義
 
 
 ----
