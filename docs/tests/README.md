@@ -1,6 +1,6 @@
 # tests
 
-テスト仕様（TDD の入力）。形式は [憲章の TDD 方針](../charter/tdd.md) に従う。  
+テスト仕様（TDD の入力）。形式は [憲章の TDD 方針](https://github.com/b4moss/charter/blob/v1/docs/charter/tech/tdd.md) に従う。  
 振る舞いの正本は [specs](../specs/)。本ディレクトリは検証観点の正本。
 
 | ドメイン | パス | 関連 Issue |

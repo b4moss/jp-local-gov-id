@@ -1,7 +1,7 @@
 # specs
 
 現行バージョンに存在する機能の仕様正本。ドメイン別に分割する（[tests](../tests/) と同じ切り方）。  
-SemVer フォルダでは切らない。ルール正本: [charter/doc-rule.md](../charter/doc-rule.md)。
+SemVer フォルダでは切らない。ルール正本: [doc-rule.md](https://github.com/b4moss/charter/blob/v1/docs/charter/doc-rule.md)。
 
 | ドメイン | パス | 内容 |
 |----------|------|------|
